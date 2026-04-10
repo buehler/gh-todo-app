@@ -17,49 +17,55 @@ class ConnectBrandBlock extends StatelessWidget {
     );
     final onPrimary = resolveColor(context, ColorTokens.primary.on);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ColumnBox(
+      style: editorialColumnStyle(spacing: 32),
       children: [
         Box(
-          style: BoxStyler()
-              .width(56)
-              .height(56)
-              .color(onBackground)
-              .borderRounded(editorialRadiusMedium)
-              .alignment(Alignment.center)
-              .shadow(
-                editorialShadow(
-                  color: withOpacity(onBackground, 0.08),
-                  blurRadius: 18,
-                  yOffset: 10,
-                ),
-              ),
+          style: _iconBadgeStyle(onBackground),
           child: StyledIcon(
             icon: LucideIcons.squareTerminal,
             style: editorialIconStyle(color: onPrimary, size: 28),
           ),
         ),
-        const SizedBox(height: 32),
-        StyledText(
-          'Connect to GitHub',
-          style: editorialTextStyle(
-            TextTokens.display.$large,
-            color: onBackground,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: StyledText(
-            'Bridge your engineering workflow with a precise editorial interface. Access your repositories and issues securely.',
-            style: editorialTextStyle(
-              TextTokens.body.$large,
-              color: onSurfaceVariant,
+        ColumnBox(
+          style: editorialColumnStyle(
+            spacing: 16,
+          ).constraints(BoxConstraintsMix.maxWidth(440)),
+          children: [
+            StyledText(
+              'Connect to GitHub',
+              style: editorialTextStyle(
+                TextTokens.display.$large,
+                color: onBackground,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
+            StyledText(
+              'Bridge your engineering workflow with a precise editorial interface. Access your repositories and issues securely.',
+              style: editorialTextStyle(
+                TextTokens.body.$large,
+                color: onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  BoxStyler _iconBadgeStyle(Color onBackground) {
+    return BoxStyler()
+        .width(56)
+        .height(56)
+        .color(onBackground)
+        .borderRounded(editorialRadiusMedium)
+        .alignment(Alignment.center)
+        .shadow(
+          editorialShadow(
+            color: withOpacity(onBackground, 0.08),
+            blurRadius: 18,
+            yOffset: 10,
+          ),
+        );
   }
 }

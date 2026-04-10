@@ -23,13 +23,15 @@ class ConnectFooter extends StatelessWidget {
       ColorTokens.surface.onVariant,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return ColumnBox(
+      style: editorialColumnStyle(
+        spacing: 16,
+        crossAxis: CrossAxisAlignment.center,
+        width: double.infinity,
+      ),
       children: [
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 20,
-          runSpacing: 8,
+        RowBox(
+          style: editorialRowStyle(spacing: 20),
           children: [
             EditorialTextLink(
               label: 'Privacy Policy',
@@ -41,12 +43,10 @@ class ConnectFooter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        RowBox(
+          style: editorialRowStyle(spacing: 8),
           children: [
             const StatusBlip(),
-            const SizedBox(width: 8),
             StyledText(
               'Operational: All Systems Go',
               style: editorialTextStyle(

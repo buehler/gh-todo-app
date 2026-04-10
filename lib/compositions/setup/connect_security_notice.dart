@@ -20,14 +20,17 @@ class ConnectSecurityNotice extends StatelessWidget {
     return EditorialCard(
       variation: CardVariation.recessed,
       padding: const EdgeInsets.all(20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: RowBox(
+        style: editorialRowStyle(
+          spacing: 14,
+          crossAxis: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+        ),
         children: [
           StyledIcon(
             icon: LucideIcons.shieldCheck,
             style: editorialIconStyle(color: primary, size: 20),
           ),
-          const SizedBox(width: 14),
           Expanded(
             child: StyledText(
               'We use your token only for local authentication. Your secret never leaves your browser\'s encrypted storage.',

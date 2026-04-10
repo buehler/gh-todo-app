@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/style/colors.dart';
-import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
 class EditorialTextLink extends StatelessWidget {
@@ -21,37 +20,25 @@ class EditorialTextLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = resolveColor(context, ColorTokens.primary.$default);
-    final onSurfaceVariant = resolveColor(
-      context,
-      ColorTokens.surface.onVariant,
-    );
+    final isEnabled = onPressed != null;
 
-    return TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: primary,
-        padding: EdgeInsets.zero,
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Row(
-        mainAxisSize: mainAxisSize,
+    return PressableBox(
+      enabled: isEnabled,
+      onPress: onPressed,
+      style: editorialTextLinkStyle(context, enabled: isEnabled),
+      child: RowBox(
+        style: editorialTextLinkRowStyle(mainAxisSize: mainAxisSize),
         children: [
           if (leadingIcon != null) ...[
             StyledIcon(
               icon: leadingIcon,
               style: editorialIconStyle(color: primary, size: 14),
             ),
-            const SizedBox(width: 6),
           ],
           Flexible(
             child: StyledText(
               label,
-              style: editorialTextStyle(
-                TextTokens.label.$large,
-                color: onPressed == null ? onSurfaceVariant : primary,
-                fontWeight: FontWeight.w600,
-              ),
+              style: editorialTextLinkTextStyle(context, enabled: isEnabled),
             ),
           ),
         ],

@@ -50,15 +50,22 @@ class EditorialCard extends StatelessWidget {
       _ => Padding(padding: padding, child: child),
     };
 
-    return Opacity(
-      opacity: enabled ? 1 : 0.58,
-      child: PressableBox(
-        enabled: enabled && onTap != null,
-        onPress: enabled ? onTap : null,
-        style: _style(context),
-        child: content,
-      ),
-    );
+    final style = _style(context);
+
+    // When the card is not tappable, wrapping in a PressableBox would install
+    // a GestureDetector with HitTestBehavior.opaque that swallows every tap
+    // inside the card, blocking interaction with nested widgets (text fields,
+    // links). Use a plain Box in that case so taps reach the children.
+    final Widget surface = onTap == null
+        ? Box(style: style, child: content)
+        : PressableBox(
+            enabled: enabled,
+            onPress: enabled ? onTap : null,
+            style: style,
+            child: content,
+          );
+
+    return Opacity(opacity: enabled ? 1 : 0.58, child: surface);
   }
 
   BoxStyler _style(BuildContext context) {

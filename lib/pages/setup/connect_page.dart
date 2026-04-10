@@ -11,10 +11,13 @@ import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/app_session_controller.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ConnectPage extends StatefulWidget {
   static const pageKey = ValueKey('connect-page');
+  static const backgroundKey = ValueKey('connect-page-background');
+  static const safeAreaKey = ValueKey('connect-page-safe-area');
   static const githubDocsUrl =
       'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens';
 
@@ -84,16 +87,114 @@ class _ConnectPageState extends State<ConnectPage> {
 
   @override
   Widget build(BuildContext context) {
-    final background = resolveColor(context, ColorTokens.background.$default);
+    return Scaffold(
+      backgroundColor: resolveColor(context, ColorTokens.background.$default),
+      body: StackBox(
+        style: setupPageStackStyle(),
+        children: [
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: _ConnectBackgroundLayer(key: ConnectPage.backgroundKey),
+            ),
+          ),
+          SafeArea(
+            key: ConnectPage.safeAreaKey,
+            child: _ConnectForegroundLayer(
+              tokenController: _tokenController,
+              errorText: _errorText,
+              isSubmitting: _isSubmitting,
+              onChanged: _handleTokenChanged,
+              onSubmitted: _submit,
+              onConnectPressed: _submit,
+              onHelpPressed: _openGithubDocs,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConnectForegroundLayer extends StatelessWidget {
+  final TextEditingController tokenController;
+  final String? errorText;
+  final bool isSubmitting;
+  final ValueChanged<String> onChanged;
+  final Future<void> Function() onSubmitted;
+  final VoidCallback onConnectPressed;
+  final VoidCallback onHelpPressed;
+
+  const _ConnectForegroundLayer({
+    required this.tokenController,
+    required this.errorText,
+    required this.isSubmitting,
+    required this.onChanged,
+    required this.onSubmitted,
+    required this.onConnectPressed,
+    required this.onHelpPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Box(
+                style: setupPageContentFrameStyle(),
+                child: ColumnBox(
+                  key: ConnectPage.pageKey,
+                  style: setupPageContentColumnStyle(),
+                  children: [
+                    const ConnectBrandBlock(),
+                    ConnectTokenForm(
+                      controller: tokenController,
+                      onChanged: onChanged,
+                      onSubmitted: (_) => onSubmitted(),
+                      onConnectPressed: onConnectPressed,
+                      onHelpPressed: onHelpPressed,
+                      isSubmitting: isSubmitting,
+                      errorText: errorText,
+                    ),
+                    const ConnectSecurityNotice(),
+                    ConnectFooter(
+                      onPrivacyPressed: () =>
+                          context.pushNamed(AppRoutes.privacyName),
+                      onTermsPressed: () =>
+                          context.pushNamed(AppRoutes.termsName),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ConnectBackgroundLayer extends StatelessWidget {
+  const _ConnectBackgroundLayer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     final primaryFixed = resolveColor(context, ColorTokens.primary.fixed);
     final tertiaryFixed = resolveColor(context, ColorTokens.tertiary.fixedDim);
 
-    return Scaffold(
-      backgroundColor: background,
-      body: SafeArea(
-        child: Stack(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 1100;
+
+        return StackBox(
+          style: setupPageStackStyle(),
           children: [
-            const Positioned.fill(child: _ConnectBackground()),
+            Positioned.fill(
+              child: Box(style: setupPageBackgroundStyle(context)),
+            ),
             Positioned(
               top: -120,
               left: -120,
@@ -110,91 +211,15 @@ class _ConnectPageState extends State<ConnectPage> {
                 size: 240,
               ),
             ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth >= 1100;
-                final horizontalPadding = constraints.maxWidth >= 720
-                    ? 48.0
-                    : 24.0;
-                final verticalPadding = constraints.maxWidth >= 720
-                    ? 36.0
-                    : 24.0;
-
-                final content = ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: Column(
-                    key: ConnectPage.pageKey,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const ConnectBrandBlock(),
-                      const SizedBox(height: 40),
-                      ConnectTokenForm(
-                        controller: _tokenController,
-                        onChanged: _handleTokenChanged,
-                        onSubmitted: (_) => _submit(),
-                        onConnectPressed: _submit,
-                        onHelpPressed: _openGithubDocs,
-                        isSubmitting: _isSubmitting,
-                        errorText: _errorText,
-                      ),
-                      const SizedBox(height: 20),
-                      const ConnectSecurityNotice(),
-                      const SizedBox(height: 32),
-                      ConnectFooter(
-                        onPrivacyPressed: () =>
-                            context.goNamed(AppRoutes.privacyName),
-                        onTermsPressed: () =>
-                            context.goNamed(AppRoutes.termsName),
-                      ),
-                    ],
-                  ),
-                );
-
-                final centeredChild = isDesktop
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(child: content),
-                          const SizedBox(width: 72),
-                          const ConnectDecorativePanel(),
-                        ],
-                      )
-                    : SingleChildScrollView(child: content);
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                    vertical: verticalPadding,
-                  ),
-                  child: Center(child: centeredChild),
-                );
-              },
-            ),
+            if (isDesktop)
+              const Positioned(
+                right: 84,
+                top: 180,
+                child: ConnectDecorativePanel(),
+              ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ConnectBackground extends StatelessWidget {
-  const _ConnectBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = resolveColor(context, ColorTokens.surface.$default);
-    final bright = resolveColor(context, ColorTokens.surface.bright);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [bright, surface],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -207,14 +232,14 @@ class _AmbientOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+      child: Box(
+        style: BoxStyler()
+            .width(size)
+            .height(size)
+            .color(color)
+            .borderRounded(size),
       ),
     );
   }

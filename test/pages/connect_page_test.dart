@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
 import 'package:gh_todos/components/components.dart';
+import 'package:gh_todos/compositions/shared/editorial_text_link.dart';
+import 'package:gh_todos/compositions/setup/connect_token_form.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/services/app_session_controller.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
+import 'package:gh_todos/style/themes.dart';
 
 import '../support/fakes.dart';
 
@@ -37,6 +40,72 @@ void main() {
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
     expect(find.text('Operational: All Systems Go'), findsOneWidget);
+  });
+
+  testWidgets('background stays outside safe area while content stays inside', (
+    tester,
+  ) async {
+    await pumpSetupApp(tester);
+
+    expect(find.byKey(ConnectPage.backgroundKey), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.byKey(ConnectPage.backgroundKey),
+        matching: find.byType(SafeArea),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.ancestor(
+        of: find.byKey(ConnectPage.pageKey),
+        matching: find.byKey(ConnectPage.safeAreaKey),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('tapping the PAT field focuses it (real hit test)', (
+    tester,
+  ) async {
+    await pumpSetupApp(tester);
+
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).focusNode?.hasFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets('tapping "How to create one?" reaches the help link via hit test', (
+    tester,
+  ) async {
+    final controller = TextEditingController();
+    addTearDown(controller.dispose);
+    var helpPressed = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: octanePrime(
+            ConnectTokenForm(
+              controller: controller,
+              onChanged: (_) {},
+              onSubmitted: (_) {},
+              onConnectPressed: () {},
+              onHelpPressed: () => helpPressed = true,
+              isSubmitting: false,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('How to create one?'));
+    await tester.pumpAndSettle();
+
+    expect(helpPressed, isTrue);
   });
 
   testWidgets('cta stays disabled while token is empty', (tester) async {
@@ -86,5 +155,53 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
+  });
+
+  testWidgets('privacy and terms links remain tappable from setup page', (
+    tester,
+  ) async {
+    await pumpSetupApp(tester);
+
+    await tester.ensureVisible(find.text('Privacy Policy'));
+    await tester.tap(find.text('Privacy Policy'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Placeholder legal copy'), findsOneWidget);
+
+    final result = await pumpSetupApp(tester);
+    expect(result.controller.hasToken, isFalse);
+    await tester.ensureVisible(find.text('Terms of Service'));
+    await tester.tap(find.text('Terms of Service'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Placeholder legal copy'), findsOneWidget);
+  });
+
+  testWidgets('how to create one link is tappable', (tester) async {
+    final controller = TextEditingController();
+    var helpPressed = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: octanePrime(
+            ConnectTokenForm(
+              controller: controller,
+              onChanged: (_) {},
+              onSubmitted: (_) {},
+              onConnectPressed: () {},
+              onHelpPressed: () => helpPressed = true,
+              isSubmitting: false,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final link = tester.widget<EditorialTextLink>(
+      find.byType(EditorialTextLink),
+    );
+    link.onPressed!.call();
+    await tester.pump();
+
+    expect(helpPressed, isTrue);
   });
 }

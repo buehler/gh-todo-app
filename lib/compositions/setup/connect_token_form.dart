@@ -31,31 +31,25 @@ class ConnectTokenForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onSurfaceVariant = resolveColor(
-      context,
-      ColorTokens.surface.onVariant,
-    );
-
     return EditorialCard(
       variation: CardVariation.recessed,
       padding: const EdgeInsets.fromLTRB(28, 28, 28, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ColumnBox(
+        style: editorialColumnStyle(spacing: 16),
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          RowBox(
+            style: editorialRowStyle(
+              spacing: 16,
+              crossAxis: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+            ),
             children: [
               Expanded(
                 child: StyledText(
                   'Personal Access Token',
-                  style: editorialTextStyle(
-                    TextTokens.label.$large,
-                    color: onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: _labelStyle(context),
                 ),
               ),
-              const SizedBox(width: 16),
               EditorialTextLink(
                 label: 'How to create one?',
                 onPressed: onHelpPressed,
@@ -63,7 +57,6 @@ class ConnectTokenForm extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
           EditorialTextField(
             controller: controller,
             hintText: 'ghp_xxxxxxxxxxxxxxxxxxxx',
@@ -74,19 +67,29 @@ class ConnectTokenForm extends StatelessWidget {
             autofocus: false,
             errorText: errorText,
           ),
-          const SizedBox(height: 28),
-          SizedBox(
-            width: double.infinity,
-            child: EditorialButton(
-              label: 'Get Started',
-              trailingIcon: LucideIcons.arrowRight,
-              onPressed: onConnectPressed,
-              enabled: _isValid && !isSubmitting,
-              loading: isSubmitting,
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: EditorialButton(
+                label: 'Get Started',
+                trailingIcon: LucideIcons.arrowRight,
+                onPressed: onConnectPressed,
+                enabled: _isValid && !isSubmitting,
+                loading: isSubmitting,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  TextStyler _labelStyle(BuildContext context) {
+    return editorialTextStyle(
+      TextTokens.label.$large,
+      color: resolveColor(context, ColorTokens.surface.onVariant),
+      fontWeight: FontWeight.w700,
     );
   }
 }
