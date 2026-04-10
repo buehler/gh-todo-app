@@ -1,0 +1,184 @@
+import 'package:flutter/material.dart';
+import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/style/colors.dart';
+import 'package:gh_todos/style/typography.dart';
+import 'package:mix/mix.dart';
+
+enum TextFieldVariation { editorial }
+
+class EditorialTextField extends StatefulWidget {
+  static const shellKey = ValueKey('editorial-text-field-shell');
+
+  final TextEditingController? controller;
+  final String? label;
+  final String? hintText;
+  final String? helperText;
+  final String? errorText;
+  final IconData? prefixIcon;
+  final bool obscureText;
+  final bool enabled;
+  final TextFieldVariation variation;
+
+  const EditorialTextField({
+    super.key,
+    this.controller,
+    this.label,
+    this.hintText,
+    this.helperText,
+    this.errorText,
+    this.prefixIcon,
+    this.obscureText = false,
+    this.enabled = true,
+    this.variation = TextFieldVariation.editorial,
+  });
+
+  @override
+  State<EditorialTextField> createState() => _EditorialTextFieldState();
+}
+
+class _EditorialTextFieldState extends State<EditorialTextField> {
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode()..addListener(_handleFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode
+      ..removeListener(_handleFocusChange)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    setState(() {});
+  }
+
+  bool get _hasError =>
+      widget.errorText != null && widget.errorText!.isNotEmpty;
+  bool get _isFocused => _focusNode.hasFocus;
+
+  @override
+  Widget build(BuildContext context) {
+    final outline = resolveColor(context, ColorTokens.outline.variant);
+    final primaryFixed = resolveColor(context, ColorTokens.primary.fixed);
+    final surfaceLow = resolveColor(context, ColorTokens.surface.containerLow);
+    final surfaceLowest = resolveColor(
+      context,
+      ColorTokens.surface.containerLowest,
+    );
+    final onSurface = resolveColor(context, ColorTokens.surface.on);
+    final onSurfaceVariant = resolveColor(
+      context,
+      ColorTokens.surface.onVariant,
+    );
+    final error = resolveColor(context, ColorTokens.error.$default);
+
+    final fieldTextStyle = resolveTextStyle(
+      context,
+      TextTokens.body.$medium,
+    ).copyWith(color: onSurface, fontWeight: FontWeight.w500);
+    final hintStyle = resolveTextStyle(
+      context,
+      TextTokens.body.$medium,
+    ).copyWith(color: withOpacity(onSurfaceVariant, 0.8));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.label != null) ...[
+          StyledText(
+            widget.label!,
+            style: editorialTextStyle(
+              TextTokens.label.$small,
+              color: resolveColor(context, ColorTokens.outline.$default),
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+            ).uppercase(),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Opacity(
+          opacity: widget.enabled ? 1 : 0.56,
+          child: Box(
+            key: EditorialTextField.shellKey,
+            style: BoxStyler()
+                .color(_isFocused ? surfaceLowest : surfaceLow)
+                .borderRounded(editorialRadiusSmall)
+                .paddingOnly(horizontal: 16, vertical: 14)
+                .animate(editorialAnimation)
+                .borderAll(
+                  color: _hasError
+                      ? withOpacity(error, 0.35)
+                      : _isFocused
+                      ? primaryFixed
+                      : Colors.transparent,
+                  width: _isFocused ? 2 : (_hasError ? 1.5 : 0),
+                )
+                .shadow(
+                  _isFocused
+                      ? editorialShadow(
+                          color: withOpacity(primaryFixed, 0.35),
+                          blurRadius: 18,
+                          yOffset: 0,
+                        )
+                      : editorialShadow(
+                          color: withOpacity(outline, 0),
+                          blurRadius: 0,
+                          yOffset: 0,
+                        ),
+                ),
+            child: Row(
+              children: [
+                if (widget.prefixIcon != null) ...[
+                  StyledIcon(
+                    icon: widget.prefixIcon,
+                    style: editorialIconStyle(
+                      color: _isFocused
+                          ? resolveColor(context, ColorTokens.primary.$default)
+                          : onSurfaceVariant,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    focusNode: _focusNode,
+                    enabled: widget.enabled,
+                    obscureText: widget.obscureText,
+                    style: fieldTextStyle,
+                    cursorColor: resolveColor(
+                      context,
+                      ColorTokens.primary.$default,
+                    ),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: widget.hintText,
+                      hintStyle: hintStyle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_hasError || widget.helperText != null) ...[
+          const SizedBox(height: 8),
+          StyledText(
+            widget.errorText ?? widget.helperText!,
+            style: editorialTextStyle(
+              TextTokens.body.$small,
+              color: _hasError ? error : onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
