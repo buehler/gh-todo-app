@@ -15,6 +15,11 @@ class EditorialTextField extends StatefulWidget {
   final String? helperText;
   final String? errorText;
   final IconData? prefixIcon;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final TextInputAction? textInputAction;
+  final TextInputType? keyboardType;
+  final bool autofocus;
   final bool obscureText;
   final bool enabled;
   final TextFieldVariation variation;
@@ -27,6 +32,11 @@ class EditorialTextField extends StatefulWidget {
     this.helperText,
     this.errorText,
     this.prefixIcon,
+    this.onChanged,
+    this.onSubmitted,
+    this.textInputAction,
+    this.keyboardType,
+    this.autofocus = false,
     this.obscureText = false,
     this.enabled = true,
     this.variation = TextFieldVariation.editorial,
@@ -151,6 +161,11 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
                     focusNode: _focusNode,
                     enabled: widget.enabled,
                     obscureText: widget.obscureText,
+                    onChanged: widget.onChanged,
+                    onSubmitted: widget.onSubmitted,
+                    textInputAction: widget.textInputAction,
+                    keyboardType: widget.keyboardType,
+                    autofocus: widget.autofocus,
                     style: fieldTextStyle,
                     cursorColor: resolveColor(
                       context,

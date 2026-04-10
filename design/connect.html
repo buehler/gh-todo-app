@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connect to GitHub - The Engineering Editorial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "outline": "#727785",
+                        "primary": "#0051ae",
+                        "on-primary-fixed-variant": "#004493",
+                        "background": "#f7f9ff",
+                        "on-secondary-fixed": "#171c22",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-surface": "#141c25",
+                        "error": "#ba1a1a",
+                        "surface": "#f7f9ff",
+                        "on-tertiary-container": "#ffece5",
+                        "tertiary-fixed-dim": "#ffb693",
+                        "surface-tint": "#005bc0",
+                        "inverse-primary": "#adc6ff",
+                        "on-tertiary-fixed": "#351000",
+                        "secondary-fixed": "#dee3eb",
+                        "surface-container-high": "#e0e9f5",
+                        "surface-container-highest": "#dae3ef",
+                        "inverse-surface": "#29313a",
+                        "tertiary-fixed": "#ffdbcc",
+                        "tertiary-container": "#b84b00",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#0969da",
+                        "on-surface-variant": "#424753",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container": "#e6effa",
+                        "surface-bright": "#f7f9ff",
+                        "surface-variant": "#dae3ef",
+                        "on-tertiary-fixed-variant": "#7a2f00",
+                        "outline-variant": "#c2c6d6",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#001a41",
+                        "on-secondary-container": "#60656c",
+                        "on-secondary-fixed-variant": "#42474e",
+                        "secondary": "#5a5f66",
+                        "secondary-container": "#dee3eb",
+                        "secondary-fixed-dim": "#c2c7cf",
+                        "tertiary": "#913900",
+                        "on-primary-container": "#ecefff",
+                        "inverse-on-surface": "#e9f2fd",
+                        "on-primary": "#ffffff",
+                        "on-background": "#141c25",
+                        "surface-container-low": "#ecf4ff",
+                        "surface-dim": "#d2dbe6",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9ff;
+            color: #141c25;
+        }
+        .editorial-gradient {
+            background: linear-gradient(135deg, #0051ae 0%, #0969da 100%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface selection:bg-primary/10">
+<main class="min-h-screen flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+<!-- Background Decorative Elements -->
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-fixed opacity-20 blur-[120px] rounded-full"></div>
+<div class="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-tertiary-fixed-dim opacity-10 blur-[100px] rounded-full"></div>
+<div class="w-full max-w-lg z-10">
+<!-- Branding Area -->
+<div class="mb-12 flex flex-col items-start">
+<div class="w-12 h-12 mb-8 bg-on-background rounded-xl flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-3xl" data-icon="terminal">terminal</span>
+</div>
+<h1 class="font-headline font-extrabold text-4xl sm:text-5xl tracking-tight text-on-surface mb-4">
+                    Connect to GitHub
+                </h1>
+<p class="font-body text-on-surface-variant text-lg max-w-md leading-relaxed">
+                    Bridge your engineering workflow with a precise editorial interface. Access your repositories and issues securely.
+                </p>
+</div>
+<!-- Login Surface -->
+<div class="surface-container-low rounded-[2rem] p-8 sm:p-10">
+<form class="space-y-8">
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<label class="font-label font-semibold text-on-surface-variant text-sm" for="token">
+                                Personal Access Token
+                            </label>
+<a class="font-label text-primary font-medium text-sm flex items-center gap-1 hover:underline underline-offset-4 decoration-primary/30 transition-all" href="#">
+<span class="material-symbols-outlined text-base" data-icon="help_outline">help_outline</span>
+                                How to create one?
+                            </a>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-on-surface-variant/40 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="key">key</span>
+</div>
+<input class="w-full bg-surface-container-lowest border-0 focus:ring-2 focus:ring-primary/20 rounded-xl py-4 pl-12 pr-4 font-body text-on-surface placeholder:text-outline-variant transition-all outline-none" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" type="text"/>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full editorial-gradient text-on-primary font-headline font-bold text-lg py-4 px-8 rounded-xl flex items-center justify-center gap-3 shadow-[0_12px_32px_rgba(20,28,37,0.06)] active:scale-[0.98] transition-all group" type="submit">
+                            Get Started
+                            <span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</form>
+<div class="mt-8 pt-8 border-t border-outline-variant/10">
+<div class="flex items-center gap-4 p-4 rounded-xl bg-surface-container-high/50">
+<span class="material-symbols-outlined text-primary" data-icon="security" style="font-variation-settings: 'FILL' 1;">security</span>
+<p class="font-body text-xs text-on-secondary-fixed-variant leading-normal">
+                            We use your token only for local authentication. Your secret never leaves your browser's encrypted storage.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Footer Links -->
+<footer class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 px-4 text-on-surface-variant/60 font-body text-xs">
+<div class="flex items-center gap-6">
+<a class="hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-on-surface transition-colors" href="#">Terms of Service</a>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+<span>Operational: All Systems Go</span>
+</div>
+</footer>
+</div>
+<!-- Decorative UI Element (Asymmetric) -->
+<div class="hidden lg:block absolute right-[-5%] top-[20%] w-[320px] aspect-square rotate-12">
+<div class="w-full h-full glass-panel rounded-[3rem] p-6 shadow-2xl flex flex-col justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="commit">commit</span>
+</div>
+<div>
+<div class="h-2 w-24 bg-outline-variant/20 rounded-full mb-2"></div>
+<div class="h-2 w-16 bg-outline-variant/10 rounded-full"></div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="h-3 w-full bg-primary-fixed/30 rounded-full"></div>
+<div class="h-3 w-3/4 bg-primary-fixed/20 rounded-full"></div>
+</div>
+<div class="flex justify-end">
+<div class="px-3 py-1 rounded-full bg-tertiary-fixed text-[10px] font-headline font-bold text-on-tertiary-fixed-variant uppercase tracking-widest">
+                        Merge Ready
+                    </div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
