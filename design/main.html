@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Engineering Editorial - Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+        .tonal-layering { background-attachment: fixed; }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "outline": "#727785",
+                    "primary": "#0051ae",
+                    "on-primary-fixed-variant": "#004493",
+                    "background": "#f7f9ff",
+                    "on-secondary-fixed": "#171c22",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-surface": "#141c25",
+                    "error": "#ba1a1a",
+                    "surface": "#f7f9ff",
+                    "on-tertiary-container": "#ffece5",
+                    "tertiary-fixed-dim": "#ffb693",
+                    "surface-tint": "#005bc0",
+                    "inverse-primary": "#adc6ff",
+                    "on-tertiary-fixed": "#351000",
+                    "secondary-fixed": "#dee3eb",
+                    "surface-container-high": "#e0e9f5",
+                    "surface-container-highest": "#dae3ef",
+                    "inverse-surface": "#29313a",
+                    "tertiary-fixed": "#ffdbcc",
+                    "tertiary-container": "#b84b00",
+                    "on-error": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "primary-container": "#0969da",
+                    "on-surface-variant": "#424753",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-container": "#e6effa",
+                    "surface-bright": "#f7f9ff",
+                    "surface-variant": "#dae3ef",
+                    "on-tertiary-fixed-variant": "#7a2f00",
+                    "outline-variant": "#c2c6d6",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed": "#001a41",
+                    "on-secondary-container": "#60656c",
+                    "on-secondary-fixed-variant": "#42474e",
+                    "secondary": "#5a5f66",
+                    "secondary-container": "#dee3eb",
+                    "secondary-fixed-dim": "#c2c7cf",
+                    "tertiary": "#913900",
+                    "on-primary-container": "#ecefff",
+                    "inverse-on-surface": "#e9f2fd",
+                    "on-primary": "#ffffff",
+                    "on-background": "#141c25",
+                    "surface-container-low": "#ecf4ff",
+                    "surface-dim": "#d2dbe6",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-50 bg-[#f7f9ff]/80 dark:bg-slate-950/80 backdrop-blur-md">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border-2 border-primary-fixed">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional developer in a clean studio setting with soft cinematic lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDo9kR1JE6BtSHjBetPNpc_dDjOeXdrRkqA7jKYWASAJAWk4kmNbxK1drZBRCla_ltzpiLyx2s4pnuCm8Vwr3Mtd3GbFZN7JEDWoDBqVXjTn0Y3304d-0b44RMUIDSSo7wSNjYv74ZpERubwGAKVorUsKZF9Vr40VlCVshdbq4w9PzusJ4TC0YvjpuEER3RyfHwT03OSOY6d_dA3neDSIlsL1Exi4uJSGZod1pkagnoRQD5AW0l45d4j389DNNgEz6MYa6vvtC9o1o"/>
+</div>
+<h1 class="font-['Manrope'] font-bold text-2xl tracking-tight text-[#141c25] dark:text-slate-100">The Engineering Editorial</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-[#ecf4ff] dark:hover:bg-slate-800 transition-colors text-slate-500 active:opacity-80 transition-all">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-6 pb-32 pt-4">
+<!-- Hero Section / Context -->
+<section class="mb-10">
+<p class="font-headline text-on-surface-variant text-lg font-medium mb-2">Morning, Alex.</p>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface max-w-2xl">
+                You have <span class="text-primary">12 active issues</span> across 3 core projects today.
+            </h2>
+</section>
+<!-- Horizontal Project Selector (Chip Set) -->
+<div class="flex items-center gap-3 overflow-x-auto pb-6 scrollbar-hide no-scrollbar">
+<button class="flex-none px-5 py-2.5 rounded-full bg-primary text-on-primary font-semibold text-sm transition-all shadow-sm">
+                All Projects
+            </button>
+<button class="flex-none px-5 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant font-medium text-sm hover:bg-surface-container-high transition-all">
+                #design-system
+            </button>
+<button class="flex-none px-5 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant font-medium text-sm hover:bg-surface-container-high transition-all">
+                #api-v2-refactor
+            </button>
+<button class="flex-none px-5 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant font-medium text-sm hover:bg-surface-container-high transition-all">
+                #mobile-onboarding
+            </button>
+<button class="flex-none w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+<!-- Issue Feed: Bento-style Editorial Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Group Header: Design System -->
+<div class="md:col-span-12 mt-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2 h-6 bg-tertiary rounded-full"></span>
+<h3 class="font-headline text-xl font-bold tracking-tight">Design System</h3>
+</div>
+<span class="font-label text-xs uppercase tracking-widest text-outline">4 Open</span>
+</div>
+<!-- Card 1: Priority Focus -->
+<div class="md:col-span-8 group bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest cursor-pointer border-l-4 border-tertiary flex flex-col justify-between min-h-[180px]">
+<div>
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold uppercase tracking-wider">High Priority</span>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="text-xs font-semibold">Oct 24</span>
+</div>
+</div>
+<h4 class="font-headline text-2xl font-bold leading-snug group-hover:text-primary transition-colors">Implement dark mode tonal layering tokens</h4>
+</div>
+<div class="flex items-center justify-between pt-6">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,91,192,0.4)]"></div>
+<span class="text-sm font-medium text-on-surface-variant">Open</span>
+</div>
+<div class="flex -space-x-2">
+<img alt="Assignee" class="w-7 h-7 rounded-full border-2 border-surface-container-lowest" data-alt="professional headshot of a software engineer with soft lighting and a warm blurred background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUK4TU51bcNHKIaqHK5R1YVtdLO68-0cGglk-SS7S_HQNKHMXgrAt9M9Ev_k9Ek2urRCrYxePp-Pw9gWPdLa4D_Fb24A2viNze8mZuUUJLYdCFbsZBgnnEeAs27zgT7Frbla7XOuRp2DccSw3D_8716Tacbw0OfeHThczUc4rMN52_S87MTBf8FnudcqfPbGJCRx_obGhBovVWFUnmyoJwd3BBCDWyWU6eBbmXWlUB_4n6idD57Lr9-5S7_F_XvyJybKZxU6xHS_c"/>
+<img alt="Assignee" class="w-7 h-7 rounded-full border-2 border-surface-container-lowest" data-alt="smiling female designer in a creative office setting with natural soft light and professional bokeh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuButzmmZaIhjYex5XZABb8wTx1HUFEbF5clG6yYop-xYbweMPahyhSRm1UB_RbkFiNxTyv4C8FgK4r672wJ7qgGa8SVBAhOWilPpZTLJitIUk4voJ6gGuLg0kNDzE9Ex_M-_yUgl4T8qJ9xvwoMxHyS6vFgJgGpom3229gkEy6tzePzJzPgV9u0mBiJgX4dVz13jL3DnAbut0sCYILgfXfYZrqOm8aeI4vZ_Ph4n7YGgNRvktFyyyFvGpW_AnKdEZYWfRWisqthHMY"/>
+</div>
+</div>
+</div>
+<!-- Card 2: Status Check -->
+<div class="md:col-span-4 bg-surface-container-low rounded-xl p-6 flex flex-col justify-between border-l-4 border-primary/20">
+<div>
+<div class="mb-4">
+<span class="px-2.5 py-1 rounded-md bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-wider">Refactor</span>
+</div>
+<h4 class="font-headline text-lg font-bold leading-tight">Audit button components for accessibility contrast</h4>
+</div>
+<div class="pt-4 flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+<span class="text-sm font-medium">Closed 2h ago</span>
+</div>
+</div>
+<!-- Group Header: API V2 -->
+<div class="md:col-span-12 mt-8 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2 h-6 bg-primary rounded-full"></span>
+<h3 class="font-headline text-xl font-bold tracking-tight">API V2 Refactor</h3>
+</div>
+<span class="font-label text-xs uppercase tracking-widest text-outline">8 Open</span>
+</div>
+<!-- Row 2 -->
+<div class="md:col-span-6 bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest cursor-pointer border-l-4 border-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold uppercase tracking-wider">Bug</span>
+<span class="text-xs font-semibold text-error">Overdue</span>
+</div>
+<h4 class="font-headline text-xl font-bold mb-4">Fix race condition in webhooks consumer</h4>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">comment</span>
+<span class="text-xs font-semibold">12</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">attachment</span>
+<span class="text-xs font-semibold">3</span>
+</div>
+</div>
+</div>
+<div class="md:col-span-6 bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest cursor-pointer border-l-4 border-primary">
+<div class="flex justify-between items-start mb-4">
+<span class="px-2.5 py-1 rounded-md bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold uppercase tracking-wider">Core</span>
+<span class="text-xs font-semibold text-on-surface-variant">No date</span>
+</div>
+<h4 class="font-headline text-xl font-bold mb-4">Update GraphQL schemas for subscription tiers</h4>
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,91,192,0.4)]"></div>
+<span class="text-sm font-medium text-on-surface-variant">Open</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Prominent FAB -->
+<button class="fixed bottom-28 right-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0_12px_32px_rgba(20,28,37,0.15)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'wght' 600;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] border-t border-slate-100/10 dark:border-slate-800/50">
+<!-- Active Item: Issues -->
+<a class="flex flex-col items-center justify-center text-[#0969DA] bg-[#ecf4ff] dark:bg-blue-900/30 rounded-xl px-6 py-2 tap-highlight-none active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">format_list_bulleted</span>
+<span class="font-['Inter'] text-[11px] font-semibold tracking-wide uppercase mt-1">Issues</span>
+</a>
+<!-- Inactive Item: Settings -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-6 py-2 hover:text-[#0051ae] transition-all tap-highlight-none active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-['Inter'] text-[11px] font-semibold tracking-wide uppercase mt-1">Settings</span>
+</a>
+</nav>
+<!-- Decoration for Editorial Feel -->
+<div class="fixed top-0 right-0 -z-10 w-1/3 h-screen pointer-events-none bg-gradient-to-l from-surface-container-low/30 to-transparent"></div>
+</body></html>

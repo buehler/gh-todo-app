@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(flutter analyze:*)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(grep -rn \"listTodo\\\\|plus\\\\b\\\\|settings\\\\b\" ~/.pub-cache/hosted/pub.dev/lucide_icons_flutter-*/lib/)"
     ]
   }
 }

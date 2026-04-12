@@ -1,5 +1,7 @@
+import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/pages/privacy_policy_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
+import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/pages/terms_of_service_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
@@ -35,10 +37,29 @@ GoRouter buildAppRouter(
       return null;
     },
     routes: [
-      GoRoute(
-        path: AppRoutes.rootPath,
-        name: AppRoutes.rootName,
-        builder: (context, state) => const RootPage(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.rootPath,
+                name: AppRoutes.rootName,
+                builder: (context, state) => const RootPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.settingsPath,
+                name: AppRoutes.settingsName,
+                builder: (context, state) => const SettingsPage(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.setupPath,
