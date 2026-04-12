@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
 /// Editorial greeting + active-issue summary shown at the top of the
 /// todos feed.
+///
+/// The greeting line is personalized via the GitHub GraphQL `viewer` query.
+/// Falls back to "Hi there." while loading or on error.
 class TodosHero extends StatelessWidget {
   const TodosHero({super.key});
 
@@ -42,7 +46,14 @@ class TodosHero extends StatelessWidget {
         crossAxis: CrossAxisAlignment.start,
       ).constraints(BoxConstraintsMix.maxWidth(640)),
       children: [
-        Text('Morning, Alex.', style: greetingStyle),
+        Query$UserInformation$Widget(
+          builder: (result, {fetchMore, refetch}) {
+            final viewer = result.parsedData?.viewer;
+            final name = viewer?.name ?? viewer?.login;
+            final greeting = name != null ? 'Hi, $name.' : 'Hi there.';
+            return Text(greeting, style: greetingStyle);
+          },
+        ),
         Text.rich(
           TextSpan(
             style: headlineBase,

@@ -1,0 +1,70 @@
+query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      items(first: 100, after: $afterCursor, query: "assignee:@me") {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          fieldValues(first: 15) {
+            nodes {
+              __typename
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field {
+                  ... on ProjectV2SingleSelectField {
+                    name
+                  }
+                }
+              }
+              ... on ProjectV2ItemFieldDateValue {
+                date
+                field {
+                  ... on ProjectV2Field {
+                    name
+                  }
+                }
+              }
+            }
+          }
+          content {
+            __typename
+            ... on Issue {
+              id
+              number
+              title
+              state
+              url
+              closedAt
+              labels(first: 10) {
+                nodes {
+                  name
+                  color
+                }
+              }
+              comments {
+                totalCount
+              }
+              assignees(first: 5) {
+                nodes {
+                  login
+                  name
+                  avatarUrl(size: 32)
+                }
+              }
+              repository {
+                name
+                owner {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

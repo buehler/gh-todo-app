@@ -1,0 +1,40 @@
+query OwnerProjects($ownerId: ID!, $afterCursor: String) {
+  node(id: $ownerId) {
+    ... on Organization {
+      projectsV2(first: 100, after: $afterCursor, orderBy: { field: TITLE, direction: ASC }) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          title
+          number
+          shortDescription
+          closed
+          public
+          url
+        }
+      }
+    }
+    ... on User {
+      projectsV2(first: 100, after: $afterCursor, orderBy: { field: TITLE, direction: ASC }) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          title
+          number
+          shortDescription
+          closed
+          public
+          url
+        }
+      }
+    }
+  }
+}

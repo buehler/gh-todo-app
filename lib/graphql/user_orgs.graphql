@@ -1,0 +1,17 @@
+query UserOrganizations($afterCursor: String) {
+  viewer {
+    organizations(first: 100, after: $afterCursor) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        id
+        login
+        name
+        avatarUrl(size: 64)
+      }
+    }
+  }
+}

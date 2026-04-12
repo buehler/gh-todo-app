@@ -9,8 +9,8 @@ import 'package:mix/mix.dart';
 
 /// Sticky frosted-glass app bar shown above every shell route.
 ///
-/// Intentionally minimal per the product spec: only the app name — no avatar,
-/// no filter action.
+/// Shows the app title on the left and the authenticated user's avatar +
+/// username on the right, fetched via the GitHub GraphQL API.
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   static const double barHeight = 64;
   static const pageKey = ValueKey('app-top-bar');
@@ -24,23 +24,29 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final surfaceBright = resolveColor(context, ColorTokens.surface.bright);
     final onSurface = resolveColor(context, ColorTokens.surface.on);
+    final onSurfaceVariant = resolveColor(
+      context,
+      ColorTokens.surface.onVariant,
+    );
+    final surfaceContainerLow = resolveColor(
+      context,
+      ColorTokens.surface.containerLow,
+    );
+    final safeTop = MediaQuery.paddingOf(context).top;
 
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Row(
-          children: [
-            Box(
-              key: pageKey,
-              style: BoxStyler()
-                  .color(withOpacity(surfaceBright, 0.8))
-                  .height(barHeight + MediaQuery.paddingOf(context).top)
-                  .paddingOnly(
-                    top: MediaQuery.paddingOf(context).top,
-                    horizontal: 24,
-                  )
-                  .alignment(Alignment.centerLeft),
-              child: StyledText(
+        child: Box(
+          key: pageKey,
+          style: BoxStyler()
+              .color(withOpacity(surfaceBright, 0.8))
+              .height(barHeight + safeTop)
+              .paddingOnly(top: safeTop, horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              StyledText(
                 'GitHub Todos',
                 style: editorialTextStyle(
                   TextTokens.title.$large,
@@ -49,13 +55,35 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   letterSpacing: -0.4,
                 ),
               ),
-            ),
-            Query$UserInformation$Widget(
-              builder: (result, {fetchMore, refetch}) => Column(
-                children: [Text(result.parsedData?.viewer.login ?? '')],
+              Query$UserInformation$Widget(
+                builder: (result, {fetchMore, refetch}) {
+                  final viewer = result.parsedData?.viewer;
+                  if (viewer == null) return const SizedBox.shrink();
+
+                  final displayName = viewer.name ?? viewer.login;
+
+                  return RowBox(
+                    style: editorialRowStyle(spacing: 12),
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: surfaceContainerLow,
+                        backgroundImage: NetworkImage(viewer.avatarUrl),
+                      ),
+                      StyledText(
+                        displayName,
+                        style: editorialTextStyle(
+                          TextTokens.label.$large,
+                          color: onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

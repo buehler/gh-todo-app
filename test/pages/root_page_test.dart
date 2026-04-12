@@ -34,7 +34,7 @@ void main() {
 
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
     expect(find.text('GitHub Todos'), findsOneWidget);
-    expect(find.text('Morning, Alex.'), findsOneWidget);
+    expect(find.text('Hi there.'), findsOneWidget);
     expect(find.text('All Projects'), findsOneWidget);
     expect(find.text('#design-system'), findsOneWidget);
     expect(find.text('Design System'), findsOneWidget);
