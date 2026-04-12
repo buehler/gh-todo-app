@@ -1,4 +1,12 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:gh_todos/services/project_storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+Future<ProjectStorageService> createTestProjectStorage() async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  return ProjectStorageService(prefs);
+}
 
 class FakeFlutterSecureStorage extends FlutterSecureStorage {
   final Map<String, String> _values;

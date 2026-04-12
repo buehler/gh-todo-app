@@ -14,8 +14,14 @@ void main() {
       ),
     );
     await controller.hydrate();
+    final projectStorage = await createTestProjectStorage();
 
-    await tester.pumpWidget(GhTodosApp(sessionController: controller));
+    await tester.pumpWidget(
+      GhTodosApp(
+        sessionController: controller,
+        projectStorage: projectStorage,
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);

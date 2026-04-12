@@ -19,10 +19,12 @@ void main() {
       storageService: GithubTokenStorageService(storage: storage),
     );
     await controller.hydrate();
+    final projectStorage = await createTestProjectStorage();
 
     await tester.pumpWidget(
       GhTodosApp(
         sessionController: controller,
+        projectStorage: projectStorage,
         initialLocation: initialLocation,
       ),
     );

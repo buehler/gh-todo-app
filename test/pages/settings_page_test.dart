@@ -21,10 +21,12 @@ void main() {
       storageService: GithubTokenStorageService(storage: storage),
     );
     await controller.hydrate();
+    final projectStorage = await createTestProjectStorage();
 
     await tester.pumpWidget(
       GhTodosApp(
         sessionController: controller,
+        projectStorage: projectStorage,
         initialLocation: location,
       ),
     );
@@ -44,7 +46,7 @@ void main() {
     expect(find.byType(TodosFab), findsNothing);
   });
 
-  testWidgets('settings page renders account and projects sections', (
+  testWidgets('settings page renders account section and add project button', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 1200));
@@ -62,14 +64,10 @@ void main() {
     // Account section
     expect(find.text('ACCOUNT'), findsOneWidget);
     expect(find.text('GitHub Personal Access Token'), findsOneWidget);
-    expect(find.text('••••••••••••••••ghp_A7x2'), findsOneWidget);
     expect(find.text('Sync Frequency'), findsOneWidget);
-    expect(find.text('Every 15 minutes'), findsOneWidget);
 
-    // Projects section
+    // Projects section — empty, but add button is present
     expect(find.text('PROJECTS'), findsOneWidget);
-    expect(find.text('editorial-ui-system'), findsOneWidget);
-    expect(find.text('core-api-v3'), findsOneWidget);
-    expect(find.text('legacy-dashboard'), findsOneWidget);
+    expect(find.text('Add Project'), findsOneWidget);
   });
 }

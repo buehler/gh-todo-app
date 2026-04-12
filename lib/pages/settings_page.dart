@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/compositions/settings/add_project_sheet.dart';
 import 'package:gh_todos/compositions/settings/settings_account_section.dart';
 import 'package:gh_todos/compositions/settings/settings_projects_section.dart';
 import 'package:gh_todos/compositions/settings/settings_section_header.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
+import 'package:gh_todos/models/project.dart';
+import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
@@ -13,10 +16,33 @@ import 'package:mix/mix.dart';
 ///
 /// Hosted inside the app shell — top bar and bottom nav are provided
 /// externally via [AppShell].
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   static const pageKey = ValueKey('settings-page');
 
-  const SettingsPage({super.key});
+  final ProjectStorageService projectStorage;
+
+  const SettingsPage({required this.projectStorage, super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  late List<Project> _projects;
+
+  @override
+  void initState() {
+    super.initState();
+    _projects = widget.projectStorage.readAll();
+  }
+
+  Future<void> _openAddProjectSheet() async {
+    final project = await showAddProjectSheet(context);
+    if (project == null || !mounted) return;
+
+    await widget.projectStorage.add(project);
+    setState(() => _projects = widget.projectStorage.readAll());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +53,7 @@ class SettingsPage extends StatelessWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: SingleChildScrollView(
-        key: pageKey,
+        key: SettingsPage.pageKey,
         padding: EdgeInsets.only(
           top: topPadding + 24,
           bottom: bottomPadding,
@@ -40,13 +66,16 @@ class SettingsPage extends StatelessWidget {
             crossAxis: CrossAxisAlignment.start,
           ).constraints(BoxConstraintsMix.maxWidth(672)),
           children: [
-            _SettingsHeadline(),
+            const _SettingsHeadline(),
             const SizedBox(height: 12),
             const SettingsSectionHeader(label: 'Account'),
             const SettingsAccountSection(),
             const SizedBox(height: 16),
             const SettingsSectionHeader(label: 'Projects'),
-            const SettingsProjectsSection(),
+            SettingsProjectsSection(
+              projects: _projects,
+              onAddPressed: _openAddProjectSheet,
+            ),
           ],
         ),
       ),
@@ -55,6 +84,8 @@ class SettingsPage extends StatelessWidget {
 }
 
 class _SettingsHeadline extends StatelessWidget {
+  const _SettingsHeadline();
+
   @override
   Widget build(BuildContext context) {
     final onSurface = resolveColor(context, ColorTokens.surface.on);

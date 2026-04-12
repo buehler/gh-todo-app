@@ -7,11 +7,13 @@ import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/pages/terms_of_service_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/app_session_controller.dart';
+import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 GoRouter buildAppRouter(
   AppSessionController sessionController, {
+  required ProjectStorageService projectStorage,
   String? initialLocation,
 }) {
   return GoRouter(
@@ -67,7 +69,8 @@ GoRouter buildAppRouter(
               GoRoute(
                 path: AppRoutes.settingsPath,
                 name: AppRoutes.settingsName,
-                builder: (context, state) => const SettingsPage(),
+                builder: (context, state) =>
+                    SettingsPage(projectStorage: projectStorage),
               ),
             ],
           ),

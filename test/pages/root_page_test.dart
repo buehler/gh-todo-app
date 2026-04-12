@@ -20,7 +20,14 @@ void main() {
     );
     await controller.hydrate();
 
-    await tester.pumpWidget(GhTodosApp(sessionController: controller));
+    final projectStorage = await createTestProjectStorage();
+
+    await tester.pumpWidget(
+      GhTodosApp(
+        sessionController: controller,
+        projectStorage: projectStorage,
+      ),
+    );
     await tester.pumpAndSettle();
   }
 
