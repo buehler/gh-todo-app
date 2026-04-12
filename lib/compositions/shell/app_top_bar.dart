@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
@@ -27,25 +28,34 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Box(
-          key: pageKey,
-          style: BoxStyler()
-              .color(withOpacity(surfaceBright, 0.8))
-              .height(barHeight + MediaQuery.paddingOf(context).top)
-              .paddingOnly(
-                top: MediaQuery.paddingOf(context).top,
-                horizontal: 24,
-              )
-              .alignment(Alignment.centerLeft),
-          child: StyledText(
-            'GitHub Todos',
-            style: editorialTextStyle(
-              TextTokens.title.$large,
-              color: onSurface,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
+        child: Row(
+          children: [
+            Box(
+              key: pageKey,
+              style: BoxStyler()
+                  .color(withOpacity(surfaceBright, 0.8))
+                  .height(barHeight + MediaQuery.paddingOf(context).top)
+                  .paddingOnly(
+                    top: MediaQuery.paddingOf(context).top,
+                    horizontal: 24,
+                  )
+                  .alignment(Alignment.centerLeft),
+              child: StyledText(
+                'GitHub Todos',
+                style: editorialTextStyle(
+                  TextTokens.title.$large,
+                  color: onSurface,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                ),
+              ),
             ),
-          ),
+            Query$UserInformation$Widget(
+              builder: (result, {fetchMore, refetch}) => Column(
+                children: [Text(result.parsedData?.viewer.login ?? '')],
+              ),
+            ),
+          ],
         ),
       ),
     );

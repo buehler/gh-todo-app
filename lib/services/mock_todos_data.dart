@@ -114,6 +114,58 @@ const mockTodoGroups = <TodoGroup>[
   ),
 ];
 
+// ---------------------------------------------------------------------------
+// Settings page mock data
+// ---------------------------------------------------------------------------
+
+const mockMaskedPat = '••••••••••••••••ghp_A7x2';
+const mockSyncFrequency = 'Every 15 minutes';
+
+class MockSettingsProject {
+  final String name;
+  final String branchLabel;
+  final int activeIssueCount;
+  final String mappedTo;
+  final bool enabled;
+  final GroupAccent accent;
+
+  const MockSettingsProject({
+    required this.name,
+    required this.branchLabel,
+    required this.activeIssueCount,
+    required this.mappedTo,
+    required this.enabled,
+    required this.accent,
+  });
+}
+
+const mockSettingsProjects = <MockSettingsProject>[
+  MockSettingsProject(
+    name: 'editorial-ui-system',
+    branchLabel: 'main branch',
+    activeIssueCount: 12,
+    mappedTo: 'GitHub Milestones',
+    enabled: true,
+    accent: GroupAccent.primary,
+  ),
+  MockSettingsProject(
+    name: 'core-api-v3',
+    branchLabel: 'production',
+    activeIssueCount: 4,
+    mappedTo: 'Issue Custom Field',
+    enabled: true,
+    accent: GroupAccent.primary,
+  ),
+  MockSettingsProject(
+    name: 'legacy-dashboard',
+    branchLabel: 'archived',
+    activeIssueCount: 0,
+    mappedTo: '',
+    enabled: false,
+    accent: GroupAccent.tertiary,
+  ),
+];
+
 /// Hero summary numbers derived from the seed data.
 int get mockActiveIssueCount => mockTodoGroups
     .expand((g) => g.issues)

@@ -1,0 +1,8 @@
+query UserInformation {
+  viewer {
+    id
+    avatarUrl
+    name
+    login
+  }
+}

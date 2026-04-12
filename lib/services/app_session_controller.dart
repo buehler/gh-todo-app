@@ -25,6 +25,10 @@ class AppSessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String?> readToken() async {
+    return await _storageService.readToken();
+  }
+
   Future<void> clearToken() async {
     await _storageService.clearToken();
     _hasToken = false;

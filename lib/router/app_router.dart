@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/pages/privacy_policy_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
@@ -7,6 +8,7 @@ import 'package:gh_todos/pages/terms_of_service_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/app_session_controller.dart';
 import 'package:go_router/go_router.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 
 GoRouter buildAppRouter(
   AppSessionController sessionController, {
@@ -38,8 +40,18 @@ GoRouter buildAppRouter(
     },
     routes: [
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) => GraphQLProvider(
+          client: ValueNotifier(
+            GraphQLClient(
+              link: AuthLink(
+                getToken: () async =>
+                    'Bearer ${await sessionController.readToken()}',
+              ).concat(HttpLink('https://api.github.com/graphql')),
+              cache: GraphQLCache(),
+            ),
+          ),
+          child: AppShell(navigationShell: navigationShell),
+        ),
         branches: [
           StatefulShellBranch(
             routes: [

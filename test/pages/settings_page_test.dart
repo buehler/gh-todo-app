@@ -31,8 +31,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('deep linking to /settings renders the blank body in the shell',
-      (tester) async {
+  testWidgets('deep linking to /settings renders in the shell without FAB', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -41,5 +42,34 @@ void main() {
     expect(find.byKey(SettingsPage.pageKey), findsOneWidget);
     expect(find.text('GitHub Todos'), findsOneWidget);
     expect(find.byType(TodosFab), findsNothing);
+  });
+
+  testWidgets('settings page renders account and projects sections', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpAuthenticatedAppAt(tester, AppRoutes.settingsPath);
+
+    // Page headline
+    expect(find.text('Settings'), findsOneWidget);
+    expect(
+      find.text('Manage your GitHub connection and editorial workflow.'),
+      findsOneWidget,
+    );
+
+    // Account section
+    expect(find.text('ACCOUNT'), findsOneWidget);
+    expect(find.text('GitHub Personal Access Token'), findsOneWidget);
+    expect(find.text('••••••••••••••••ghp_A7x2'), findsOneWidget);
+    expect(find.text('Sync Frequency'), findsOneWidget);
+    expect(find.text('Every 15 minutes'), findsOneWidget);
+
+    // Projects section
+    expect(find.text('PROJECTS'), findsOneWidget);
+    expect(find.text('editorial-ui-system'), findsOneWidget);
+    expect(find.text('core-api-v3'), findsOneWidget);
+    expect(find.text('legacy-dashboard'), findsOneWidget);
   });
 }
