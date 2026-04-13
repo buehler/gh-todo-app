@@ -3,7 +3,10 @@
     "allow": [
       "Bash(flutter analyze:*)",
       "Bash(flutter test:*)",
-      "Bash(grep -rn \"listTodo\\\\|plus\\\\b\\\\|settings\\\\b\" ~/.pub-cache/hosted/pub.dev/lucide_icons_flutter-*/lib/)"
+      "Bash(grep -rn \"listTodo\\\\|plus\\\\b\\\\|settings\\\\b\" ~/.pub-cache/hosted/pub.dev/lucide_icons_flutter-*/lib/)",
+      "Bash(flutter pub:*)",
+      "Bash(dart run:*)",
+      "Bash(grep -n 'class Options\\\\$Query\\\\|class Variables\\\\$Query' /Users/christophalexander.buehler/Development/gh-todo-app/lib/graphql/owner_projects.graphql.dart)"
     ]
   }
 }

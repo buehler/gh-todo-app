@@ -1,10 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gh_todos/app.dart';
 import 'package:gh_todos/compositions/todos/todos_fab.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
-import 'package:gh_todos/services/app_session_controller.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 
 import '../support/fakes.dart';
@@ -14,22 +12,12 @@ void main() {
     WidgetTester tester,
     String location,
   ) async {
-    final storage = FakeFlutterSecureStorage(
-      seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+    final result = await createTestApp(
+      tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+      initialLocation: location,
     );
-    final controller = AppSessionController(
-      storageService: GithubTokenStorageService(storage: storage),
-    );
-    await controller.hydrate();
-    final projectStorage = await createTestProjectStorage();
 
-    await tester.pumpWidget(
-      GhTodosApp(
-        sessionController: controller,
-        projectStorage: projectStorage,
-        initialLocation: location,
-      ),
-    );
+    await tester.pumpWidget(result.app);
     await tester.pumpAndSettle();
   }
 

@@ -1,43 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gh_todos/app.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/compositions/shared/editorial_text_link.dart';
 import 'package:gh_todos/compositions/setup/connect_token_form.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
-import 'package:gh_todos/services/app_session_controller.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/style/themes.dart';
 
 import '../support/fakes.dart';
 
 void main() {
-  Future<({AppSessionController controller, FakeFlutterSecureStorage storage})>
-  pumpSetupApp(WidgetTester tester, {bool throwOnWrite = false}) async {
-    final storage = FakeFlutterSecureStorage(throwOnWrite: throwOnWrite);
-    final controller = AppSessionController(
-      storageService: GithubTokenStorageService(storage: storage),
-    );
-    await controller.hydrate();
-
-    final projectStorage = await createTestProjectStorage();
-
-    await tester.pumpWidget(
-      GhTodosApp(
-        sessionController: controller,
-        projectStorage: projectStorage,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    return (controller: controller, storage: storage);
-  }
-
   testWidgets('setup page renders hero, form, notice, and footer links', (
     tester,
   ) async {
-    await pumpSetupApp(tester);
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     expect(find.text('Connect to GitHub'), findsOneWidget);
     expect(find.text('Personal Access Token'), findsOneWidget);
@@ -52,7 +32,10 @@ void main() {
   testWidgets('background stays outside safe area while content stays inside', (
     tester,
   ) async {
-    await pumpSetupApp(tester);
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     expect(find.byKey(ConnectPage.backgroundKey), findsOneWidget);
     expect(
@@ -74,7 +57,10 @@ void main() {
   testWidgets('tapping the PAT field focuses it (real hit test)', (
     tester,
   ) async {
-    await pumpSetupApp(tester);
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(TextField));
     await tester.pumpAndSettle();
@@ -116,7 +102,10 @@ void main() {
   });
 
   testWidgets('cta stays disabled while token is empty', (tester) async {
-    await pumpSetupApp(tester);
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     final button = tester.widget<EditorialButton>(find.byType(EditorialButton));
     expect(button.enabled, isFalse);
@@ -125,7 +114,10 @@ void main() {
   testWidgets('successful submit stores token and navigates to root', (
     tester,
   ) async {
-    final result = await pumpSetupApp(tester);
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), '  ghp_abc123  ');
     await tester.pumpAndSettle();
@@ -142,13 +134,15 @@ void main() {
       result.storage.values[GithubTokenStorageService.tokenStorageKey],
       'ghp_abc123',
     );
-    expect(result.controller.hasToken, isTrue);
   });
 
   testWidgets('failed submit shows inline error and stays on setup', (
     tester,
   ) async {
-    await pumpSetupApp(tester, throwOnWrite: true);
+    final result = await createTestApp(throwOnWrite: true);
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'ghp_abc123');
     await tester.pumpAndSettle();
@@ -164,18 +158,24 @@ void main() {
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
   });
 
-  testWidgets('privacy and terms links remain tappable from setup page', (
-    tester,
-  ) async {
-    await pumpSetupApp(tester);
+  testWidgets('privacy link is tappable from setup page', (tester) async {
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Privacy Policy'));
     await tester.tap(find.text('Privacy Policy'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Placeholder legal copy'), findsOneWidget);
+  });
 
-    final result = await pumpSetupApp(tester);
-    expect(result.controller.hasToken, isFalse);
+  testWidgets('terms link is tappable from setup page', (tester) async {
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
+
     await tester.ensureVisible(find.text('Terms of Service'));
     await tester.tap(find.text('Terms of Service'));
     await tester.pumpAndSettle();

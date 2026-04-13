@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/settings/add_project_sheet.dart';
 import 'package:gh_todos/compositions/settings/edit_project_sheet.dart';
@@ -8,86 +9,23 @@ import 'package:gh_todos/compositions/settings/settings_projects_section.dart';
 import 'package:gh_todos/compositions/settings/settings_section_header.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
-import 'package:gh_todos/models/project.dart';
-import 'package:gh_todos/services/app_session_controller.dart';
-import 'package:gh_todos/services/project_storage_service.dart';
+import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/session_provider.dart';
+import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
 /// Settings page showing account info and project list.
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerWidget {
   static const pageKey = ValueKey('settings-page');
 
-  final ProjectStorageService projectStorage;
-  final AppSessionController sessionController;
-
-  const SettingsPage({
-    required this.projectStorage,
-    required this.sessionController,
-    super.key,
-  });
+  const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final projects = ref.watch(projectListProvider);
 
-class _SettingsPageState extends State<SettingsPage> {
-  late List<Project> _projects;
-
-  @override
-  void initState() {
-    super.initState();
-    _projects = widget.projectStorage.readAll();
-  }
-
-  void _refreshProjects() {
-    setState(() => _projects = widget.projectStorage.readAll());
-  }
-
-  Future<void> _openAddProjectSheet() async {
-    final excludeIds = _projects.map((p) => p.id).toSet();
-    final project = await showAddProjectSheet(
-      context,
-      excludeProjectIds: excludeIds,
-    );
-    if (project == null || !mounted) return;
-
-    await widget.projectStorage.add(project);
-    _refreshProjects();
-  }
-
-  Future<void> _onProjectTapped(Project project) async {
-    final action = await showEditProjectSheet(context, project);
-    if (action == null || !mounted) return;
-
-    if (action == EditProjectAction.remove) {
-      await widget.projectStorage.remove(project.id);
-      _refreshProjects();
-    }
-  }
-
-  Future<void> _onPatPressed() async {
-    final action = await showPatManagementSheet(context);
-    if (action == null || !mounted) return;
-
-    switch (action) {
-      case PatAction.remove:
-        await widget.projectStorage.save([]);
-        await widget.sessionController.clearToken();
-        // Router redirect will navigate to setup automatically.
-        break;
-      case PatAction.update:
-        if (!mounted) return;
-        final newToken = await showPatUpdateSheet(context);
-        if (newToken == null || !mounted) return;
-        await widget.sessionController.setToken(newToken);
-        break;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final topPadding = AppTopBar.barHeight + MediaQuery.paddingOf(context).top;
     final bottomPadding =
         AppBottomNav.barHeight + MediaQuery.paddingOf(context).bottom + 24;
@@ -111,18 +49,64 @@ class _SettingsPageState extends State<SettingsPage> {
             const _SettingsHeadline(),
             const SizedBox(height: 12),
             const SettingsSectionHeader(label: 'Account'),
-            SettingsAccountSection(onPatPressed: _onPatPressed),
+            SettingsAccountSection(
+              onPatPressed: () => _onPatPressed(context, ref),
+            ),
             const SizedBox(height: 16),
             const SettingsSectionHeader(label: 'Projects'),
             SettingsProjectsSection(
-              projects: _projects,
-              onAddPressed: _openAddProjectSheet,
-              onProjectTapped: _onProjectTapped,
+              projects: projects,
+              onAddPressed: () => _openAddProjectSheet(context, ref),
+              onProjectTapped: (project) =>
+                  _onProjectTapped(context, ref, project),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _openAddProjectSheet(BuildContext context, WidgetRef ref) async {
+    final projects = ref.read(projectListProvider);
+    final excludeIds = projects.map((p) => p.id).toSet();
+    final project = await showAddProjectSheet(
+      context,
+      excludeProjectIds: excludeIds,
+    );
+    if (project == null) return;
+
+    await ref.read(projectListProvider.notifier).add(project);
+  }
+
+  Future<void> _onProjectTapped(
+    BuildContext context,
+    WidgetRef ref,
+    project,
+  ) async {
+    final action = await showEditProjectSheet(context, project);
+    if (action == null) return;
+
+    if (action == EditProjectAction.remove) {
+      await ref.read(projectListProvider.notifier).remove(project.id);
+    }
+  }
+
+  Future<void> _onPatPressed(BuildContext context, WidgetRef ref) async {
+    final action = await showPatManagementSheet(context);
+    if (action == null) return;
+
+    switch (action) {
+      case PatAction.remove:
+        await ref.read(projectStorageProvider).save([]);
+        await ref.read(sessionProvider.notifier).clearToken();
+        break;
+      case PatAction.update:
+        if (!context.mounted) return;
+        final newToken = await showPatUpdateSheet(context);
+        if (newToken == null) return;
+        await ref.read(sessionProvider.notifier).setToken(newToken);
+        break;
+    }
   }
 }
 

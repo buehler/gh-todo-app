@@ -1,40 +1,45 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/pages/privacy_policy_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/pages/terms_of_service_page.dart';
+import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
-import 'package:gh_todos/services/app_session_controller.dart';
-import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:go_router/go_router.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
 
-GoRouter buildAppRouter(
-  AppSessionController sessionController, {
-  required ProjectStorageService projectStorage,
-  String? initialLocation,
-}) {
+/// A [ChangeNotifier] that fires whenever the session provider changes,
+/// bridging Riverpod state into GoRouter's [refreshListenable].
+class _SessionRefreshNotifier extends ChangeNotifier {
+  _SessionRefreshNotifier(Ref ref) {
+    ref.listen(sessionProvider, (_, __) => notifyListeners());
+  }
+}
+
+final appRouterProvider =
+    Provider.family<GoRouter, String?>((ref, initialLocation) {
+  final refreshNotifier = _SessionRefreshNotifier(ref);
+
   return GoRouter(
     initialLocation: initialLocation ?? AppRoutes.rootPath,
-    refreshListenable: sessionController,
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
-      if (!sessionController.isHydrated) {
-        return null;
-      }
+      final session = ref.read(sessionProvider);
+      final isLoaded = session is AsyncData;
+      if (!isLoaded) return null;
 
+      final hasToken = session.requireValue.hasToken;
       final path = state.uri.path;
       final isPublicPage =
           path == AppRoutes.privacyPath || path == AppRoutes.termsPath;
 
-      if (!sessionController.hasToken &&
-          !isPublicPage &&
-          path != AppRoutes.setupPath) {
+      if (!hasToken && !isPublicPage && path != AppRoutes.setupPath) {
         return AppRoutes.setupPath;
       }
 
-      if (sessionController.hasToken && path == AppRoutes.setupPath) {
+      if (hasToken && path == AppRoutes.setupPath) {
         return AppRoutes.rootPath;
       }
 
@@ -42,18 +47,8 @@ GoRouter buildAppRouter(
     },
     routes: [
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => GraphQLProvider(
-          client: ValueNotifier(
-            GraphQLClient(
-              link: AuthLink(
-                getToken: () async =>
-                    'Bearer ${await sessionController.readToken()}',
-              ).concat(HttpLink('https://api.github.com/graphql')),
-              cache: GraphQLCache(),
-            ),
-          ),
-          child: AppShell(navigationShell: navigationShell),
-        ),
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -69,10 +64,7 @@ GoRouter buildAppRouter(
               GoRoute(
                 path: AppRoutes.settingsPath,
                 name: AppRoutes.settingsName,
-                builder: (context, state) => SettingsPage(
-                  projectStorage: projectStorage,
-                  sessionController: sessionController,
-                ),
+                builder: (context, state) => const SettingsPage(),
               ),
             ],
           ),
@@ -81,8 +73,7 @@ GoRouter buildAppRouter(
       GoRoute(
         path: AppRoutes.setupPath,
         name: AppRoutes.setupName,
-        builder: (context, state) =>
-            ConnectPage(sessionController: sessionController),
+        builder: (context, state) => const ConnectPage(),
       ),
       GoRoute(
         path: AppRoutes.privacyPath,
@@ -96,4 +87,4 @@ GoRouter buildAppRouter(
       ),
     ],
   );
-}
+});

@@ -8,28 +8,27 @@ import 'package:gh_todos/compositions/setup/connect_footer.dart';
 import 'package:gh_todos/compositions/setup/connect_security_notice.dart';
 import 'package:gh_todos/compositions/setup/connect_token_form.dart';
 import 'package:gh_todos/router/app_routes.dart';
-import 'package:gh_todos/services/app_session_controller.dart';
+import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/style/colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ConnectPage extends StatefulWidget {
+class ConnectPage extends ConsumerStatefulWidget {
   static const pageKey = ValueKey('connect-page');
   static const backgroundKey = ValueKey('connect-page-background');
   static const safeAreaKey = ValueKey('connect-page-safe-area');
   static const githubDocsUrl =
       'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens';
 
-  final AppSessionController sessionController;
-
-  const ConnectPage({required this.sessionController, super.key});
+  const ConnectPage({super.key});
 
   @override
-  State<ConnectPage> createState() => _ConnectPageState();
+  ConsumerState<ConnectPage> createState() => _ConnectPageState();
 }
 
-class _ConnectPageState extends State<ConnectPage> {
+class _ConnectPageState extends ConsumerState<ConnectPage> {
   final TextEditingController _tokenController = TextEditingController();
 
   String? _errorText;
@@ -53,7 +52,7 @@ class _ConnectPageState extends State<ConnectPage> {
     });
 
     try {
-      await widget.sessionController.setToken(trimmedToken);
+      await ref.read(sessionProvider.notifier).setToken(trimmedToken);
       if (!mounted) {
         return;
       }

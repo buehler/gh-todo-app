@@ -40,9 +40,10 @@ dependencies:
   go_router: ^17.2.0
   flutter_secure_storage: ^10.0.0
   url_launcher: ^6.3.2
-  graphql_flutter: ^5.3.0
   graphql: ^5.2.4
   shared_preferences: ^2.5.5
+  flutter_riverpod: ^3.3.1
+  riverpod_annotation: ^4.0.2
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +57,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   graphql_codegen: ^3.0.1
   build_runner: ^2.13.1
+  riverpod_generator: ^4.0.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

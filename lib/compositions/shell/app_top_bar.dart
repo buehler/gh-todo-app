@@ -1,8 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
-import 'package:gh_todos/graphql/userinfo.graphql.dart';
+import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
@@ -11,7 +12,7 @@ import 'package:mix/mix.dart';
 ///
 /// Shows the app title on the left and the authenticated user's avatar +
 /// username on the right, fetched via the GitHub GraphQL API.
-class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
+class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
   static const double barHeight = 64;
   static const pageKey = ValueKey('app-top-bar');
 
@@ -21,7 +22,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(barHeight);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final surfaceBright = resolveColor(context, ColorTokens.surface.bright);
     final onSurface = resolveColor(context, ColorTokens.surface.on);
     final onSurfaceVariant = resolveColor(
@@ -33,6 +34,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       ColorTokens.surface.containerLow,
     );
     final safeTop = MediaQuery.paddingOf(context).top;
+
+    final userAsync = ref.watch(userInfoProvider);
 
     return ClipRect(
       child: BackdropFilter(
@@ -55,9 +58,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   letterSpacing: -0.4,
                 ),
               ),
-              Query$UserInformation$Widget(
-                builder: (result, {fetchMore, refetch}) {
-                  final viewer = result.parsedData?.viewer;
+              userAsync.when(
+                data: (viewer) {
                   if (viewer == null) return const SizedBox.shrink();
 
                   final displayName = viewer.name ?? viewer.login;
@@ -81,6 +83,8 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                     ],
                   );
                 },
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
               ),
             ],
           ),
