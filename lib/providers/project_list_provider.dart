@@ -9,18 +9,27 @@ class ProjectList extends _$ProjectList {
   @override
   List<Project> build() {
     final storage = ref.watch(projectStorageProvider);
-    return storage.readAll();
+    return _sorted(storage.readAll());
+  }
+
+  List<Project> _sorted(List<Project> projects) {
+    return projects.toList()
+      ..sort((a, b) {
+        final ownerCmp = a.ownerLogin.compareTo(b.ownerLogin);
+        if (ownerCmp != 0) return ownerCmp;
+        return a.name.compareTo(b.name);
+      });
   }
 
   Future<void> add(Project project) async {
     final storage = ref.read(projectStorageProvider);
     await storage.add(project);
-    state = storage.readAll();
+    state = _sorted(storage.readAll());
   }
 
   Future<void> remove(String id) async {
     final storage = ref.read(projectStorageProvider);
     await storage.remove(id);
-    state = storage.readAll();
+    state = _sorted(storage.readAll());
   }
 }

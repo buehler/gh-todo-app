@@ -3,6 +3,7 @@ import 'package:gh_todos/graphql/owner_projects.graphql.dart';
 import 'package:gh_todos/graphql/user_orgs.graphql.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
+import 'package:graphql/client.dart';
 
 final userInfoProvider =
     FutureProvider.autoDispose<Query$UserInformation$viewer?>((ref) async {
@@ -14,7 +15,11 @@ final userInfoProvider =
 final userOrganizationsProvider = FutureProvider.autoDispose<
     List<Query$UserOrganizations$viewer$organizations$nodes>>((ref) async {
   final client = ref.watch(graphqlClientProvider);
-  final result = await client.query$UserOrganizations();
+  final result = await client.query$UserOrganizations(
+    Options$Query$UserOrganizations(
+      fetchPolicy: FetchPolicy.networkOnly,
+    ),
+  );
   return result.parsedData?.viewer.organizations.nodes
           ?.whereType<Query$UserOrganizations$viewer$organizations$nodes>()
           .toList() ??
@@ -27,6 +32,7 @@ final ownerProjectsProvider = FutureProvider.autoDispose
   final result = await client.query$OwnerProjects(
     Options$Query$OwnerProjects(
       variables: Variables$Query$OwnerProjects(ownerId: ownerId),
+      fetchPolicy: FetchPolicy.networkOnly,
     ),
   );
   return result.parsedData?.node;
