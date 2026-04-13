@@ -61,10 +61,10 @@ void main() {
       findsOneWidget,
     );
 
-    // Account section
+    // Account section — only PAT, no sync frequency
     expect(find.text('ACCOUNT'), findsOneWidget);
     expect(find.text('GitHub Personal Access Token'), findsOneWidget);
-    expect(find.text('Sync Frequency'), findsOneWidget);
+    expect(find.text('Sync Frequency'), findsNothing);
 
     // Projects section — empty, but add button is present
     expect(find.text('PROJECTS'), findsOneWidget);

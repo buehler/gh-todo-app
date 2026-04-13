@@ -7,47 +7,27 @@ import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
-/// Account settings card with PAT and sync frequency rows.
+/// Account settings card with PAT row.
 class SettingsAccountSection extends StatelessWidget {
-  const SettingsAccountSection({super.key});
+  final VoidCallback onPatPressed;
+
+  const SettingsAccountSection({required this.onPatPressed, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final outlineVariant = resolveColor(context, ColorTokens.outline.variant);
-
     return EditorialCard(
       variation: CardVariation.elevated,
       padding: EdgeInsets.zero,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _AccountRow(
-            icon: LucideIcons.keyRound,
-            iconBgColor: withOpacity(
-              resolveColor(context, ColorTokens.primary.$default),
-              0.1,
-            ),
-            iconColor: resolveColor(context, ColorTokens.primary.$default),
-            title: 'GitHub Personal Access Token',
-            subtitle: mockMaskedPat,
-          ),
-          Box(
-            style: BoxStyler()
-                .height(1)
-                .color(withOpacity(outlineVariant, 0.15))
-                .margin(EdgeInsetsMix.symmetric(horizontal: 20)),
-          ),
-          _AccountRow(
-            icon: LucideIcons.refreshCw,
-            iconBgColor: withOpacity(
-              resolveColor(context, ColorTokens.tertiary.$default),
-              0.1,
-            ),
-            iconColor: resolveColor(context, ColorTokens.tertiary.$default),
-            title: 'Sync Frequency',
-            subtitle: mockSyncFrequency,
-          ),
-        ],
+      child: _AccountRow(
+        icon: LucideIcons.keyRound,
+        iconBgColor: withOpacity(
+          resolveColor(context, ColorTokens.primary.$default),
+          0.1,
+        ),
+        iconColor: resolveColor(context, ColorTokens.primary.$default),
+        title: 'GitHub Personal Access Token',
+        subtitle: mockMaskedPat,
+        onPress: onPatPressed,
       ),
     );
   }
@@ -59,6 +39,7 @@ class _AccountRow extends StatelessWidget {
   final Color iconColor;
   final String title;
   final String subtitle;
+  final VoidCallback onPress;
 
   const _AccountRow({
     required this.icon,
@@ -66,6 +47,7 @@ class _AccountRow extends StatelessWidget {
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    required this.onPress,
   });
 
   @override
@@ -82,7 +64,7 @@ class _AccountRow extends StatelessWidget {
     final outline = resolveColor(context, ColorTokens.outline.$default);
 
     return PressableBox(
-      onPress: () {},
+      onPress: onPress,
       style: BoxStyler()
           .color(Colors.transparent)
           .paddingOnly(horizontal: 20, vertical: 16)

@@ -11,10 +11,12 @@ import 'package:mix/mix.dart';
 class SettingsProjectsSection extends StatelessWidget {
   final List<Project> projects;
   final VoidCallback onAddPressed;
+  final ValueChanged<Project> onProjectTapped;
 
   const SettingsProjectsSection({
     required this.projects,
     required this.onAddPressed,
+    required this.onProjectTapped,
     super.key,
   });
 
@@ -34,7 +36,10 @@ class SettingsProjectsSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (var i = 0; i < projects.length; i++) ...[
-                  SettingsProjectItem(project: projects[i]),
+                  SettingsProjectItem(
+                    project: projects[i],
+                    onTap: () => onProjectTapped(projects[i]),
+                  ),
                   if (i < projects.length - 1)
                     Box(
                       style: BoxStyler()

@@ -69,8 +69,10 @@ GoRouter buildAppRouter(
               GoRoute(
                 path: AppRoutes.settingsPath,
                 name: AppRoutes.settingsName,
-                builder: (context, state) =>
-                    SettingsPage(projectStorage: projectStorage),
+                builder: (context, state) => SettingsPage(
+                  projectStorage: projectStorage,
+                  sessionController: sessionController,
+                ),
               ),
             ],
           ),

@@ -1,13 +1,25 @@
 class Project {
   final String id;
   final String name;
+  final String ownerLogin;
 
-  const Project({required this.id, required this.name});
+  const Project({
+    required this.id,
+    required this.name,
+    required this.ownerLogin,
+  });
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'ownerLogin': ownerLogin,
+      };
 
-  factory Project.fromJson(Map<String, dynamic> json) =>
-      Project(id: json['id'] as String, name: json['name'] as String);
+  factory Project.fromJson(Map<String, dynamic> json) => Project(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        ownerLogin: (json['ownerLogin'] as String?) ?? '',
+      );
 
   @override
   bool operator ==(Object other) =>

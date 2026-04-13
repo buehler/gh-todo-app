@@ -12,8 +12,12 @@ import 'package:mix/mix.dart';
 /// Shows a modal bottom sheet that lets the user pick an owner (self or org)
 /// and then select a GitHub project to add.
 ///
+/// Projects whose IDs are in [excludeProjectIds] are filtered out.
 /// Returns the selected [Project] or `null` if dismissed.
-Future<Project?> showAddProjectSheet(BuildContext context) {
+Future<Project?> showAddProjectSheet(
+  BuildContext context, {
+  Set<String> excludeProjectIds = const {},
+}) {
   final client = GraphQLProvider.of(context).value;
 
   return showModalBottomSheet<Project>(
@@ -22,7 +26,7 @@ Future<Project?> showAddProjectSheet(BuildContext context) {
     backgroundColor: Colors.transparent,
     builder: (_) => GraphQLProvider(
       client: ValueNotifier(client),
-      child: const _AddProjectSheet(),
+      child: _AddProjectSheet(excludeProjectIds: excludeProjectIds),
     ),
   );
 }
@@ -35,14 +39,15 @@ class _Owner {
 }
 
 class _AddProjectSheet extends StatefulWidget {
-  const _AddProjectSheet();
+  final Set<String> excludeProjectIds;
+
+  const _AddProjectSheet({required this.excludeProjectIds});
 
   @override
   State<_AddProjectSheet> createState() => _AddProjectSheetState();
 }
 
 class _AddProjectSheetState extends State<_AddProjectSheet> {
-  /// Explicitly selected owner (null = use viewer as default).
   _Owner? _explicitOwner;
 
   void _selectOwner(_Owner owner) => setState(() => _explicitOwner = owner);
@@ -66,7 +71,6 @@ class _AddProjectSheetState extends State<_AddProjectSheet> {
               top: Radius.circular(24),
             ),
           ),
-          // Query viewer info first — everything else depends on it.
           child: Query$UserInformation$Widget(
             builder: (userResult, {fetchMore, refetch}) {
               final viewer = userResult.parsedData?.viewer;
@@ -101,6 +105,8 @@ class _AddProjectSheetState extends State<_AddProjectSheet> {
                   Expanded(
                     child: _ProjectList(
                       ownerId: activeOwner.id,
+                      ownerLogin: activeOwner.login,
+                      excludeProjectIds: widget.excludeProjectIds,
                       scrollController: scrollController,
                     ),
                   ),
@@ -114,11 +120,6 @@ class _AddProjectSheetState extends State<_AddProjectSheet> {
   }
 }
 
-/// Loads orgs via [Query$UserOrganizations$Widget] and builds the dropdown.
-///
-/// This is a separate widget so its internal query state is preserved across
-/// parent rebuilds (e.g. when the user picks a different owner and the parent
-/// calls setState).
 class _OwnerDropdownLoader extends StatelessWidget {
   final _Owner viewerOwner;
   final String selectedId;
@@ -263,10 +264,14 @@ class _OwnerDropdown extends StatelessWidget {
 
 class _ProjectList extends StatelessWidget {
   final String ownerId;
+  final String ownerLogin;
+  final Set<String> excludeProjectIds;
   final ScrollController scrollController;
 
   const _ProjectList({
     required this.ownerId,
+    required this.ownerLogin,
+    required this.excludeProjectIds,
     required this.scrollController,
   });
 
@@ -281,7 +286,9 @@ class _ProjectList extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final projects = _extractProjects(result.parsedData?.node);
+        final projects = _extractProjects(result.parsedData?.node)
+            .where((p) => !excludeProjectIds.contains(p.id))
+            .toList();
 
         if (projects.isEmpty) {
           return _EmptyState();
@@ -298,7 +305,11 @@ class _ProjectList extends StatelessWidget {
               description: p.shortDescription,
               onTap: () => Navigator.pop(
                 context,
-                Project(id: p.id, name: p.title),
+                Project(
+                  id: p.id,
+                  name: p.title,
+                  ownerLogin: ownerLogin,
+                ),
               ),
             );
           },

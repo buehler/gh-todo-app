@@ -119,7 +119,6 @@ const mockTodoGroups = <TodoGroup>[
 // ---------------------------------------------------------------------------
 
 const mockMaskedPat = '••••••••••••••••ghp_A7x2';
-const mockSyncFrequency = 'Every 15 minutes';
 
 /// Hero summary numbers derived from the seed data.
 int get mockActiveIssueCount => mockTodoGroups
