@@ -73,6 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     switch (action) {
       case PatAction.remove:
+        await widget.projectStorage.save([]);
         await widget.sessionController.clearToken();
         // Router redirect will navigate to setup automatically.
         break;
