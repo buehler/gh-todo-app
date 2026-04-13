@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
+import 'package:gh_todos/graphql/project_issues.graphql.dart';
 import 'package:gh_todos/graphql/user_orgs.graphql.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
+import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:graphql/client.dart';
 
@@ -36,4 +38,40 @@ final ownerProjectsProvider = FutureProvider.autoDispose
     ),
   );
   return result.parsedData?.node;
+});
+
+final projectIssuesProvider = FutureProvider.autoDispose
+    .family<List<IssueData>, String>((ref, projectId) async {
+  final client = ref.watch(graphqlClientProvider);
+  final result = await client.query$ProjectAssignedIssues(
+    Options$Query$ProjectAssignedIssues(
+      variables: Variables$Query$ProjectAssignedIssues(projectId: projectId),
+      fetchPolicy: FetchPolicy.networkOnly,
+    ),
+  );
+
+  final node = result.parsedData?.node;
+  if (node is! Query$ProjectAssignedIssues$node$$ProjectV2) return [];
+
+  final items = node.items.nodes ?? [];
+  final issues = <IssueData>[];
+
+  for (final item in items) {
+    final content = item?.content;
+    if (content
+        is! Query$ProjectAssignedIssues$node$$ProjectV2$items$nodes$content$$Issue) {
+      continue;
+    }
+
+    issues.add(IssueData(
+      id: content.id,
+      number: content.number,
+      title: content.title,
+      commentCount: content.comments.totalCount,
+      createdAt: content.createdAt,
+    ));
+  }
+
+  issues.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return issues;
 });

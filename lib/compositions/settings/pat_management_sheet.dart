@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
-import 'package:gh_todos/services/mock_todos_data.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -93,7 +92,7 @@ class _PatManagementSheet extends StatelessWidget {
                   ),
                 ),
                 StyledText(
-                  mockMaskedPat,
+                  '••••••••••••••••',
                   style: editorialTextStyle(
                     TextTokens.body.$small,
                     color: onSurfaceVariant,

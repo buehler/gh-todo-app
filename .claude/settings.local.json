@@ -6,7 +6,10 @@
       "Bash(grep -rn \"listTodo\\\\|plus\\\\b\\\\|settings\\\\b\" ~/.pub-cache/hosted/pub.dev/lucide_icons_flutter-*/lib/)",
       "Bash(flutter pub:*)",
       "Bash(dart run:*)",
-      "Bash(grep -n 'class Options\\\\$Query\\\\|class Variables\\\\$Query' /Users/christophalexander.buehler/Development/gh-todo-app/lib/graphql/owner_projects.graphql.dart)"
+      "Bash(grep -n 'class Options\\\\$Query\\\\|class Variables\\\\$Query' /Users/christophalexander.buehler/Development/gh-todo-app/lib/graphql/owner_projects.graphql.dart)",
+      "Read(//Users/christophalexander.buehler/.pub-cache/hosted/pub.dev/flutter_riverpod-3.3.1/lib/src/**)",
+      "Read(//Users/christophalexander.buehler/.pub-cache/hosted/pub.dev/flutter_riverpod-3.3.1/lib/**)",
+      "Bash(grep -rn 'Override' /Users/christophalexander.buehler/.pub-cache/hosted/pub.dev/flutter_riverpod-3.3.1/lib/src/*.dart)"
     ]
   }
 }

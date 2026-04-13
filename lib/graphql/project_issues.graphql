@@ -1,7 +1,7 @@
 query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
   node(id: $projectId) {
     ... on ProjectV2 {
-      items(first: 100, after: $afterCursor, query: "assignee:@me") {
+      items(first: 100, after: $afterCursor, query: "assignee:@me is:open") {
         totalCount
         pageInfo {
           hasNextPage
@@ -36,8 +36,11 @@ query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
               id
               number
               title
+              bodyText
               state
               url
+              createdAt
+              updatedAt
               closedAt
               labels(first: 10) {
                 nodes {
@@ -45,20 +48,13 @@ query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
                   color
                 }
               }
-              comments {
+              comments(first: 100) {
                 totalCount
-              }
-              assignees(first: 5) {
                 nodes {
-                  login
-                  name
-                  avatarUrl(size: 32)
-                }
-              }
-              repository {
-                name
-                owner {
-                  login
+                  author {
+                    login
+                  }
+                  bodyText
                 }
               }
             }

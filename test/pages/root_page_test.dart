@@ -1,69 +1,146 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gh_todos/app.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/todos/todos_fab.dart';
+import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
+import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fakes.dart';
 
+const _testProjects = [
+  Project(id: 'proj-1', name: 'Alpha', ownerLogin: 'acme'),
+  Project(id: 'proj-2', name: 'Beta', ownerLogin: 'acme'),
+];
+
+const _testIssues = [
+  IssueData(
+    id: 'issue-1',
+    number: 42,
+    title: 'Fix login flow',
+    commentCount: 3,
+    createdAt: '2025-04-01T10:00:00Z',
+  ),
+  IssueData(
+    id: 'issue-2',
+    number: 99,
+    title: 'Add dark mode',
+    commentCount: 0,
+    createdAt: '2025-03-15T08:00:00Z',
+  ),
+];
+
 void main() {
-  Future<void> pumpAuthenticatedApp(WidgetTester tester) async {
-    final result = await createTestApp(
-      tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
-    );
-
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
-  }
-
-  testWidgets('todos page shows hero, chips, group headers and cards', (
+  testWidgets('shows empty state when no projects are mapped', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await pumpAuthenticatedApp(tester);
+    final fakeStorage = FakeFlutterSecureStorage(
+      seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+    );
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(
+            GithubTokenStorageService(storage: fakeStorage),
+          ),
+          sharedPreferencesProvider.overrideWith((_) async => prefs),
+          projectListProvider.overrideWith(() => _FakeProjectList(const [])),
+        ],
+        child: const GhTodosApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
-    expect(find.text('GitHub Todos'), findsOneWidget);
-    expect(find.text('Hi there.'), findsOneWidget);
-    expect(find.text('All Projects'), findsOneWidget);
-    expect(find.text('#design-system'), findsOneWidget);
-    expect(find.text('Design System'), findsOneWidget);
-    expect(find.text('API V2 Refactor'), findsOneWidget);
+    expect(find.byKey(RootPage.emptyKey), findsOneWidget);
     expect(
-      find.text('Implement dark mode tonal layering tokens'),
+      find.text('Add a project in Settings to get started.'),
       findsOneWidget,
     );
-    expect(find.text('Fix race condition in webhooks consumer'), findsOneWidget);
-    expect(find.text('TODOS'), findsOneWidget);
-    expect(find.text('SETTINGS'), findsOneWidget);
     expect(find.byType(TodosFab), findsOneWidget);
   });
 
-  testWidgets('group header renders open counts from mock data', (
+  testWidgets('renders project chips and issues for selected project', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await pumpAuthenticatedApp(tester);
+    final fakeStorage = FakeFlutterSecureStorage(
+      seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+    );
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
 
-    // Design System group has one closed issue → one open.
-    expect(find.text('1 OPEN'), findsOneWidget);
-    // API V2 group has two open issues.
-    expect(find.text('2 OPEN'), findsOneWidget);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(
+            GithubTokenStorageService(storage: fakeStorage),
+          ),
+          sharedPreferencesProvider.overrideWith((_) async => prefs),
+          projectListProvider.overrideWith(
+            () => _FakeProjectList(_testProjects),
+          ),
+          projectIssuesProvider('proj-1')
+              .overrideWith((ref) async => _testIssues),
+        ],
+        child: const GhTodosApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Project chips rendered.
+    expect(find.text('Alpha'), findsOneWidget);
+    expect(find.text('Beta'), findsOneWidget);
+
+    // Issues rendered.
+    expect(find.text('Fix login flow'), findsOneWidget);
+    expect(find.text('Add dark mode'), findsOneWidget);
+    // Comment count shown for issue with comments.
+    expect(find.text('3'), findsOneWidget);
   });
 
-  testWidgets('tapping the settings nav tab swaps the branch and hides FAB', (
+  testWidgets('tapping settings tab swaps the branch and hides FAB', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await pumpAuthenticatedApp(tester);
+    final fakeStorage = FakeFlutterSecureStorage(
+      seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+    );
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tokenStorageProvider.overrideWithValue(
+            GithubTokenStorageService(storage: fakeStorage),
+          ),
+          sharedPreferencesProvider.overrideWith((_) async => prefs),
+          projectListProvider.overrideWith(() => _FakeProjectList(const [])),
+        ],
+        child: const GhTodosApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
     expect(find.byType(TodosFab), findsOneWidget);
 
@@ -72,7 +149,6 @@ void main() {
 
     expect(find.byKey(SettingsPage.pageKey), findsOneWidget);
     expect(find.byType(TodosFab), findsNothing);
-    // Top bar is shared, so the label remains.
     expect(find.text('GitHub Todos'), findsOneWidget);
 
     await tester.tap(find.byKey(AppBottomNav.todosTabKey));
@@ -81,4 +157,14 @@ void main() {
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
     expect(find.byType(TodosFab), findsOneWidget);
   });
+}
+
+/// A fake [ProjectList] notifier that returns a fixed list.
+class _FakeProjectList extends ProjectList {
+  final List<Project> _projects;
+
+  _FakeProjectList(this._projects);
+
+  @override
+  List<Project> build() => _projects;
 }
