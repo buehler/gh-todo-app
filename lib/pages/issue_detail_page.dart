@@ -1,0 +1,104 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_conversation_section.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_description_section.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_detail_top_bar.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_header_section.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
+import 'package:gh_todos/compositions/todos/todos_fab.dart';
+import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/style/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mix/mix.dart';
+
+/// Full-screen, push-routed detail view for a single GitHub issue.
+///
+/// Lives outside the [StatefulShellRoute], so it owns its own [Scaffold] and
+/// replaces the shell's top bar with its own back-button header.
+///
+/// The header (title, priority, #number, dates) renders immediately from the
+/// [issue] that was passed via `GoRouterState.extra` when navigating from the
+/// feed. The description + conversation are fetched lazily by the child
+/// sections via `issueDetailsProvider`.
+class IssueDetailPage extends ConsumerWidget {
+  static const pageKey = ValueKey('issue-detail-page');
+  static const scrollKey = ValueKey('issue-detail-scroll');
+  static const fabKey = ValueKey('issue-detail-fab');
+
+  final String issueId;
+  final IssueData issue;
+
+  const IssueDetailPage({
+    required this.issueId,
+    required this.issue,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final topPadding =
+        IssueDetailTopBar.barHeight + MediaQuery.paddingOf(context).top;
+    // The FAB sits in the safe-area; leave room below the scroll body for it.
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 120;
+
+    return Scaffold(
+      key: pageKey,
+      backgroundColor: resolveColor(context, ColorTokens.background.$default),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SingleChildScrollView(
+              key: scrollKey,
+              padding: EdgeInsets.only(
+                top: topPadding + 24,
+                left: 24,
+                right: 24,
+                bottom: bottomPadding,
+              ),
+              child: ColumnBox(
+                style: FlexBoxStyler().flex(
+                  FlexStyler()
+                      .direction(Axis.vertical)
+                      .crossAxisAlignment(CrossAxisAlignment.stretch)
+                      .mainAxisSize(MainAxisSize.min)
+                      .spacing(32),
+                ),
+                children: [
+                  IssueHeaderSection(issue: issue),
+                  IssueStateAction(
+                    issue: issue,
+                    // TODO(state): wire up close / re-open mutation.
+                    onPressed: () {},
+                  ),
+                  IssueDescriptionSection(issueId: issueId),
+                  IssueConversationSection(
+                    issueId: issueId,
+                    commentCount: issue.commentCount,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: IssueDetailTopBar(onBack: () => context.pop()),
+          ),
+          Positioned(
+            right: 24,
+            bottom: MediaQuery.paddingOf(context).bottom + 24,
+            child: TodosFab(
+              key: fabKey,
+              // TODO(comments): wire up "add comment" flow.
+              onPressed: () {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

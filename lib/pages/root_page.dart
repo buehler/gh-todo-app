@@ -10,8 +10,10 @@ import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
+import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mix/mix.dart';
 
 /// The authenticated root page — the "Issues" feed.
@@ -234,11 +236,7 @@ List<Widget> _dataSlivers(
     );
     slivers.add(
       SliverPadding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          bottom: bottomPadding,
-        ),
+        padding: EdgeInsets.only(left: 24, right: 24, bottom: bottomPadding),
         sliver: _IssueSliverList(issues: closed),
       ),
     );
@@ -257,7 +255,17 @@ class _IssueSliverList extends StatelessWidget {
     return SliverList.separated(
       itemCount: issues.length,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
-      itemBuilder: (_, index) => TodosIssueCard(issue: issues[index]),
+      itemBuilder: (_, index) {
+        final issue = issues[index];
+        return TodosIssueCard(
+          issue: issue,
+          onTap: () => context.pushNamed(
+            AppRoutes.issueDetailName,
+            pathParameters: {'id': issue.id},
+            extra: issue,
+          ),
+        );
+      },
     );
   }
 }

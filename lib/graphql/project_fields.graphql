@@ -1,12 +1,7 @@
-query ProjectFields($projectId: ID!, $afterCursor: String) {
+query ProjectFields($projectId: ID!) {
   node(id: $projectId) {
     ... on ProjectV2 {
-      fields(first: 100, after: $afterCursor) {
-        totalCount
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
+      fields(first: 100) {
         nodes {
           __typename
           ... on ProjectV2Field {
@@ -22,7 +17,6 @@ query ProjectFields($projectId: ID!, $afterCursor: String) {
               id
               name
               color
-              description
             }
           }
         }

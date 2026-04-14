@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
+import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/pages/issue_detail_page.dart';
 import 'package:gh_todos/pages/privacy_policy_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
@@ -18,8 +20,10 @@ class _SessionRefreshNotifier extends ChangeNotifier {
   }
 }
 
-final appRouterProvider =
-    Provider.family<GoRouter, String?>((ref, initialLocation) {
+final appRouterProvider = Provider.family<GoRouter, String?>((
+  ref,
+  initialLocation,
+) {
   final refreshNotifier = _SessionRefreshNotifier(ref);
 
   return GoRouter(
@@ -84,6 +88,14 @@ final appRouterProvider =
         path: AppRoutes.termsPath,
         name: AppRoutes.termsName,
         builder: (context, state) => const TermsOfServicePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.issueDetailPath,
+        name: AppRoutes.issueDetailName,
+        builder: (context, state) => IssueDetailPage(
+          issueId: state.pathParameters['id']!,
+          issue: state.extra as IssueData,
+        ),
       ),
     ],
   );

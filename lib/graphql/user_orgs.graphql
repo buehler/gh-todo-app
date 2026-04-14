@@ -1,16 +1,9 @@
-query UserOrganizations($afterCursor: String) {
+query UserOrganizations {
   viewer {
-    organizations(first: 100, after: $afterCursor) {
-      totalCount
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
+    organizations(first: 100) {
       nodes {
         id
         login
-        name
-        avatarUrl(size: 64)
       }
     }
   }

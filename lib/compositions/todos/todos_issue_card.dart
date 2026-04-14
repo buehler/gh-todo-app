@@ -17,8 +17,9 @@ import 'package:mix/mix.dart';
 /// "Done" pill where the priority badge would otherwise sit.
 class TodosIssueCard extends StatelessWidget {
   final IssueData issue;
+  final VoidCallback? onTap;
 
-  const TodosIssueCard({required this.issue, super.key});
+  const TodosIssueCard({required this.issue, this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +36,12 @@ class TodosIssueCard extends StatelessWidget {
         ? resolveColor(context, tokensFor(priority).fg)
         : null;
 
-    return EditorialCard(
-      enabled: !issue.closed,
+    // Closed cards stay tappable (so the detail page — and the re-open button
+    // there — remain reachable), but are visually dimmed via an external
+    // Opacity wrapper instead of EditorialCard's `enabled: false`, which would
+    // also swallow the tap.
+    final card = EditorialCard(
+      onTap: onTap,
       variation: showAccent ? CardVariation.accent : CardVariation.elevated,
       accentColor: accentColor,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -97,6 +102,8 @@ class TodosIssueCard extends StatelessWidget {
         ],
       ),
     );
+
+    return issue.closed ? Opacity(opacity: 0.58, child: card) : card;
   }
 }
 
@@ -191,11 +198,7 @@ class _MetaFooter extends StatelessWidget {
           style: mutedTextStyle,
           iconColor: outline,
         ),
-        _MetaItem(
-          label: tailLabel,
-          style: mutedTextStyle,
-          iconColor: outline,
-        ),
+        _MetaItem(label: tailLabel, style: mutedTextStyle, iconColor: outline),
       ],
     );
   }

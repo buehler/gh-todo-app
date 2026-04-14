@@ -1,12 +1,7 @@
-query ProjectAssignedIssues($projectId: ID!, $afterOpen: String, $afterRecentlyClosed: String) {
+query ProjectAssignedIssues($projectId: ID!) {
   open: node(id: $projectId) {
     ... on ProjectV2 {
-      items(first: 100, after: $afterOpen, query: "assignee:@me is:open") {
-        totalCount
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
+      items(first: 100, query: "assignee:@me is:open") {
         nodes {
           ...ProjectItemFields
         }
@@ -15,12 +10,7 @@ query ProjectAssignedIssues($projectId: ID!, $afterOpen: String, $afterRecentlyC
   }
   recentlyClosed: node(id: $projectId) {
     ... on ProjectV2 {
-      items(first: 100, after: $afterRecentlyClosed, query: "assignee:@me is:closed updated:>@today-3d") {
-        totalCount
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
+      items(first: 100, query: "assignee:@me is:closed updated:>@today-3d") {
         nodes {
           ...ProjectItemFields
         }
@@ -61,26 +51,11 @@ fragment ProjectItemFields on ProjectV2Item {
       id
       number
       title
-      bodyText
-      state
-      url
       createdAt
       updatedAt
       closedAt
-      labels(first: 10) {
-        nodes {
-          name
-          color
-        }
-      }
-      comments(first: 100) {
+      comments(first: 0) {
         totalCount
-        nodes {
-          author {
-            login
-          }
-          bodyText
-        }
       }
     }
   }

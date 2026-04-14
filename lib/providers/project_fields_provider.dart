@@ -46,9 +46,9 @@ class ProjectFieldInfo {
 
 /// Fetches the date + single-select fields of a GitHub Projects V2 project.
 ///
-/// TODO: pagination — the query requests the first 100 fields. Projects with
-/// more than 100 custom fields exist in theory but are rare; when that bites
-/// someone, plumb [Variables$Query$ProjectFields.afterCursor] through.
+/// The query requests the first 100 fields. Projects with more than 100 custom
+/// fields exist in theory but are rare; re-add pagination variables to the
+/// query if that bites someone.
 @riverpod
 Future<List<ProjectFieldInfo>> projectFields(
   Ref ref,
