@@ -8,6 +8,7 @@ class ColorTokens {
   static const background = _BackgroundColorTokens._();
   static const outline = _OutlineColorTokens._();
   static const error = _ErrorColorTokens._();
+  static const priority = _PriorityColorTokens._();
 
   const ColorTokens._();
 }
@@ -74,4 +75,40 @@ class _ErrorColorTokens {
   final onContainer = const ColorToken('color.error.on-container');
 
   const _ErrorColorTokens._();
+}
+
+/// Semantic color tokens for the 5 priority levels, per `design/prio.html` §07.
+///
+/// Each level exposes a `fg` (strong tone — used for the dot and label text)
+/// and a `bg` (pill fill). Values are defined in the theme, not inline.
+class _PriorityColorTokens {
+  final urgent = const PriorityLevelTokens(
+    fg: ColorToken('color.priority.urgent.fg'),
+    bg: ColorToken('color.priority.urgent.bg'),
+  );
+  final high = const PriorityLevelTokens(
+    fg: ColorToken('color.priority.high.fg'),
+    bg: ColorToken('color.priority.high.bg'),
+  );
+  final medium = const PriorityLevelTokens(
+    fg: ColorToken('color.priority.medium.fg'),
+    bg: ColorToken('color.priority.medium.bg'),
+  );
+  final low = const PriorityLevelTokens(
+    fg: ColorToken('color.priority.low.fg'),
+    bg: ColorToken('color.priority.low.bg'),
+  );
+  final trivial = const PriorityLevelTokens(
+    fg: ColorToken('color.priority.trivial.fg'),
+    bg: ColorToken('color.priority.trivial.bg'),
+  );
+
+  const _PriorityColorTokens._();
+}
+
+class PriorityLevelTokens {
+  final ColorToken fg;
+  final ColorToken bg;
+
+  const PriorityLevelTokens({required this.fg, required this.bg});
 }

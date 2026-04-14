@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Octane Prime Design System | The Engineering Editorial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#b84b00",
+                      "surface-bright": "#f7f9ff",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#e6effa",
+                      "secondary-fixed-dim": "#c2c7cf",
+                      "on-tertiary": "#ffffff",
+                      "on-surface-variant": "#424753",
+                      "surface-container-low": "#ecf4ff",
+                      "surface": "#f7f9ff",
+                      "on-tertiary-container": "#ffece5",
+                      "on-primary-fixed-variant": "#004493",
+                      "primary-fixed-dim": "#adc6ff",
+                      "background": "#f7f9ff",
+                      "primary": "#0051ae",
+                      "on-secondary-container": "#60656c",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#351000",
+                      "on-secondary-fixed": "#171c22",
+                      "on-secondary": "#ffffff",
+                      "surface-variant": "#dae3ef",
+                      "outline": "#727785",
+                      "surface-container-high": "#e0e9f5",
+                      "surface-container-highest": "#dae3ef",
+                      "secondary": "#5a5f66",
+                      "on-tertiary-fixed-variant": "#7a2f00",
+                      "inverse-on-surface": "#e9f2fd",
+                      "on-primary-container": "#ecefff",
+                      "inverse-primary": "#adc6ff",
+                      "primary-fixed": "#d8e2ff",
+                      "outline-variant": "#c2c6d6",
+                      "inverse-surface": "#29313a",
+                      "on-surface": "#141c25",
+                      "tertiary": "#913900",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#ffb693",
+                      "secondary-container": "#dee3eb",
+                      "on-primary-fixed": "#001a41",
+                      "on-secondary-fixed-variant": "#42474e",
+                      "on-error": "#ffffff",
+                      "secondary-fixed": "#dee3eb",
+                      "error-container": "#ffdad6",
+                      "surface-dim": "#d2dbe6",
+                      "surface-tint": "#005bc0",
+                      "tertiary-fixed": "#ffdbcc",
+                      "primary-container": "#0969da",
+                      "on-background": "#141c25"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Manrope"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar Navigation -->
+<header class="sticky top-0 w-full z-50 bg-[#f7f9ff]/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white shadow-lg overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="minimalist geometric abstract logo with deep blue and white shapes representing precision and speed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYfAY-ULn2E7-EnfZMukLNyo8lFNHM_hHBjQxOFh2BojSWoFVa1VlKvCuJYxBwaixVI7faAp3BmyE6DaMU1WKKhhPUqOP6i6DHWZU1FdzZtnSjjBj3ppYTrOxDHGw0cd1_RLtZhNfWc-S0ufiqbRef_9S6Q-EeIi9gCNEMiq3fANWS0a_Sl7ds63__hYZuRusjnG5GPXMsMcHYWBL3CCPrMZmv4mwYZ_-_AaEGMwht7x_ADc-k8qPHlo42ciQqP0mAfGKrxNf4xOM"/>
+</div>
+<h1 class="font-['Manrope'] font-bold text-2xl tracking-tight text-[#141c25] dark:text-slate-100">The Engineering Editorial</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:bg-[#ecf4ff] dark:hover:bg-slate-800 transition-colors p-2 rounded-xl scale-95 active:opacity-80 transition-all">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden">
+<img alt="User Profile" data-alt="professional portrait of a software engineer in a modern office with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_zQ0B_6l0YifiM1EZiufUy7n0h7PCRMBABfRc2B7jfbbMGMi5jCtCtqP8dN7eWJedefxWRZ_6mG-fgK1C0hrTU9sFAKXZeV_BxRqENjbnRP5ZFHZthuHjRB9G5qHJpJXsts3wVvVxblqf90Mslaspx3NEEHVCWckhKOQf6cPIwvijKit0piTRXJV7v1318j7m-k4pd5GWMfkDO-zekVT8UATVwHpqvisTzOGOJ6bp07wXIPfLpUHXjHOb9fyfL4IhvuBdGhsABBA"/>
+</div>
+</div>
+</header>
+<main class="max-w-5xl mx-auto px-6 py-12 pb-32 space-y-24">
+<!-- Typography Section -->
+<section class="space-y-8" id="typography">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">01 / Foundation</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Typography</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface-container-low p-8 rounded-xl">
+<div class="space-y-6">
+<div>
+<p class="text-[10px] text-outline mb-2 uppercase tracking-widest font-semibold">Display Large / Manrope</p>
+<h1 class="font-headline text-5xl font-extrabold tracking-tighter text-on-surface">Engineering Editorial</h1>
+</div>
+<div>
+<p class="text-[10px] text-outline mb-2 uppercase tracking-widest font-semibold">Headline Medium / Manrope</p>
+<h2 class="font-headline text-3xl font-bold tracking-tight text-on-surface">System Core Primitives</h2>
+</div>
+<div>
+<p class="text-[10px] text-outline mb-2 uppercase tracking-widest font-semibold">Title Small / Manrope</p>
+<h3 class="font-headline text-xl font-semibold text-on-surface">Component Documentation</h3>
+</div>
+</div>
+<div class="space-y-6">
+<div>
+<p class="text-[10px] text-outline mb-2 uppercase tracking-widest font-semibold">Body Large / Inter</p>
+<p class="font-body text-lg leading-relaxed text-on-surface-variant">The Engineering Editorial moves away from utilitarian, density-packed interfaces. We prioritize the "quiet" moments of project management.</p>
+</div>
+<div>
+<p class="text-[10px] text-outline mb-2 uppercase tracking-widest font-semibold">Body Medium / Inter</p>
+<p class="font-body text-base text-on-surface-variant">Inter is chosen for its exceptional legibility in dense data environments like issue tracking and commit hashes.</p>
+</div>
+<div>
+<p class="text-[10px] text-outline mb-2 uppercase tracking-widest font-semibold">Label Small / Inter</p>
+<p class="font-label text-xs uppercase tracking-widest font-bold text-primary">System Integrity Status: Active</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Colors Section -->
+<section class="space-y-8" id="colors">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">02 / Atmosphere</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Color Palette</h2>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="space-y-2">
+<div class="h-24 rounded-xl bg-gradient-to-br from-primary to-primary-container shadow-lg"></div>
+<p class="font-headline font-bold text-sm">Primary Brand</p>
+<p class="text-xs text-outline font-mono">#0051AE — #0969DA</p>
+</div>
+<div class="space-y-2">
+<div class="h-24 rounded-xl bg-surface-container-highest border border-outline-variant/20"></div>
+<p class="font-headline font-bold text-sm">Surface High</p>
+<p class="text-xs text-outline font-mono">#DAE3EF</p>
+</div>
+<div class="space-y-2">
+<div class="h-24 rounded-xl bg-tertiary-container"></div>
+<p class="font-headline font-bold text-sm">Tertiary (Alerts)</p>
+<p class="text-xs text-outline font-mono">#B84B00</p>
+</div>
+<div class="space-y-2">
+<div class="h-24 rounded-xl bg-error"></div>
+<p class="font-headline font-bold text-sm">Error State</p>
+<p class="text-xs text-outline font-mono">#BA1A1A</p>
+</div>
+</div>
+</section>
+<!-- Interactive Components -->
+<section class="space-y-12" id="interactions">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">03 / Actions</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Interactive UI</h2>
+</div>
+<!-- Buttons -->
+<div class="bg-surface-container-low p-8 rounded-xl space-y-6">
+<h3 class="font-headline font-bold text-lg mb-4">Buttons &amp; CTAs</h3>
+<div class="flex flex-wrap gap-6 items-center">
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-3 rounded-xl font-headline font-bold flex items-center gap-2 shadow-[0_12px_32px_rgba(0,81,174,0.15)] active:scale-95 transition-all">
+                        Get Started
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<button class="bg-surface-container-high text-on-surface-variant px-8 py-3 rounded-xl font-headline font-bold flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">map</span>
+                        View Map
+                    </button>
+<button class="text-on-primary-fixed-variant px-6 py-3 rounded-xl font-headline font-bold flex items-center gap-2 hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+                        Refresh Sync
+                    </button>
+<button class="w-12 h-12 rounded-full bg-primary-container text-white flex items-center justify-center shadow-lg active:scale-90 transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Selection Controls & Inputs -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-surface-container-low p-8 rounded-xl space-y-6">
+<h3 class="font-headline font-bold text-lg">Selection Controls</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xl">
+<span class="font-body font-medium text-sm">Push Notifications</span>
+<div class="w-12 h-6 bg-primary rounded-full relative p-1 flex items-center justify-end cursor-pointer">
+<div class="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xl opacity-60">
+<span class="font-body font-medium text-sm">Developer Analytics</span>
+<div class="w-12 h-6 bg-secondary-fixed-dim rounded-full relative p-1 flex items-center justify-start cursor-pointer">
+<div class="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="text-primary focus:ring-primary h-5 w-5 border-outline-variant" name="prime" type="radio"/>
+<span class="text-sm font-medium">Production</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-primary focus:ring-primary h-5 w-5 border-outline-variant" name="prime" type="radio"/>
+<span class="text-sm font-medium">Staging</span>
+</label>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-8 rounded-xl space-y-6">
+<h3 class="font-headline font-bold text-lg">Input Fields</h3>
+<div class="space-y-4">
+<div class="space-y-2">
+<label class="text-[11px] font-bold uppercase tracking-widest text-outline">GitHub Personal Access Token</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">key</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-lowest rounded-xl border-none focus:ring-2 focus:ring-primary/20 transition-all font-mono text-sm" placeholder="ghp_xxxxxxxxxxxx" type="password"/>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Ensure your token has <code>repo</code> and <code>admin:org</code> scopes for full Editorial access.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Cards & Bento Examples -->
+<section class="space-y-8" id="containers">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">04 / Layouts</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Cards &amp; Containers</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Project Card -->
+<div class="md:col-span-2 bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_12px_32px_rgba(20,28,37,0.03)] border border-outline-variant/10 relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1.5 h-full bg-tertiary"></div>
+<div class="flex justify-between items-start mb-8">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-tertiary-fixed-dim text-on-tertiary-fixed-variant px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">High Priority</span>
+<span class="text-outline text-xs font-medium">#1204</span>
+</div>
+<h4 class="font-headline text-2xl font-bold">Refactor Auth Middleware</h4>
+</div>
+<button class="w-10 h-10 rounded-xl hover:bg-surface-container transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-3">
+<img class="w-8 h-8 rounded-full border-2 border-white" data-alt="avatar of a team member" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNyFtO6f6-icWin0kk8UNuW1bLIhiiASA-tJ97zuIdaEaQ5oM-bP6nmOww6q6EibKEjOrKJnKfN0h20yYUyQa6UtP61uObFuXZnGTX01dHLvPHv8_o1UID9T9Gc05_UzQ0AivC9BE4M9V7vOeU2kVXOS8gu3BPrsyBisINCW1vUQQirFaxhJqaJJvraKTmvaGB6dglNar_GHTiWqpeGasWs_rdACP3kd-EEtIcVBJATBOGutAeBLdVVNVgfljZcYKhdEq5rj2pRCo"/>
+<img class="w-8 h-8 rounded-full border-2 border-white" data-alt="avatar of another team member" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkO2a5naBf5Plx_3ugWxeI73OuHGycL4hJiBbYj7NZqw2IwNMCB-ituwL3E0ypnEIZXonKuDFvDfyDejDUy95A84-tsLKn2TUgDu-MZLaKb7wuJu-O5SM78d12mGHEn4q5HL0CoAyqnHbZe2v2WQMzojWkU3iV3Ng5piTI6TZgfrMkd7mViRLA2b5TcDy-WBLuk3fpayr1bqeQ48RsBsMO3Bs9RlhUflSYL8o7MMs4_3eWr4YbSo4_1ytQZIi86sijSyCP1q6oP5w"/>
+<div class="w-8 h-8 rounded-full bg-surface-container border-2 border-white flex items-center justify-center text-[10px] font-bold">+3</div>
+</div>
+<div class="h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary"></div>
+</div>
+<span class="text-xs font-bold text-outline">75%</span>
+</div>
+</div>
+<!-- Settings Card -->
+<div class="bg-surface-container-low p-6 rounded-[2rem] flex flex-col justify-between border border-outline-variant/5">
+<div class="space-y-4">
+<div class="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-weight="fill">settings</span>
+</div>
+<h4 class="font-headline text-lg font-bold">System Sync</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Auto-sync your local environment with the main cluster every 15 minutes.</p>
+</div>
+<div class="pt-6">
+<div class="w-full h-12 bg-surface-container-highest rounded-xl flex items-center px-4 justify-between">
+<span class="text-xs font-bold uppercase tracking-widest">Active</span>
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#0051ae]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Chips & Badges -->
+<section class="space-y-8" id="chips">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">05 / Taxonomy</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Chips &amp; Badges</h2>
+</div>
+<div class="bg-surface-container-low p-8 rounded-xl space-y-8">
+<div>
+<p class="text-[10px] text-outline mb-4 uppercase tracking-widest font-bold">Filtering States</p>
+<div class="flex flex-wrap gap-3">
+<button class="px-6 py-2 rounded-full bg-primary text-on-primary font-headline text-sm font-bold shadow-md">All Projects</button>
+<button class="px-6 py-2 rounded-full bg-white text-on-surface-variant font-headline text-sm font-semibold hover:bg-surface-container transition-colors">#design-system</button>
+<button class="px-6 py-2 rounded-full bg-white text-on-surface-variant font-headline text-sm font-semibold hover:bg-surface-container transition-colors">#backend-v2</button>
+<button class="px-6 py-2 rounded-full bg-white text-on-surface-variant font-headline text-sm font-semibold hover:bg-surface-container transition-colors">#research</button>
+</div>
+</div>
+<div>
+<p class="text-[10px] text-outline mb-4 uppercase tracking-widest font-bold">Priority &amp; Status</p>
+<div class="flex flex-wrap gap-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-tertiary-container text-on-tertiary-container text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container"></span>
+                            High Priority
+                        </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-error-container text-on-error-container text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-on-error-container"></span>
+                            Bug Report
+                        </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary-fixed text-on-primary-fixed-variant text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                            Core Feature
+                        </span>
+<div class="bg-secondary-container text-on-secondary-fixed-variant px-2 py-1 rounded-md font-mono text-[10px]">hash: e9a2c1f</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Iconography -->
+<section class="space-y-8" id="icons">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">06 / Symbols</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Iconography</h2>
+</div>
+<div class="grid grid-cols-4 md:grid-cols-8 gap-4">
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">terminal</span>
+<span class="text-[9px] font-bold text-outline">Terminal</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">sync</span>
+<span class="text-[9px] font-bold text-outline">Sync</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">folder</span>
+<span class="text-[9px] font-bold text-outline">Folder</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">calendar_today</span>
+<span class="text-[9px] font-bold text-outline">Calendar</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">settings</span>
+<span class="text-[9px] font-bold text-outline">Settings</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">format_list_bulleted</span>
+<span class="text-[9px] font-bold text-outline">List</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">layers</span>
+<span class="text-[9px] font-bold text-outline">Layers</span>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-xl flex flex-col items-center justify-center gap-2 group hover:bg-white transition-all cursor-help">
+<span class="material-symbols-outlined text-on-surface group-hover:scale-110 transition-transform">shield_with_heart</span>
+<span class="text-[9px] font-bold text-outline">Shield</span>
+</div>
+</div>
+</section><!-- Semantics Section -->
+<section class="space-y-8" id="semantics">
+<div class="flex flex-col gap-1">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">07 / SEMANTICS</span>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight">Priority Scale</h2>
+</div>
+<div class="bg-surface-container-low p-8 rounded-xl">
+<div class="grid grid-cols-1 gap-6">
+<!-- Urgent -->
+<div class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-xl gap-4 border border-outline-variant/10">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm text-on-surface">Urgent (Critical)</span>
+<span class="text-xs text-outline font-medium">System blocking or critical failures</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-[#93000a] shadow-sm"></div>
+<div class="w-8 h-8 rounded-lg bg-[#ffdad6] border border-[#93000a]/20"></div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#ffdad6] text-[#93000a] text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-[#93000a]"></span>
+                            Urgent
+                        </span>
+</div>
+</div>
+<!-- High -->
+<div class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-xl gap-4 border border-outline-variant/10">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm text-on-surface">High Priority</span>
+<span class="text-xs text-outline font-medium">Key features and immediate requirements</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-[#b84b00] shadow-sm"></div>
+<div class="w-8 h-8 rounded-lg bg-[#ffdbcc] border border-[#b84b00]/20"></div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#ffdbcc] text-[#b84b00] text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-[#b84b00]"></span>
+                            High Priority
+                        </span>
+</div>
+</div>
+<!-- Medium -->
+<div class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-xl gap-4 border border-outline-variant/10">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm text-on-surface">Medium Priority</span>
+<span class="text-xs text-outline font-medium">Standard tasks and enhancements</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-[#725c00] shadow-sm"></div>
+<div class="w-8 h-8 rounded-lg bg-[#ffe084] border border-[#725c00]/20"></div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#ffe084] text-[#725c00] text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-[#725c00]"></span>
+                            Medium
+                        </span>
+</div>
+</div>
+<!-- Low -->
+<div class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-xl gap-4 border border-outline-variant/10">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm text-on-surface">Low Priority</span>
+<span class="text-xs text-outline font-medium">Minor improvements and non-urgent fixes</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-[#42474e] shadow-sm"></div>
+<div class="w-8 h-8 rounded-lg bg-[#dee3eb] border border-[#42474e]/20"></div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#dee3eb] text-[#42474e] text-[11px] font-extrabold uppercase tracking-tight">
+<span class="w-1.5 h-1.5 rounded-full bg-[#42474e]"></span>
+                            Low
+                        </span>
+</div>
+</div>
+<!-- Trivial -->
+<div class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-xl gap-4 border border-outline-variant/10">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-sm text-on-surface">Trivial (Backlog)</span>
+<span class="text-xs text-outline font-medium">Nice-to-have or future exploration</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-[#727785] shadow-sm opacity-50"></div>
+<div class="w-8 h-8 rounded-lg bg-[#f0f1f5] border border-outline-variant"></div>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#f0f1f5] text-[#727785] text-[11px] font-extrabold uppercase tracking-tight border border-outline-variant/30">
+<span class="w-1.5 h-1.5 rounded-full bg-[#727785]"></span>
+                            Trivial
+                        </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] border-t border-slate-100/10 dark:border-slate-800/50">
+<a class="flex flex-col items-center justify-center text-[#0969DA] bg-[#ecf4ff] dark:bg-blue-900/30 rounded-xl px-6 py-2 tap-highlight-none active:scale-90 duration-200 hover:text-[#0051ae] transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill">format_list_bulleted</span>
+<span class="font-['Inter'] text-[11px] font-semibold tracking-wide uppercase">Issues</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-6 py-2 tap-highlight-none active:scale-90 duration-200 hover:text-[#0051ae] transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-['Inter'] text-[11px] font-semibold tracking-wide uppercase">Settings</span>
+</a>
+</nav>
+</body></html>

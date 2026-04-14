@@ -27,6 +27,12 @@ class ProjectList extends _$ProjectList {
     state = _sorted(storage.readAll());
   }
 
+  Future<void> update(Project project) async {
+    final storage = ref.read(projectStorageProvider);
+    await storage.update(project);
+    state = _sorted(storage.readAll());
+  }
+
   Future<void> remove(String id) async {
     final storage = ref.read(projectStorageProvider);
     await storage.remove(id);

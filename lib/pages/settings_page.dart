@@ -83,11 +83,14 @@ class SettingsPage extends ConsumerWidget {
     WidgetRef ref,
     project,
   ) async {
-    final action = await showEditProjectSheet(context, project);
-    if (action == null) return;
+    final result = await showEditProjectSheet(context, project);
+    if (result == null) return;
 
-    if (action == EditProjectAction.remove) {
-      await ref.read(projectListProvider.notifier).remove(project.id);
+    switch (result) {
+      case RemoveProjectResult():
+        await ref.read(projectListProvider.notifier).remove(project.id);
+      case UpdateProjectResult(:final project):
+        await ref.read(projectListProvider.notifier).update(project);
     }
   }
 

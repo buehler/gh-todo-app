@@ -35,6 +35,17 @@ MixScope octanePrime(Widget child) => MixScope(
     ColorTokens.error.$default: const Color(0xFFBA1A1A),
     ColorTokens.error.container: const Color(0xFFFFDAD6),
     ColorTokens.error.onContainer: const Color(0xFF93000A),
+    // Priority levels — see design/prio.html §07 Semantics.
+    ColorTokens.priority.urgent.fg: const Color(0xFF93000A),
+    ColorTokens.priority.urgent.bg: const Color(0xFFFFDAD6),
+    ColorTokens.priority.high.fg: const Color(0xFFB84B00),
+    ColorTokens.priority.high.bg: const Color(0xFFFFDBCC),
+    ColorTokens.priority.medium.fg: const Color(0xFF725C00),
+    ColorTokens.priority.medium.bg: const Color(0xFFFFE084),
+    ColorTokens.priority.low.fg: const Color(0xFF42474E),
+    ColorTokens.priority.low.bg: const Color(0xFFDEE3EB),
+    ColorTokens.priority.trivial.fg: const Color(0xFF727785),
+    ColorTokens.priority.trivial.bg: const Color(0xFFF0F1F5),
   },
   textStyles: {
     TextTokens.display.$large: GoogleFonts.manrope(

@@ -1,3 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'issue_data.g.dart';
+
+@JsonSerializable()
 class IssueData {
   final String id;
   final int number;
@@ -12,4 +17,9 @@ class IssueData {
     required this.commentCount,
     required this.createdAt,
   });
+
+  factory IssueData.fromJson(Map<String, dynamic> json) =>
+      _$IssueDataFromJson(json);
+
+  Map<String, dynamic> toJson() => _$IssueDataToJson(this);
 }

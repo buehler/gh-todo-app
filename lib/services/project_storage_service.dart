@@ -31,6 +31,14 @@ class ProjectStorageService {
     await save(current);
   }
 
+  Future<void> update(Project project) async {
+    final current = readAll();
+    final idx = current.indexWhere((p) => p.id == project.id);
+    if (idx == -1) return;
+    current[idx] = project;
+    await save(current);
+  }
+
   Future<void> remove(String id) async {
     final current = readAll()..removeWhere((p) => p.id == id);
     await save(current);
