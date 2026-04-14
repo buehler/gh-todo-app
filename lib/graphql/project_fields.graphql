@@ -1,0 +1,32 @@
+query ProjectFields($projectId: ID!, $afterCursor: String) {
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      fields(first: 100, after: $afterCursor) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          __typename
+          ... on ProjectV2Field {
+            id
+            name
+            dataType
+          }
+          ... on ProjectV2SingleSelectField {
+            id
+            name
+            dataType
+            options {
+              id
+              name
+              color
+              description
+            }
+          }
+        }
+      }
+    }
+  }
+}

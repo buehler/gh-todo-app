@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
 import 'package:gh_todos/graphql/project_issues.graphql.dart';
@@ -6,6 +8,10 @@ import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:graphql/client.dart';
+
+/// Time after which cached project issues are considered stale and refetched
+/// the next time the project is viewed.
+const projectIssuesCacheTtl = Duration(hours: 1);
 
 final userInfoProvider =
     FutureProvider.autoDispose<Query$UserInformation$viewer?>((ref) async {
@@ -42,6 +48,15 @@ final ownerProjectsProvider = FutureProvider.autoDispose
 
 final projectIssuesProvider = FutureProvider.autoDispose
     .family<List<IssueData>, String>((ref, projectId) async {
+  // Keep this provider's result alive in Riverpod's cache for [projectIssuesCacheTtl]
+  // even when no widget is watching it. This makes switching between projects
+  // instant (cached data is returned immediately). After the TTL expires, the
+  // provider auto-disposes so the next watch triggers a fresh fetch.
+  // Pull-to-refresh bypasses this by calling ref.invalidate(provider).
+  final link = ref.keepAlive();
+  final timer = Timer(projectIssuesCacheTtl, link.close);
+  ref.onDispose(timer.cancel);
+
   final client = ref.watch(graphqlClientProvider);
   final result = await client.query$ProjectAssignedIssues(
     Options$Query$ProjectAssignedIssues(
