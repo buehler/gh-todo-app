@@ -13,9 +13,11 @@ query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
             nodes {
               __typename
               ... on ProjectV2ItemFieldSingleSelectValue {
+                optionId
                 name
                 field {
                   ... on ProjectV2SingleSelectField {
+                    id
                     name
                   }
                 }
@@ -24,6 +26,7 @@ query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
                 date
                 field {
                   ... on ProjectV2Field {
+                    id
                     name
                   }
                 }

@@ -28,6 +28,7 @@ const _testIssues = [
     title: 'Fix login flow',
     commentCount: 3,
     createdAt: '2025-04-01T10:00:00Z',
+    updatedAt: '2025-04-02T10:00:00Z',
   ),
   IssueData(
     id: 'issue-2',
@@ -35,6 +36,7 @@ const _testIssues = [
     title: 'Add dark mode',
     commentCount: 0,
     createdAt: '2025-03-15T08:00:00Z',
+    updatedAt: '2025-03-16T08:00:00Z',
   ),
 ];
 
