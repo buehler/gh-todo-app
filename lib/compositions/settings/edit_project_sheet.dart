@@ -43,6 +43,11 @@ Future<EditProjectResult?> showEditProjectSheet(
   return showModalBottomSheet<EditProjectResult>(
     context: context,
     isScrollControlled: true,
+    // Push onto the root navigator so the sheet (and any DropdownButton
+    // overlays it opens) render above AppShell's persistent bottom nav.
+    // Without this the branch's nested navigator sits underneath the nav
+    // bar, clipping dropdown options that extend near the bottom.
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _EditProjectSheet(project: project),
   );

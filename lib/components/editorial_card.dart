@@ -79,8 +79,17 @@ class EditorialCard extends StatelessWidget {
         .clipBehavior(Clip.antiAlias)
         .borderRounded(editorialRadiusLarge)
         .animate(editorialAnimation)
-        .onPressed(BoxStyler().color(highest))
         .borderAll(color: withOpacity(outline, 0.1), width: 1);
+
+    // Only attach a pressed-state style when the card itself is tappable.
+    // Otherwise Mix wraps the Box in its own MixInteractionDetector whose
+    // Listener captures pointer events across the whole card — meaning
+    // tapping ANY descendant (e.g. a nested PressableBox list item) flips
+    // the card's pressed state and its highlight shows through all
+    // transparent children, making sibling items appear "co-highlighted".
+    if (onTap != null) {
+      style = style.onPressed(BoxStyler().color(highest));
+    }
 
     return switch (variation) {
       CardVariation.elevated =>
