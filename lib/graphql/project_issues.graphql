@@ -1,67 +1,85 @@
-query ProjectAssignedIssues($projectId: ID!, $afterCursor: String) {
-  node(id: $projectId) {
+query ProjectAssignedIssues($projectId: ID!, $afterOpen: String, $afterRecentlyClosed: String) {
+  open: node(id: $projectId) {
     ... on ProjectV2 {
-      items(first: 100, after: $afterCursor, query: "assignee:@me is:open") {
+      items(first: 100, after: $afterOpen, query: "assignee:@me is:open") {
         totalCount
         pageInfo {
           hasNextPage
           endCursor
         }
         nodes {
-          id
-          fieldValues(first: 15) {
-            nodes {
-              __typename
-              ... on ProjectV2ItemFieldSingleSelectValue {
-                optionId
-                name
-                field {
-                  ... on ProjectV2SingleSelectField {
-                    id
-                    name
-                  }
-                }
-              }
-              ... on ProjectV2ItemFieldDateValue {
-                date
-                field {
-                  ... on ProjectV2Field {
-                    id
-                    name
-                  }
-                }
-              }
-            }
+          ...ProjectItemFields
+        }
+      }
+    }
+  }
+  recentlyClosed: node(id: $projectId) {
+    ... on ProjectV2 {
+      items(first: 100, after: $afterRecentlyClosed, query: "assignee:@me is:closed updated:>@today-3d") {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          ...ProjectItemFields
+        }
+      }
+    }
+  }
+}
+
+fragment ProjectItemFields on ProjectV2Item {
+  id
+  fieldValues(first: 15) {
+    nodes {
+      __typename
+      ... on ProjectV2ItemFieldSingleSelectValue {
+        optionId
+        name
+        field {
+          ... on ProjectV2SingleSelectField {
+            id
+            name
           }
-          content {
-            __typename
-            ... on Issue {
-              id
-              number
-              title
-              bodyText
-              state
-              url
-              createdAt
-              updatedAt
-              closedAt
-              labels(first: 10) {
-                nodes {
-                  name
-                  color
-                }
-              }
-              comments(first: 100) {
-                totalCount
-                nodes {
-                  author {
-                    login
-                  }
-                  bodyText
-                }
-              }
-            }
+        }
+      }
+      ... on ProjectV2ItemFieldDateValue {
+        date
+        field {
+          ... on ProjectV2Field {
+            id
+            name
           }
+        }
+      }
+    }
+  }
+  content {
+    __typename
+    ... on Issue {
+      id
+      number
+      title
+      bodyText
+      state
+      url
+      createdAt
+      updatedAt
+      closedAt
+      labels(first: 10) {
+        nodes {
+          name
+          color
+        }
+      }
+      comments(first: 100) {
+        totalCount
+        nodes {
+          author {
+            login
+          }
+          bodyText
         }
       }
     }

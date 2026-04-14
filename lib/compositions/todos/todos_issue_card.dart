@@ -12,10 +12,9 @@ import 'package:mix/mix.dart';
 
 /// Issue row for the project feed.
 ///
-/// Layout: priority badge (optional) + title + comment count on top, muted
-/// metadata footer (due date, #number, created, updated) below. When the
-/// issue has a resolved priority, the card gets a colored left stripe via
-/// [EditorialCard]'s `accent` variation.
+/// Open cards get the priority badge (if mapped) + colored left stripe.
+/// Closed cards are dimmed via the card's `enabled: false` flag and show a
+/// "Done" pill where the priority badge would otherwise sit.
 class TodosIssueCard extends StatelessWidget {
   final IssueData issue;
 
@@ -31,14 +30,14 @@ class TodosIssueCard extends StatelessWidget {
     final outline = resolveColor(context, ColorTokens.outline.$default);
 
     final priority = issue.priority;
-    final accentColor = priority == null
-        ? null
-        : resolveColor(context, tokensFor(priority).fg);
+    final showAccent = !issue.closed && priority != null;
+    final accentColor = showAccent
+        ? resolveColor(context, tokensFor(priority).fg)
+        : null;
 
     return EditorialCard(
-      variation: priority == null
-          ? CardVariation.elevated
-          : CardVariation.accent,
+      enabled: !issue.closed,
+      variation: showAccent ? CardVariation.accent : CardVariation.elevated,
       accentColor: accentColor,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: ColumnBox(
@@ -56,7 +55,10 @@ class TodosIssueCard extends StatelessWidget {
               crossAxis: CrossAxisAlignment.start,
             ),
             children: [
-              if (priority != null) PriorityBadge(priority: priority),
+              if (issue.closed)
+                const _DoneBadge()
+              else if (priority != null)
+                PriorityBadge(priority: priority),
               Expanded(
                 child: StyledText(
                   issue.title,
@@ -98,8 +100,48 @@ class TodosIssueCard extends StatelessWidget {
   }
 }
 
+/// "Done" pill shown on closed cards — dot + uppercase label, using the
+/// primary-fixed palette (same family as an informational status chip).
+class _DoneBadge extends StatelessWidget {
+  const _DoneBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = resolveColor(context, ColorTokens.primary.onFixedVariant);
+    final bg = resolveColor(context, ColorTokens.primary.fixed);
+
+    return Box(
+      style: BoxStyler()
+          .color(bg)
+          .borderRounded(8)
+          .paddingOnly(horizontal: 8, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StyledIcon(
+            icon: LucideIcons.check,
+            style: editorialIconStyle(color: fg, size: 12),
+          ),
+          const SizedBox(width: 4),
+          StyledText(
+            'DONE',
+            style: editorialTextStyle(
+              TextTokens.label.$small,
+              color: fg,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Muted single-line footer of auxiliary issue metadata. Due date (when set)
-/// is emphasised slightly; number + created/updated use the outline color.
+/// is emphasised slightly; the rest uses the outline color. Closed issues
+/// swap the "updated" line for "closed", which reads more naturally in the
+/// "Recently closed" section.
 class _MetaFooter extends StatelessWidget {
   final IssueData issue;
   final Color outline;
@@ -109,6 +151,7 @@ class _MetaFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dueDate = issue.dueDate;
+    final closedAt = issue.closedAt;
 
     final mutedTextStyle = editorialTextStyle(
       TextTokens.label.$small,
@@ -122,12 +165,16 @@ class _MetaFooter extends StatelessWidget {
       fontWeight: FontWeight.w800,
     );
 
+    final tailLabel = issue.closed && closedAt != null
+        ? 'closed ${formatRelative(closedAt)}'
+        : 'updated ${formatRelative(issue.updatedAt)}';
+
     return Wrap(
       spacing: 12,
       runSpacing: 4,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        if (dueDate != null)
+        if (dueDate != null && !issue.closed)
           _MetaItem(
             icon: LucideIcons.calendarClock,
             label: formatDueDate(dueDate),
@@ -145,7 +192,7 @@ class _MetaFooter extends StatelessWidget {
           iconColor: outline,
         ),
         _MetaItem(
-          label: 'updated ${formatRelative(issue.updatedAt)}',
+          label: tailLabel,
           style: mutedTextStyle,
           iconColor: outline,
         ),

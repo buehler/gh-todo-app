@@ -98,8 +98,9 @@ void main() {
           projectListProvider.overrideWith(
             () => _FakeProjectList(_testProjects),
           ),
-          projectIssuesProvider('proj-1')
-              .overrideWith((ref) async => _testIssues),
+          projectIssuesProvider('proj-1').overrideWith(
+            (ref) async => (open: _testIssues, closed: <IssueData>[]),
+          ),
         ],
         child: const GhTodosApp(),
       ),

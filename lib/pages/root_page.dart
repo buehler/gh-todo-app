@@ -7,6 +7,7 @@ import 'package:gh_todos/compositions/todos/todos_fab.dart';
 import 'package:gh_todos/compositions/todos/todos_hero.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_card.dart';
 import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
+import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 import 'package:gh_todos/style/colors.dart';
@@ -21,6 +22,7 @@ class RootPage extends ConsumerWidget {
   static const pageKey = ValueKey('root-page');
   static const scrollKey = ValueKey('root-page-scroll');
   static const emptyKey = ValueKey('root-page-empty');
+  static const recentlyClosedHeaderKey = ValueKey('root-page-closed-header');
 
   const RootPage({super.key});
 
@@ -96,7 +98,7 @@ class _IssuesFeed extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final issuesAsync = ref.watch(projectIssuesProvider(projectId));
+    final feedAsync = ref.watch(projectIssuesProvider(projectId));
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -124,59 +126,138 @@ class _IssuesFeed extends ConsumerWidget {
               child: TodosProjectChips(),
             ),
           ),
-          issuesAsync.when(
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (_, _) => SliverFillRemaining(
-              child: Center(
-                child: StyledText(
-                  'Failed to load issues.',
-                  style: editorialTextStyle(
-                    TextTokens.body.$large,
-                    color: resolveColor(
-                      context,
-                      ColorTokens.surface.onVariant,
+          ...feedAsync.when(
+            loading: () => [
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+            error: (_, _) => [
+              SliverFillRemaining(
+                child: Center(
+                  child: StyledText(
+                    'Failed to load issues.',
+                    style: editorialTextStyle(
+                      TextTokens.body.$large,
+                      color: resolveColor(
+                        context,
+                        ColorTokens.surface.onVariant,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            data: (issues) {
-              if (issues.isEmpty) {
-                return SliverFillRemaining(
-                  child: Center(
-                    child: StyledText(
-                      'No open issues assigned to you.',
-                      style: editorialTextStyle(
-                        TextTokens.body.$large,
-                        color: resolveColor(
-                          context,
-                          ColorTokens.surface.onVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              return SliverPadding(
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  bottom: bottomPadding,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: issues.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 16),
-                  itemBuilder: (_, index) =>
-                      TodosIssueCard(issue: issues[index]),
-                ),
-              );
-            },
+            ],
+            data: (feed) => _dataSlivers(context, feed, bottomPadding),
           ),
         ],
       ),
+    );
+  }
+}
+
+List<Widget> _dataSlivers(
+  BuildContext context,
+  ProjectIssuesFeed feed,
+  double bottomPadding,
+) {
+  final open = feed.open;
+  final closed = feed.closed;
+
+  if (open.isEmpty && closed.isEmpty) {
+    return [
+      SliverFillRemaining(
+        child: Center(
+          child: StyledText(
+            'No open issues assigned to you.',
+            style: editorialTextStyle(
+              TextTokens.body.$large,
+              color: resolveColor(context, ColorTokens.surface.onVariant),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  final slivers = <Widget>[];
+
+  if (open.isNotEmpty) {
+    slivers.add(
+      SliverPadding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          // Leave room below only when closed section follows; otherwise pad to
+          // bottom for the FAB + nav.
+          bottom: closed.isEmpty ? bottomPadding : 0,
+        ),
+        sliver: _IssueSliverList(issues: open),
+      ),
+    );
+  } else {
+    // Only closed issues exist — give the closed section a minimal header
+    // context with a short note above it.
+    slivers.add(
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+          child: StyledText(
+            'No open issues.',
+            style: editorialTextStyle(
+              TextTokens.body.$medium,
+              color: resolveColor(context, ColorTokens.surface.onVariant),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (closed.isNotEmpty) {
+    slivers.add(
+      SliverToBoxAdapter(
+        key: RootPage.recentlyClosedHeaderKey,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+          child: StyledText(
+            'Recently closed',
+            style: editorialTextStyle(
+              TextTokens.label.$small,
+              color: resolveColor(context, ColorTokens.primary.$default),
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.6,
+            ),
+          ),
+        ),
+      ),
+    );
+    slivers.add(
+      SliverPadding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          bottom: bottomPadding,
+        ),
+        sliver: _IssueSliverList(issues: closed),
+      ),
+    );
+  }
+
+  return slivers;
+}
+
+class _IssueSliverList extends StatelessWidget {
+  final List<IssueData> issues;
+
+  const _IssueSliverList({required this.issues});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList.separated(
+      itemCount: issues.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 16),
+      itemBuilder: (_, index) => TodosIssueCard(issue: issues[index]),
     );
   }
 }
