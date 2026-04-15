@@ -245,7 +245,11 @@ final issueDetailsProvider = FutureProvider.autoDispose
 
       final node = result.parsedData?.node;
       if (node is! Query$IssueDetail$node$$Issue) {
-        return const IssueDetails(description: null, comments: []);
+        return const IssueDetails(
+          description: null,
+          url: null,
+          comments: [],
+        );
       }
 
       final commentNodes = node.comments.nodes ?? const [];
@@ -273,6 +277,7 @@ final issueDetailsProvider = FutureProvider.autoDispose
       final description = node.bodyText.trim();
       return IssueDetails(
         description: description.isEmpty ? null : description,
+        url: node.url,
         comments: comments,
       );
     });

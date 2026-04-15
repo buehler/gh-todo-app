@@ -3,14 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_conversation_section.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_description_section.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_detail_menu.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_detail_top_bar.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_header_section.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
 import 'package:gh_todos/compositions/todos/todos_fab.dart';
 import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mix/mix.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Full-screen, push-routed detail view for a single GitHub issue.
 ///
@@ -86,7 +89,10 @@ class IssueDetailPage extends ConsumerWidget {
             top: 0,
             left: 0,
             right: 0,
-            child: IssueDetailTopBar(onBack: () => context.pop()),
+            child: IssueDetailTopBar(
+              onBack: () => context.pop(),
+              onMenuPressed: () => _onMenuPressed(context, ref),
+            ),
           ),
           Positioned(
             right: 24,
@@ -100,5 +106,40 @@ class IssueDetailPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _onMenuPressed(BuildContext context, WidgetRef ref) async {
+    final action = await showIssueDetailMenuSheet(context);
+    if (action == null) return;
+
+    switch (action) {
+      case IssueDetailMenuAction.editIssue:
+        // TODO(edit): wire up the edit-issue flow.
+        break;
+      case IssueDetailMenuAction.openInBrowser:
+        await _openInBrowser(ref);
+        break;
+    }
+  }
+
+  /// Launches the issue's canonical GitHub URL in the system browser.
+  ///
+  /// The URL is fetched lazily via `issueDetailsProvider`; if it hasn't
+  /// resolved yet (menu tapped before the detail payload lands), await the
+  /// future so the action doesn't silently no-op. Failures are swallowed — the
+  /// user can always retry.
+  Future<void> _openInBrowser(WidgetRef ref) async {
+    final String? url;
+    try {
+      final details = await ref.read(issueDetailsProvider(issueId).future);
+      url = details.url;
+    } catch (_) {
+      return;
+    }
+    if (url == null || url.isEmpty) return;
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

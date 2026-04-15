@@ -10,16 +10,22 @@ import 'package:mix/mix.dart';
 /// Frosted top bar for the issue detail page.
 ///
 /// Mirrors the `AppTopBar` recipe (blur + translucent surface + safe-area
-/// padding), but with a back chevron on the leading edge and a "Issue Details"
-/// title. No avatar.
+/// padding), but with a back chevron on the leading edge, "Issue Details"
+/// title, and a trailing kebab menu button. No avatar.
 class IssueDetailTopBar extends StatelessWidget {
   static const double barHeight = 64;
   static const pageKey = ValueKey('issue-detail-top-bar');
   static const backButtonKey = ValueKey('issue-detail-top-bar-back');
+  static const menuButtonKey = ValueKey('issue-detail-top-bar-menu');
 
   final VoidCallback onBack;
+  final VoidCallback? onMenuPressed;
 
-  const IssueDetailTopBar({required this.onBack, super.key});
+  const IssueDetailTopBar({
+    required this.onBack,
+    this.onMenuPressed,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +45,7 @@ class IssueDetailTopBar extends StatelessWidget {
           style: BoxStyler()
               .color(withOpacity(surfaceBright, 0.8))
               .height(barHeight + safeTop)
-              .paddingOnly(top: safeTop, horizontal: 12, right: 24),
+              .paddingOnly(top: safeTop, horizontal: 12),
           child: Row(
             children: [
               IconButton(
@@ -50,14 +56,23 @@ class IssueDetailTopBar extends StatelessWidget {
                 tooltip: 'Back',
               ),
               const SizedBox(width: 4),
-              StyledText(
-                'Issue Details',
-                style: editorialTextStyle(
-                  TextTokens.title.$large,
-                  color: onSurface,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
+              Expanded(
+                child: StyledText(
+                  'Issue Details',
+                  style: editorialTextStyle(
+                    TextTokens.title.$large,
+                    color: onSurface,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                  ),
                 ),
+              ),
+              IconButton(
+                key: menuButtonKey,
+                onPressed: onMenuPressed,
+                icon: Icon(LucideIcons.ellipsis, color: onSurfaceVariant),
+                splashRadius: 22,
+                tooltip: 'More actions',
               ),
             ],
           ),
