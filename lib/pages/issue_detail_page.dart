@@ -9,7 +9,6 @@ import 'package:gh_todos/compositions/issue_detail/issue_detail_menu.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_detail_top_bar.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_header_section.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
-import 'package:gh_todos/compositions/todos/todos_fab.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
@@ -29,7 +28,6 @@ import 'package:url_launcher/url_launcher.dart';
 class IssueDetailPage extends ConsumerWidget {
   static const pageKey = ValueKey('issue-detail-page');
   static const scrollKey = ValueKey('issue-detail-scroll');
-  static const fabKey = ValueKey('issue-detail-fab');
 
   final String issueId;
   final IssueData issue;
@@ -44,8 +42,9 @@ class IssueDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final topPadding =
         IssueDetailTopBar.barHeight + MediaQuery.paddingOf(context).top;
-    // The FAB sits in the safe-area; leave room below the scroll body for it.
-    final bottomPadding = MediaQuery.paddingOf(context).bottom + 120;
+    // Leave a bit of breathing room below the composer for the safe-area
+    // (home-indicator) and the on-screen keyboard's clearance.
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 32;
 
     return Scaffold(
       key: pageKey,
@@ -94,15 +93,6 @@ class IssueDetailPage extends ConsumerWidget {
             child: IssueDetailTopBar(
               onBack: () => context.pop(),
               onMenuAction: (action) => _handleMenuAction(action, ref),
-            ),
-          ),
-          Positioned(
-            right: 24,
-            bottom: MediaQuery.paddingOf(context).bottom + 24,
-            child: TodosFab(
-              key: fabKey,
-              // TODO(comments): wire up "add comment" flow.
-              onPressed: () {},
             ),
           ),
         ],

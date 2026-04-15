@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
 import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
@@ -9,8 +10,9 @@ import 'package:gh_todos/style/typography.dart';
 import 'package:gh_todos/util/dates.dart';
 import 'package:mix/mix.dart';
 
-/// "Conversation" section — section header with a count pill, then the
-/// comment thread rendered newest-first (no avatars).
+/// "Conversation" section — section header with a count pill, the comment
+/// thread rendered oldest-first (no avatars), and an always-visible composer
+/// anchored at the bottom of the transcript.
 class IssueConversationSection extends ConsumerWidget {
   static const pageKey = ValueKey('issue-conversation-section');
   static const commentListKey = ValueKey('issue-conversation-list');
@@ -92,6 +94,11 @@ class IssueConversationSection extends ConsumerWidget {
             ),
           ),
           data: (details) => _CommentList(comments: details.comments),
+        ),
+        const SizedBox(height: 8),
+        const AddCommentComposer(
+          // TODO(comments): wire up the GitHub add-comment mutation.
+          onSubmit: null,
         ),
       ],
     );

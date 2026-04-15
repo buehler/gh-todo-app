@@ -24,6 +24,13 @@ class EditorialTextField extends StatefulWidget {
   final bool enabled;
   final TextFieldVariation variation;
 
+  /// Minimum visible rows. Mirrors `TextField.minLines`.
+  final int? minLines;
+
+  /// Maximum visible rows before scrolling. Mirrors `TextField.maxLines`.
+  /// Pass `null` for unbounded growth; keep default `1` for single-line inputs.
+  final int? maxLines;
+
   const EditorialTextField({
     super.key,
     this.controller,
@@ -40,6 +47,8 @@ class EditorialTextField extends StatefulWidget {
     this.obscureText = false,
     this.enabled = true,
     this.variation = TextFieldVariation.editorial,
+    this.minLines,
+    this.maxLines = 1,
   });
 
   @override
@@ -135,6 +144,8 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
                     textInputAction: widget.textInputAction,
                     keyboardType: widget.keyboardType,
                     autofocus: widget.autofocus,
+                    minLines: widget.minLines,
+                    maxLines: widget.maxLines,
                     style: fieldTextStyle,
                     cursorColor: resolveColor(
                       context,
