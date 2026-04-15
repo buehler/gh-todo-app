@@ -1,0 +1,9 @@
+mutation ReopenIssue($issueId: ID!) {
+  reopenIssue(input: { issueId: $issueId }) {
+    issue {
+      id
+      state
+      updatedAt
+    }
+  }
+}

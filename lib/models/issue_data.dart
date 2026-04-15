@@ -30,6 +30,17 @@ class IssueData {
   /// value for the mapped date field. `null` otherwise.
   final String? dueDate;
 
+  /// GitHub Projects V2 project id this issue was surfaced from. Null when
+  /// the feed entry couldn't be traced back to a project (shouldn't happen in
+  /// normal flows but tolerated for defensive construction — e.g. tests).
+  final String? projectId;
+
+  /// GitHub Projects V2 **item** id — distinct from [id] (the issue node id).
+  /// Required when mutating project-scoped fields (priority, due date); those
+  /// mutations target the item, not the issue. Null when we couldn't resolve
+  /// it (same caveat as [projectId]).
+  final String? projectItemId;
+
   const IssueData({
     required this.id,
     required this.number,
@@ -41,10 +52,43 @@ class IssueData {
     this.closedAt,
     this.priority,
     this.dueDate,
+    this.projectId,
+    this.projectItemId,
   });
 
   factory IssueData.fromJson(Map<String, dynamic> json) =>
       _$IssueDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$IssueDataToJson(this);
+
+  /// Returns a copy of this issue with the given fields replaced.
+  ///
+  /// Uses sentinel `clear*` flags for fields whose "absence" is semantically
+  /// meaningful (null != unchanged) so callers can e.g. clear a due date
+  /// without passing `null` for "leave as-is".
+  IssueData copyWith({
+    String? title,
+    int? commentCount,
+    String? updatedAt,
+    bool? closed,
+    String? closedAt,
+    bool clearClosedAt = false,
+    TodoPriority? priority,
+    bool clearPriority = false,
+    String? dueDate,
+    bool clearDueDate = false,
+  }) => IssueData(
+    id: id,
+    number: number,
+    title: title ?? this.title,
+    commentCount: commentCount ?? this.commentCount,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    closed: closed ?? this.closed,
+    closedAt: clearClosedAt ? null : (closedAt ?? this.closedAt),
+    priority: clearPriority ? null : (priority ?? this.priority),
+    dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+    projectId: projectId,
+    projectItemId: projectItemId,
+  );
 }

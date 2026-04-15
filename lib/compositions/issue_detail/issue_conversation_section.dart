@@ -8,21 +8,33 @@ import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:gh_todos/util/dates.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
 /// "Conversation" section — section header with a count pill, the comment
 /// thread rendered oldest-first (no avatars), and an always-visible composer
 /// anchored at the bottom of the transcript.
+///
+/// [onPostComment] is invoked with the draft body when the user taps the
+/// composer's submit button. Returns `true` on success so the composer can
+/// clear. [onEditComment] is invoked when the viewer taps one of their own
+/// comments (identified by matching login against [viewerLogin]).
 class IssueConversationSection extends ConsumerWidget {
   static const pageKey = ValueKey('issue-conversation-section');
   static const commentListKey = ValueKey('issue-conversation-list');
 
   final String issueId;
   final int commentCount;
+  final String? viewerLogin;
+  final Future<bool> Function(String body)? onPostComment;
+  final void Function(IssueComment comment)? onEditComment;
 
   const IssueConversationSection({
     required this.issueId,
     required this.commentCount,
+    this.viewerLogin,
+    this.onPostComment,
+    this.onEditComment,
     super.key,
   });
 
@@ -38,6 +50,11 @@ class IssueConversationSection extends ConsumerWidget {
       ColorTokens.surface.containerHigh,
     );
     final detailsAsync = ref.watch(issueDetailsProvider(issueId));
+    // Prefer the live comment count from the details provider so it reflects
+    // freshly-posted / deleted comments after the provider invalidates.
+    // Falls back to the feed-provided [commentCount] while details are still
+    // loading or have errored.
+    final liveCount = detailsAsync.asData?.value.comments.length ?? commentCount;
 
     return ColumnBox(
       key: pageKey,
@@ -58,14 +75,14 @@ class IssueConversationSection extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            if (commentCount > 0)
+            if (liveCount > 0)
               Box(
                 style: BoxStyler()
                     .color(surfaceContainerHigh)
                     .borderRounded(999)
                     .paddingOnly(horizontal: 10, vertical: 4),
                 child: StyledText(
-                  '$commentCount',
+                  '$liveCount',
                   style: editorialTextStyle(
                     TextTokens.label.$medium,
                     color: onSurfaceVariant,
@@ -93,13 +110,14 @@ class IssueConversationSection extends ConsumerWidget {
               color: onSurfaceVariant,
             ),
           ),
-          data: (details) => _CommentList(comments: details.comments),
+          data: (details) => _CommentList(
+            comments: details.comments,
+            viewerLogin: viewerLogin,
+            onEditComment: onEditComment,
+          ),
         ),
         const SizedBox(height: 8),
-        const AddCommentComposer(
-          // TODO(comments): wire up the GitHub add-comment mutation.
-          onSubmit: null,
-        ),
+        AddCommentComposer(onSubmit: onPostComment),
       ],
     );
   }
@@ -107,8 +125,14 @@ class IssueConversationSection extends ConsumerWidget {
 
 class _CommentList extends StatelessWidget {
   final List<IssueComment> comments;
+  final String? viewerLogin;
+  final void Function(IssueComment comment)? onEditComment;
 
-  const _CommentList({required this.comments});
+  const _CommentList({
+    required this.comments,
+    required this.viewerLogin,
+    required this.onEditComment,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +157,14 @@ class _CommentList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final c in comments) ...[
-          _CommentCard(comment: c),
+          _CommentCard(
+            comment: c,
+            editable:
+                viewerLogin != null &&
+                c.authorLogin != null &&
+                viewerLogin == c.authorLogin,
+            onEdit: onEditComment,
+          ),
           const SizedBox(height: 12),
         ],
       ],
@@ -143,8 +174,14 @@ class _CommentList extends StatelessWidget {
 
 class _CommentCard extends StatelessWidget {
   final IssueComment comment;
+  final bool editable;
+  final void Function(IssueComment comment)? onEdit;
 
-  const _CommentCard({required this.comment});
+  const _CommentCard({
+    required this.comment,
+    required this.editable,
+    required this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -153,11 +190,14 @@ class _CommentCard extends StatelessWidget {
       context,
       ColorTokens.surface.onVariant,
     );
+    final handler = onEdit;
+    final canEdit = editable && handler != null;
 
     return EditorialCard(
       key: ValueKey('issue-comment-${comment.id}'),
       variation: CardVariation.elevated,
       padding: const EdgeInsets.all(16),
+      onTap: canEdit ? () => handler(comment) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -175,6 +215,16 @@ class _CommentCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
+              if (canEdit)
+                Padding(
+                  key: const ValueKey('issue-comment-edit-icon'),
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Icon(
+                    LucideIcons.pencil,
+                    size: 14,
+                    color: withOpacity(onSurfaceVariant, 0.6),
+                  ),
+                ),
               StyledText(
                 formatRelative(comment.createdAt),
                 style: editorialTextStyle(

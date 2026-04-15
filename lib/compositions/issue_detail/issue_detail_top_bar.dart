@@ -24,11 +24,7 @@ class IssueDetailTopBar extends StatefulWidget {
   /// action. Not invoked when the menu is dismissed without a choice.
   final ValueChanged<IssueDetailMenuAction>? onMenuAction;
 
-  const IssueDetailTopBar({
-    required this.onBack,
-    this.onMenuAction,
-    super.key,
-  });
+  const IssueDetailTopBar({required this.onBack, this.onMenuAction, super.key});
 
   @override
   State<IssueDetailTopBar> createState() => _IssueDetailTopBarState();

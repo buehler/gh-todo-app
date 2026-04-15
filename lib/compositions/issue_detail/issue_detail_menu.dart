@@ -100,8 +100,10 @@ PopupMenuItem<IssueDetailMenuAction> _menuItem(
           Expanded(
             child: Text(
               label,
-              style: resolveTextStyle(context, TextTokens.body.$medium)
-                  .copyWith(color: labelColor, fontWeight: FontWeight.w600),
+              style: resolveTextStyle(
+                context,
+                TextTokens.body.$medium,
+              ).copyWith(color: labelColor, fontWeight: FontWeight.w600),
             ),
           ),
         ],

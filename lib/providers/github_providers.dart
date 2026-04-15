@@ -101,11 +101,16 @@ final projectIssuesProvider = FutureProvider.autoDispose
                 .nodes
           : null;
 
-      final open = _issuesFromNodes(openNodes, project: project, closed: false)
-        ..sort(_compareOpenIssues);
+      final open = _issuesFromNodes(
+        openNodes,
+        project: project,
+        projectId: projectId,
+        closed: false,
+      )..sort(_compareOpenIssues);
       final closed = _issuesFromNodes(
         closedNodes,
         project: project,
+        projectId: projectId,
         closed: true,
       )..sort(_compareClosedIssues);
 
@@ -117,12 +122,18 @@ final projectIssuesProvider = FutureProvider.autoDispose
 List<IssueData> _issuesFromNodes(
   Iterable<Fragment$ProjectItemFields?>? nodes, {
   required Project? project,
+  required String projectId,
   required bool closed,
 }) {
   if (nodes == null) return <IssueData>[];
   final out = <IssueData>[];
   for (final item in nodes) {
-    final issue = _issueFromItem(item, project: project, closed: closed);
+    final issue = _issueFromItem(
+      item,
+      project: project,
+      projectId: projectId,
+      closed: closed,
+    );
     if (issue != null) out.add(issue);
   }
   return out;
@@ -131,6 +142,7 @@ List<IssueData> _issuesFromNodes(
 IssueData? _issueFromItem(
   Fragment$ProjectItemFields? item, {
   required Project? project,
+  required String projectId,
   required bool closed,
 }) {
   final content = item?.content;
@@ -152,6 +164,8 @@ IssueData? _issueFromItem(
     closedAt: content.closedAt,
     priority: priority,
     dueDate: dueDate,
+    projectId: projectId,
+    projectItemId: item?.id,
   );
 }
 
@@ -246,11 +260,7 @@ final issueDetailsProvider = FutureProvider.autoDispose
 
       final node = result.parsedData?.node;
       if (node is! Query$IssueDetail$node$$Issue) {
-        return const IssueDetails(
-          description: null,
-          url: null,
-          comments: [],
-        );
+        return const IssueDetails(description: null, url: null, comments: []);
       }
 
       final commentNodes = node.comments.nodes ?? const [];

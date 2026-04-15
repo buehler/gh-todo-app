@@ -13,15 +13,16 @@ import 'package:gh_todos/components/src/component_foundation.dart';
 /// primary action ("Close/Re-open Issue" above), so it reads as a quiet
 /// finishing affordance instead of competing with it.
 ///
-/// Save is intentionally a no-op for now — wiring the GitHub mutation is a
-/// follow-up, matching the state-action and edit-issue stubs elsewhere on the
-/// page.
+/// [onSubmit] returns `true` on success (composer clears) and `false` on
+/// failure (composer keeps the draft so the user can retry). While the host
+/// handler is awaiting a network round-trip, the submit button disables
+/// itself — no need for the caller to pass an `enabled` flag.
 class AddCommentComposer extends StatefulWidget {
   static const pageKey = ValueKey('add-comment-composer');
   static const fieldKey = ValueKey('add-comment-composer-field');
   static const submitKey = ValueKey('add-comment-composer-submit');
 
-  final ValueChanged<String>? onSubmit;
+  final Future<bool> Function(String body)? onSubmit;
 
   const AddCommentComposer({this.onSubmit, super.key});
 
@@ -31,8 +32,11 @@ class AddCommentComposer extends StatefulWidget {
 
 class _AddCommentComposerState extends State<AddCommentComposer> {
   final TextEditingController _controller = TextEditingController();
+  bool _submitting = false;
 
   bool get _hasText => _controller.text.trim().isNotEmpty;
+
+  bool get _canSubmit => _hasText && !_submitting;
 
   @override
   void dispose() {
@@ -46,14 +50,20 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
     setState(() {});
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    widget.onSubmit?.call(text);
-    // Clear optimistically so the field returns to its resting state. Once the
-    // save mutation is wired up this will move to the success callback.
-    _controller.clear();
-    setState(() {});
+    final handler = widget.onSubmit;
+    if (handler == null) return;
+
+    setState(() => _submitting = true);
+    try {
+      final ok = await handler(text);
+      if (!mounted) return;
+      if (ok) _controller.clear();
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -69,6 +79,7 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
           onChanged: _onChanged,
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
+          enabled: !_submitting,
           minLines: 3,
           maxLines: 6,
         ),
@@ -79,8 +90,9 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
             key: AddCommentComposer.submitKey,
             label: 'Post Comment',
             variation: ButtonVariation.secondary,
-            enabled: _hasText,
-            onPressed: _hasText ? _submit : null,
+            enabled: _canSubmit,
+            loading: _submitting,
+            onPressed: _canSubmit ? _submit : null,
           ),
         ),
       ],
