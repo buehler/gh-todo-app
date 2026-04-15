@@ -227,8 +227,9 @@ int _compareClosedIssues(IssueData a, IssueData b) {
 
 /// Fetches the description + comment thread for a single issue by its node id.
 /// Kept separate from the project feed so the feed query doesn't over-fetch
-/// comment bodies for issues the user never opens. Comments are returned
-/// sorted newest-first for direct rendering.
+/// comment bodies for issues the user never opens. Comments are returned in
+/// chronological order (oldest first) — the conversation reads top-to-bottom
+/// like a transcript, with the newest reply anchored at the bottom.
 final issueDetailsProvider = FutureProvider.autoDispose
     .family<IssueDetails, String>((ref, issueId) async {
       final client = ref.watch(graphqlClientProvider);
@@ -266,12 +267,12 @@ final issueDetailsProvider = FutureProvider.autoDispose
         );
       }
 
-      // Newest-first; stable secondary sort on id descending to avoid flicker on
-      // equal timestamps.
+      // Oldest-first; stable secondary sort on id ascending to avoid flicker
+      // on equal timestamps.
       comments.sort((a, b) {
-        final cmp = b.createdAt.compareTo(a.createdAt);
+        final cmp = a.createdAt.compareTo(b.createdAt);
         if (cmp != 0) return cmp;
-        return b.id.compareTo(a.id);
+        return a.id.compareTo(b.id);
       });
 
       final description = node.bodyText.trim();

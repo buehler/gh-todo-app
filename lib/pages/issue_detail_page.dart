@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
@@ -91,7 +93,7 @@ class IssueDetailPage extends ConsumerWidget {
             right: 0,
             child: IssueDetailTopBar(
               onBack: () => context.pop(),
-              onMenuPressed: () => _onMenuPressed(context, ref),
+              onMenuAction: (action) => _handleMenuAction(action, ref),
             ),
           ),
           Positioned(
@@ -108,16 +110,13 @@ class IssueDetailPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _onMenuPressed(BuildContext context, WidgetRef ref) async {
-    final action = await showIssueDetailMenuSheet(context);
-    if (action == null) return;
-
+  void _handleMenuAction(IssueDetailMenuAction action, WidgetRef ref) {
     switch (action) {
       case IssueDetailMenuAction.editIssue:
         // TODO(edit): wire up the edit-issue flow.
         break;
       case IssueDetailMenuAction.openInBrowser:
-        await _openInBrowser(ref);
+        unawaited(_openInBrowser(ref));
         break;
     }
   }

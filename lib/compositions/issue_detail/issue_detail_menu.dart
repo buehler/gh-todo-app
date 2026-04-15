@@ -3,145 +3,109 @@ import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:mix/mix.dart';
 
 /// Available actions behind the issue detail page's kebab menu.
 enum IssueDetailMenuAction { editIssue, openInBrowser }
 
-/// Opens the issue detail page's overflow menu as a bottom sheet and returns
-/// the selected action (or `null` if dismissed). Matches the sheet-pattern used
-/// elsewhere in the app (see `pat_management_sheet.dart`).
-Future<IssueDetailMenuAction?> showIssueDetailMenuSheet(BuildContext context) {
-  return showModalBottomSheet<IssueDetailMenuAction>(
+/// Opens the issue detail overflow menu as a dropdown anchored at [position]
+/// (computed from the kebab button's `RenderBox`) and returns the selected
+/// action, or `null` if the user dismissed by tapping outside.
+///
+/// Anchored dropdowns beat bottom sheets for quick 2-item overflow menus
+/// triggered from a top-corner button: the menu sprouts next to the finger
+/// instead of forcing a round trip to the bottom of the screen.
+Future<IssueDetailMenuAction?> showIssueDetailMenu(
+  BuildContext context,
+  RelativeRect position,
+) {
+  final surfaceLowest = resolveColor(
+    context,
+    ColorTokens.surface.containerLowest,
+  );
+  final surfaceHighest = resolveColor(
+    context,
+    ColorTokens.surface.containerHighest,
+  );
+  final onSurface = resolveColor(context, ColorTokens.surface.on);
+  final primary = resolveColor(context, ColorTokens.primary.$default);
+
+  return showMenu<IssueDetailMenuAction>(
     context: context,
-    backgroundColor: Colors.transparent,
-    builder: (_) => const _IssueDetailMenuSheet(),
+    position: position,
+    color: surfaceLowest,
+    surfaceTintColor: Colors.transparent,
+    elevation: 6,
+    shadowColor: withOpacity(onSurface, 0.08),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(editorialRadiusMedium),
+    ),
+    constraints: const BoxConstraints(minWidth: 208, maxWidth: 280),
+    items: [
+      _menuItem(
+        context,
+        key: const ValueKey('issue-detail-menu-edit'),
+        value: IssueDetailMenuAction.editIssue,
+        icon: LucideIcons.pencil,
+        label: 'Edit Issue',
+        iconColor: primary,
+        labelColor: onSurface,
+        hoverColor: surfaceHighest,
+      ),
+      _menuItem(
+        context,
+        key: const ValueKey('issue-detail-menu-open-in-browser'),
+        value: IssueDetailMenuAction.openInBrowser,
+        icon: LucideIcons.externalLink,
+        label: 'Open in Browser',
+        iconColor: primary,
+        labelColor: onSurface,
+        hoverColor: surfaceHighest,
+      ),
+    ],
   );
 }
 
-class _IssueDetailMenuSheet extends StatelessWidget {
-  const _IssueDetailMenuSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final surfaceLowest = resolveColor(
-      context,
-      ColorTokens.surface.containerLowest,
-    );
-    final outlineVariant = resolveColor(context, ColorTokens.outline.variant);
-    final onSurface = resolveColor(context, ColorTokens.surface.on);
-    final primary = resolveColor(context, ColorTokens.primary.$default);
-    final surfaceHighest = resolveColor(
-      context,
-      ColorTokens.surface.containerHighest,
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceLowest,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+/// Builds a custom-styled [PopupMenuItem] whose tap feedback is handled by the
+/// host `showMenu` overlay (so we don't render our own `PressableBox`).
+PopupMenuItem<IssueDetailMenuAction> _menuItem(
+  BuildContext context, {
+  required Key key,
+  required IssueDetailMenuAction value,
+  required IconData icon,
+  required String label,
+  required Color iconColor,
+  required Color labelColor,
+  required Color hoverColor,
+}) {
+  return PopupMenuItem<IssueDetailMenuAction>(
+    key: key,
+    value: value,
+    padding: EdgeInsets.zero,
+    height: 48,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
         children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: withOpacity(outlineVariant, 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: withOpacity(iconColor, 0.1),
+              borderRadius: BorderRadius.circular(editorialRadiusSmall),
             ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: iconColor, size: 16),
           ),
-          const SizedBox(height: 4),
-          _ActionRow(
-            key: const ValueKey('issue-detail-menu-edit'),
-            icon: LucideIcons.pencil,
-            iconColor: primary,
-            iconBgColor: withOpacity(primary, 0.1),
-            label: 'Edit Issue',
-            labelColor: onSurface,
-            hoverColor: surfaceHighest,
-            onTap: () =>
-                Navigator.pop(context, IssueDetailMenuAction.editIssue),
-          ),
-          _ActionRow(
-            key: const ValueKey('issue-detail-menu-open-in-browser'),
-            icon: LucideIcons.externalLink,
-            iconColor: primary,
-            iconBgColor: withOpacity(primary, 0.1),
-            label: 'Open in Browser',
-            labelColor: onSurface,
-            hoverColor: surfaceHighest,
-            onTap: () =>
-                Navigator.pop(context, IssueDetailMenuAction.openInBrowser),
-          ),
-          SizedBox(height: MediaQuery.paddingOf(context).bottom + 32),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBgColor;
-  final String label;
-  final Color labelColor;
-  final Color hoverColor;
-  final VoidCallback onTap;
-
-  const _ActionRow({
-    super.key,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBgColor,
-    required this.label,
-    required this.labelColor,
-    required this.hoverColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PressableBox(
-      onPress: onTap,
-      style: BoxStyler()
-          .color(Colors.transparent)
-          .paddingOnly(horizontal: 24, vertical: 14)
-          .animate(editorialAnimation)
-          .onHovered(BoxStyler().color(hoverColor)),
-      child: RowBox(
-        style: editorialRowStyle(spacing: 16, mainAxisSize: MainAxisSize.max),
-        children: [
-          Box(
-            style: BoxStyler()
-                .width(40)
-                .height(40)
-                .color(iconBgColor)
-                .borderRounded(editorialRadiusSmall)
-                .alignment(Alignment.center),
-            child: StyledIcon(
-              icon: icon,
-              style: editorialIconStyle(color: iconColor, size: 20),
-            ),
-          ),
+          const SizedBox(width: 12),
           Expanded(
-            child: StyledText(
+            child: Text(
               label,
-              style: editorialTextStyle(
-                TextTokens.body.$medium,
-                color: labelColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: resolveTextStyle(context, TextTokens.body.$medium)
+                  .copyWith(color: labelColor, fontWeight: FontWeight.w600),
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
 }
