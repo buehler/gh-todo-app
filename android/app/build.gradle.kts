@@ -7,12 +7,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val keyProperties = Properties()
-val keyPropertiesFile = rootProject.file("key.properties")
-if (keyPropertiesFile.exists()) {
-    keyPropertiesFile.inputStream().use { keyProperties.load(it) }
-}
-
 android {
     namespace = "ch.cbue.gh_todos"
     compileSdk = flutter.compileSdkVersion
@@ -40,10 +34,10 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keyProperties["keyAlias"] as String
-            keyPassword = keyProperties["keyPassword"] as String
-            storePassword = keyProperties["storePassword"] as String
-            storeFile = keyProperties["storeFile"]?.let { file(it) }
+            keyAlias = System.getenv("CM_KEY_ALIAS")
+            keyPassword = System.getenv("CM_KEY_PASSWORD")
+            storePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+            storeFile = System.getenv("CM_KEYSTORE_PATH")?.let { file(it) }
         }
     }
 
