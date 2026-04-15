@@ -13,6 +13,9 @@ import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:graphql/client.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'github_providers.g.dart';
 
 /// Time after which cached project issues are considered stale and refetched
 /// the next time the project is viewed.
@@ -55,67 +58,139 @@ final ownerProjectsProvider = FutureProvider.autoDispose
       return result.parsedData?.node;
     });
 
-final projectIssuesProvider = FutureProvider.autoDispose
-    .family<ProjectIssuesFeed, String>((ref, projectId) async {
-      // Keep this provider's result alive in Riverpod's cache for [projectIssuesCacheTtl]
-      // even when no widget is watching it. This makes switching between projects
-      // instant (cached data is returned immediately). After the TTL expires, the
-      // provider auto-disposes so the next watch triggers a fresh fetch.
-      // Pull-to-refresh bypasses this by calling ref.invalidate(provider).
-      final link = ref.keepAlive();
-      final timer = Timer(projectIssuesCacheTtl, link.close);
-      ref.onDispose(timer.cancel);
+/// Owns the open + recently-closed issue lists for a single GitHub Project.
+///
+/// [build] does the initial network fetch (with a TTL-backed keepAlive so
+/// switching projects feels instant); the `apply*` methods let the mutation
+/// layer patch the cached lists directly when an issue is closed, reopened,
+/// or created, avoiding a full refetch on every action.
+///
+/// Pull-to-refresh still works via `ref.invalidate(projectIssuesProvider(id))`
+/// — that disposes the notifier and re-runs [build].
+@riverpod
+class ProjectIssues extends _$ProjectIssues {
+  @override
+  Future<ProjectIssuesFeed> build(String projectId) async {
+    // Keep this provider's result alive in Riverpod's cache for
+    // [projectIssuesCacheTtl] even when no widget is watching it. This makes
+    // switching between projects instant (cached data is returned
+    // immediately). After the TTL expires, the provider auto-disposes so the
+    // next watch triggers a fresh fetch. Pull-to-refresh bypasses this by
+    // calling ref.invalidate(provider).
+    final link = ref.keepAlive();
+    final timer = Timer(projectIssuesCacheTtl, link.close);
+    ref.onDispose(timer.cancel);
 
-      // Resolve the project (for its optional priority/due-date mappings) from the
-      // local project list. Missing here means the project was removed locally
-      // after the UI requested its issues; fall back to no-mapping behaviour.
-      final projects = ref.watch(projectListProvider);
-      final Project? project = projects
-          .where((p) => p.id == projectId)
-          .cast<Project?>()
-          .firstOrNull;
+    // Resolve the project (for its optional priority/due-date mappings) from
+    // the local project list. Missing here means the project was removed
+    // locally after the UI requested its issues; fall back to no-mapping
+    // behaviour.
+    final projects = ref.watch(projectListProvider);
+    final Project? project = projects
+        .where((p) => p.id == projectId)
+        .cast<Project?>()
+        .firstOrNull;
 
-      final client = ref.watch(graphqlClientProvider);
-      final result = await client.query$ProjectAssignedIssues(
-        Options$Query$ProjectAssignedIssues(
-          variables: Variables$Query$ProjectAssignedIssues(
-            projectId: projectId,
-          ),
-          fetchPolicy: FetchPolicy.networkOnly,
-        ),
-      );
+    final client = ref.watch(graphqlClientProvider);
+    final result = await client.query$ProjectAssignedIssues(
+      Options$Query$ProjectAssignedIssues(
+        variables: Variables$Query$ProjectAssignedIssues(projectId: projectId),
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+    );
 
-      final parsed = result.parsedData;
-      final openNodes =
-          (parsed?.open is Query$ProjectAssignedIssues$open$$ProjectV2)
-          ? (parsed!.open as Query$ProjectAssignedIssues$open$$ProjectV2)
-                .items
-                .nodes
-          : null;
-      final closedNodes =
-          (parsed?.recentlyClosed
-              is Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
-          ? (parsed!.recentlyClosed
-                    as Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
-                .items
-                .nodes
-          : null;
+    final parsed = result.parsedData;
+    final openNodes =
+        (parsed?.open is Query$ProjectAssignedIssues$open$$ProjectV2)
+        ? (parsed!.open as Query$ProjectAssignedIssues$open$$ProjectV2)
+              .items
+              .nodes
+        : null;
+    final closedNodes =
+        (parsed?.recentlyClosed
+            is Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
+        ? (parsed!.recentlyClosed
+                  as Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
+              .items
+              .nodes
+        : null;
 
-      final open = _issuesFromNodes(
-        openNodes,
-        project: project,
-        projectId: projectId,
-        closed: false,
-      )..sort(_compareOpenIssues);
-      final closed = _issuesFromNodes(
-        closedNodes,
-        project: project,
-        projectId: projectId,
-        closed: true,
-      )..sort(_compareClosedIssues);
+    final open = _issuesFromNodes(
+      openNodes,
+      project: project,
+      projectId: projectId,
+      closed: false,
+    )..sort(_compareOpenIssues);
+    final closed = _issuesFromNodes(
+      closedNodes,
+      project: project,
+      projectId: projectId,
+      closed: true,
+    )..sort(_compareClosedIssues);
 
-      return (open: open, closed: closed);
-    });
+    return (open: open, closed: closed);
+  }
+
+  /// Moves [issueId] from the open list to the closed list, stamping it with
+  /// the [closedAt] / [updatedAt] returned by GitHub. No-op when the current
+  /// state isn't `AsyncData` (still loading or errored) or when the issue
+  /// isn't present — the next natural refetch will reconcile.
+  void applyClose(
+    String issueId, {
+    required String? closedAt,
+    required String updatedAt,
+  }) {
+    final feed = state.asData?.value;
+    if (feed == null) return;
+
+    final idx = feed.open.indexWhere((i) => i.id == issueId);
+    if (idx == -1) return;
+
+    final moved = feed.open[idx].copyWith(
+      closed: true,
+      closedAt: closedAt,
+      updatedAt: updatedAt,
+    );
+    final nextOpen = [...feed.open]..removeAt(idx);
+    final nextClosed = [...feed.closed, moved]..sort(_compareClosedIssues);
+    state = AsyncData((open: nextOpen, closed: nextClosed));
+  }
+
+  /// Moves [issueId] from the closed list back to the open list, clearing
+  /// `closedAt` and stamping the fresh [updatedAt]. No-op in the same
+  /// conditions as [applyClose].
+  void applyReopen(String issueId, {required String updatedAt}) {
+    final feed = state.asData?.value;
+    if (feed == null) return;
+
+    final idx = feed.closed.indexWhere((i) => i.id == issueId);
+    if (idx == -1) return;
+
+    final moved = feed.closed[idx].copyWith(
+      closed: false,
+      closedAt: null,
+      updatedAt: updatedAt,
+    );
+    final nextClosed = [...feed.closed]..removeAt(idx);
+    final nextOpen = [...feed.open, moved]..sort(_compareOpenIssues);
+    state = AsyncData((open: nextOpen, closed: nextClosed));
+  }
+
+  /// Inserts a freshly created [issue] into the open list so the composer's
+  /// result appears immediately. If the id is already present anywhere in the
+  /// feed (e.g. a refetch raced us), the call is ignored to avoid duplicates.
+  void applyCreate(IssueData issue) {
+    final feed = state.asData?.value;
+    if (feed == null) return;
+    final exists =
+        feed.open.any((i) => i.id == issue.id) ||
+        feed.closed.any((i) => i.id == issue.id);
+    if (exists) return;
+
+    final nextOpen = [...feed.open, issue]..sort(_compareOpenIssues);
+    state = AsyncData((open: nextOpen, closed: feed.closed));
+  }
+}
 
 /// Maps a list of project-item fragment nodes into concrete [IssueData].
 /// Skips non-Issue contents (pull requests, drafts, etc.) and null entries.

@@ -112,7 +112,9 @@ void main() {
             () => _FakeProjectList(_testProjects),
           ),
           projectIssuesProvider('proj-1').overrideWith(
-            (ref) async => (open: _testIssues, closed: <IssueData>[]),
+            () => _FakeProjectIssues(
+              seed: (open: _testIssues, closed: <IssueData>[]),
+            ),
           ),
         ],
         child: const GhTodosApp(),
@@ -259,6 +261,106 @@ void main() {
 
     expect(find.text('Failed to close the issue.'), findsOneWidget);
   });
+
+  // ----------------------- Optimistic feed updates --------------------------
+
+  testWidgets(
+    'applyClose on the notifier moves the card to "Recently closed"',
+    (tester) async {
+      await _pumpFeed(
+        tester,
+        projects: _testProjects,
+        open: [_testIssues.first],
+        closed: const [],
+        mutations: FakeIssueMutations(),
+      );
+
+      // No "Recently closed" section yet — the feed is all-open.
+      expect(find.byKey(RootPage.recentlyClosedHeaderKey), findsNothing);
+
+      // Simulate what `_RealIssueMutations.closeIssue` does after the GitHub
+      // mutation resolves — patch the cached feed directly.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byKey(RootPage.pageKey)),
+      );
+      container
+          .read(projectIssuesProvider('proj-1').notifier)
+          .applyClose(
+            'issue-1',
+            closedAt: '2026-04-20T10:00:00Z',
+            updatedAt: '2026-04-20T10:00:00Z',
+          );
+      await tester.pumpAndSettle();
+
+      // Card shows up under the "Recently closed" header now.
+      expect(find.byKey(RootPage.recentlyClosedHeaderKey), findsOneWidget);
+      expect(find.text('Fix login flow'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'applyReopen on the notifier moves the card back to the open list',
+    (tester) async {
+      await _pumpFeed(
+        tester,
+        projects: _testProjects,
+        open: const [],
+        closed: const [_closedIssue],
+        mutations: FakeIssueMutations(),
+      );
+
+      expect(find.byKey(RootPage.recentlyClosedHeaderKey), findsOneWidget);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byKey(RootPage.pageKey)),
+      );
+      container
+          .read(projectIssuesProvider('proj-1').notifier)
+          .applyReopen(
+            'issue-closed-1',
+            updatedAt: '2026-04-20T10:00:00Z',
+          );
+      await tester.pumpAndSettle();
+
+      // "Recently closed" section disappears once the only closed issue
+      // reopens; the title remains visible in the open list.
+      expect(find.byKey(RootPage.recentlyClosedHeaderKey), findsNothing);
+      expect(find.text('Ship onboarding copy'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'applyCreate on the notifier adds the new issue to the open list',
+    (tester) async {
+      await _pumpFeed(
+        tester,
+        projects: _testProjects,
+        open: const [],
+        closed: const [],
+        mutations: FakeIssueMutations(),
+      );
+
+      expect(find.text('Freshly composed todo'), findsNothing);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byKey(RootPage.pageKey)),
+      );
+      container.read(projectIssuesProvider('proj-1').notifier).applyCreate(
+        const IssueData(
+          id: 'issue-new',
+          number: 101,
+          title: 'Freshly composed todo',
+          commentCount: 0,
+          createdAt: '2026-04-20T10:00:00Z',
+          updatedAt: '2026-04-20T10:00:00Z',
+          projectId: 'proj-1',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Freshly composed todo'), findsOneWidget);
+    },
+  );
 }
 
 /// Pumps the full app with the given project + feed data and a
@@ -288,9 +390,9 @@ Future<void> _pumpFeed(
         ),
         sharedPreferencesProvider.overrideWith((_) async => prefs),
         projectListProvider.overrideWith(() => _FakeProjectList(projects)),
-        projectIssuesProvider(
-          projects.first.id,
-        ).overrideWith((ref) async => (open: open, closed: closed)),
+        projectIssuesProvider(projects.first.id).overrideWith(
+          () => _FakeProjectIssues(seed: (open: open, closed: closed)),
+        ),
         issueMutationsProvider.overrideWithValue(mutations),
       ],
       child: const GhTodosApp(),
@@ -307,4 +409,17 @@ class _FakeProjectList extends ProjectList {
 
   @override
   List<Project> build() => _projects;
+}
+
+/// A fake [ProjectIssues] notifier that seeds the feed synchronously without
+/// hitting the network. The `apply*` methods are inherited from the real
+/// notifier so tests can exercise the optimistic-paint behaviour by invoking
+/// the real mutation layer (which calls those methods internally).
+class _FakeProjectIssues extends ProjectIssues {
+  _FakeProjectIssues({required this.seed});
+
+  final ProjectIssuesFeed seed;
+
+  @override
+  Future<ProjectIssuesFeed> build(String projectId) async => seed;
 }

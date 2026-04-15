@@ -195,14 +195,25 @@ class _RealIssueMutations implements IssueMutations {
     );
     final data = _unwrap(result);
     final issue = data.closeIssue?.issue;
-    _ref.invalidate(projectIssuesProvider(projectId));
     if (issue == null) {
+      // Response didn't carry the refreshed issue — fall back to a full
+      // refetch so the feed doesn't desync.
+      _ref.invalidate(projectIssuesProvider(projectId));
       return const CloseIssueResult(
         closed: true,
         closedAt: null,
         updatedAt: '',
       );
     }
+    // Patch the cached feed directly so the card moves to "Recently closed"
+    // without waiting for a refetch.
+    _ref
+        .read(projectIssuesProvider(projectId).notifier)
+        .applyClose(
+          issueId,
+          closedAt: issue.closedAt,
+          updatedAt: issue.updatedAt,
+        );
     return CloseIssueResult(
       closed: issue.state == Enum$IssueState.CLOSED,
       closedAt: issue.closedAt,
@@ -222,10 +233,13 @@ class _RealIssueMutations implements IssueMutations {
     );
     final data = _unwrap(result);
     final issue = data.reopenIssue?.issue;
-    _ref.invalidate(projectIssuesProvider(projectId));
     if (issue == null) {
+      _ref.invalidate(projectIssuesProvider(projectId));
       return const ReopenIssueResult(closed: false, updatedAt: '');
     }
+    _ref
+        .read(projectIssuesProvider(projectId).notifier)
+        .applyReopen(issueId, updatedAt: issue.updatedAt);
     return ReopenIssueResult(
       closed: issue.state == Enum$IssueState.CLOSED,
       updatedAt: issue.updatedAt,
@@ -388,10 +402,7 @@ class _RealIssueMutations implements IssueMutations {
     final addData = _unwrap(addResult);
     final projectItemId = addData.addProjectV2ItemById?.item?.id;
 
-    // Refresh the feed so the new issue animates in on next build.
-    _ref.invalidate(projectIssuesProvider(projectId));
-
-    return IssueData(
+    final newIssue = IssueData(
       id: issue.id,
       number: issue.number,
       title: issue.title,
@@ -402,5 +413,12 @@ class _RealIssueMutations implements IssueMutations {
       projectId: projectId,
       projectItemId: projectItemId,
     );
+
+    // Splice the new issue into the cached feed so it appears instantly.
+    _ref
+        .read(projectIssuesProvider(projectId).notifier)
+        .applyCreate(newIssue);
+
+    return newIssue;
   }
 }
