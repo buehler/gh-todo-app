@@ -20,9 +20,9 @@ const priorityLabels = <TodoPriority, String>{
 /// Returns the fg/bg `ColorToken` pair for [priority]. Widgets resolve the
 /// actual colors through the Mix theme via `resolveColor(context, ...)`.
 PriorityLevelTokens tokensFor(TodoPriority priority) => switch (priority) {
-      TodoPriority.urgent => ColorTokens.priority.urgent,
-      TodoPriority.high => ColorTokens.priority.high,
-      TodoPriority.medium => ColorTokens.priority.medium,
-      TodoPriority.low => ColorTokens.priority.low,
-      TodoPriority.trivial => ColorTokens.priority.trivial,
-    };
+  TodoPriority.urgent => ColorTokens.priority.urgent,
+  TodoPriority.high => ColorTokens.priority.high,
+  TodoPriority.medium => ColorTokens.priority.medium,
+  TodoPriority.low => ColorTokens.priority.low,
+  TodoPriority.trivial => ColorTokens.priority.trivial,
+};

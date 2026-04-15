@@ -105,7 +105,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
         setState(() {
           _issue = _issue.copyWith(
             closed: result.closed,
-            clearClosedAt: true,
+            closedAt: null,
             updatedAt: result.updatedAt.isNotEmpty
                 ? result.updatedAt
                 : _issue.updatedAt,
@@ -173,13 +173,16 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
           body: result.bodyChanged ? result.body : null,
         );
         if (!mounted) return;
+        final nextUpdatedAt = updated.updatedAt.isNotEmpty
+            ? updated.updatedAt
+            : _issue.updatedAt;
         setState(() {
-          _issue = _issue.copyWith(
-            title: result.titleChanged ? updated.title : null,
-            updatedAt: updated.updatedAt.isNotEmpty
-                ? updated.updatedAt
-                : _issue.updatedAt,
-          );
+          // Freezed's copyWith treats omitted args as "unchanged"; we only
+          // pass `title` through when it actually changed so we never try to
+          // set the non-nullable field to null.
+          _issue = result.titleChanged
+              ? _issue.copyWith(title: updated.title, updatedAt: nextUpdatedAt)
+              : _issue.copyWith(updatedAt: nextUpdatedAt);
         });
       }
 
@@ -196,7 +199,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
             fieldId: fieldId,
           );
           if (!mounted) return;
-          setState(() => _issue = _issue.copyWith(clearDueDate: true));
+          setState(() => _issue = _issue.copyWith(dueDate: null));
         } else if (result.dueDate != null) {
           await mutations.setProjectItemDate(
             projectId: projectId,
@@ -222,7 +225,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
             fieldId: fieldId,
           );
           if (!mounted) return;
-          setState(() => _issue = _issue.copyWith(clearPriority: true));
+          setState(() => _issue = _issue.copyWith(priority: null));
         } else if (result.priority != null) {
           final optionId = _resolveOptionId(project!, result.priority!);
           if (optionId == null) {

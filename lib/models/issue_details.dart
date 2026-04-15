@@ -1,32 +1,30 @@
-/// A single GitHub issue comment, flattened for rendering on the detail page.
-class IssueComment {
-  final String id;
-  final String? authorLogin;
-  final String body;
-  final String createdAt;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const IssueComment({
-    required this.id,
-    required this.authorLogin,
-    required this.body,
-    required this.createdAt,
-  });
+part 'issue_details.freezed.dart';
+
+/// A single GitHub issue comment, flattened for rendering on the detail page.
+@freezed
+abstract class IssueComment with _$IssueComment {
+  const factory IssueComment({
+    required String id,
+    required String? authorLogin,
+    required String body,
+    required String createdAt,
+  }) = _IssueComment;
 }
 
 /// The deferred-loaded portion of an issue: its description, canonical URL,
 /// and comment thread. Fetched by the detail page; kept separate from
 /// [IssueData] so the feed query doesn't have to over-fetch.
-class IssueDetails {
-  final String? description;
+@freezed
+abstract class IssueDetails with _$IssueDetails {
+  const factory IssueDetails({
+    required String? description,
 
-  /// Canonical HTML URL of the issue on github.com. Null if the node resolves
-  /// to something other than an Issue (shouldn't happen under normal flows).
-  final String? url;
-  final List<IssueComment> comments;
-
-  const IssueDetails({
-    required this.description,
-    required this.url,
-    required this.comments,
-  });
+    /// Canonical HTML URL of the issue on github.com. Null if the node
+    /// resolves to something other than an Issue (shouldn't happen under
+    /// normal flows).
+    required String? url,
+    required List<IssueComment> comments,
+  }) = _IssueDetails;
 }
