@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
-import 'package:gh_todos/compositions/todos/todos_issue_card.dart';
+import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
 import 'package:gh_todos/models/issue_data.dart';
@@ -135,7 +135,12 @@ class _IssuesFeed extends ConsumerWidget {
                 ),
               ),
             ],
-            data: (feed) => _dataSlivers(context, feed, bottomPadding),
+            data: (feed) => _dataSlivers(
+              context,
+              feed,
+              projectId: projectId,
+              bottomPadding: bottomPadding,
+            ),
           ),
         ],
       ),
@@ -145,9 +150,10 @@ class _IssuesFeed extends ConsumerWidget {
 
 List<Widget> _dataSlivers(
   BuildContext context,
-  ProjectIssuesFeed feed,
-  double bottomPadding,
-) {
+  ProjectIssuesFeed feed, {
+  required String projectId,
+  required double bottomPadding,
+}) {
   final open = feed.open;
   final closed = feed.closed;
 
@@ -179,7 +185,7 @@ List<Widget> _dataSlivers(
           // bottom for the nav bar.
           bottom: closed.isEmpty ? bottomPadding : 0,
         ),
-        sliver: _IssueSliverList(issues: open),
+        sliver: _IssueSliverList(issues: open, projectId: projectId),
       ),
     );
   } else {
@@ -222,7 +228,7 @@ List<Widget> _dataSlivers(
     slivers.add(
       SliverPadding(
         padding: EdgeInsets.only(left: 24, right: 24, bottom: bottomPadding),
-        sliver: _IssueSliverList(issues: closed),
+        sliver: _IssueSliverList(issues: closed, projectId: projectId),
       ),
     );
   }
@@ -232,8 +238,9 @@ List<Widget> _dataSlivers(
 
 class _IssueSliverList extends StatelessWidget {
   final List<IssueData> issues;
+  final String projectId;
 
-  const _IssueSliverList({required this.issues});
+  const _IssueSliverList({required this.issues, required this.projectId});
 
   @override
   Widget build(BuildContext context) {
@@ -242,8 +249,9 @@ class _IssueSliverList extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (_, index) {
         final issue = issues[index];
-        return TodosIssueCard(
+        return SwipeableIssueRow(
           issue: issue,
+          projectId: projectId,
           onTap: () => context.pushNamed(
             AppRoutes.issueDetailName,
             pathParameters: {'id': issue.id},
