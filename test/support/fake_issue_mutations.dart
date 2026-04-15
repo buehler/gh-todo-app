@@ -1,3 +1,4 @@
+import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/issue_mutations.dart';
 
 /// Recorder + stub for [IssueMutations], used by widget tests that don't want
@@ -153,6 +154,42 @@ class FakeIssueMutations implements IssueMutations {
     );
     _maybeThrow();
   }
+
+  /// When true, [createIssueInProject] throws [NoLinkedRepositoryException]
+  /// instead of returning a canned issue — used by tests exercising the
+  /// "no linked repo" error path in the composer.
+  bool throwNoLinkedRepo = false;
+
+  /// Canned issue returned by [createIssueInProject] on success.
+  IssueData createIssueResult = const IssueData(
+    id: 'issue-new',
+    number: 101,
+    title: 'New todo',
+    commentCount: 0,
+    createdAt: '2026-04-15T12:00:00Z',
+    updatedAt: '2026-04-15T12:00:00Z',
+  );
+
+  @override
+  Future<IssueData> createIssueInProject({
+    required String projectId,
+    required String title,
+    String? body,
+  }) async {
+    calls.add(
+      CreateIssueInProjectCall(
+        projectId: projectId,
+        title: title,
+        body: body,
+      ),
+    );
+    if (throwNoLinkedRepo) {
+      throwNoLinkedRepo = false;
+      throw NoLinkedRepositoryException(projectId);
+    }
+    _maybeThrow();
+    return createIssueResult;
+  }
 }
 
 // --- Call types --------------------------------------------------------------
@@ -237,5 +274,16 @@ class ClearProjectItemFieldCall extends MutationCall {
     required this.projectId,
     required this.itemId,
     required this.fieldId,
+  });
+}
+
+class CreateIssueInProjectCall extends MutationCall {
+  final String projectId;
+  final String title;
+  final String? body;
+  const CreateIssueInProjectCall({
+    required this.projectId,
+    required this.title,
+    required this.body,
   });
 }

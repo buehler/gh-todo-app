@@ -1,12 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/add_comment.graphql.dart';
+import 'package:gh_todos/graphql/add_project_item.graphql.dart';
 import 'package:gh_todos/graphql/clear_project_item_field.graphql.dart';
 import 'package:gh_todos/graphql/close_issue.graphql.dart';
+import 'package:gh_todos/graphql/create_issue.graphql.dart';
+import 'package:gh_todos/graphql/project_repository.graphql.dart';
 import 'package:gh_todos/graphql/reopen_issue.graphql.dart';
 import 'package:gh_todos/graphql/schema.graphql.dart';
 import 'package:gh_todos/graphql/update_issue.graphql.dart';
 import 'package:gh_todos/graphql/update_issue_comment.graphql.dart';
 import 'package:gh_todos/graphql/update_project_item_field.graphql.dart';
+import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:graphql/client.dart';
@@ -62,6 +66,31 @@ abstract class IssueMutations {
     required String itemId,
     required String fieldId,
   });
+
+  /// Creates a new GitHub Issue in the selected project's first linked
+  /// repository and attaches it as a ProjectV2 item on [projectId].
+  ///
+  /// Throws [NoLinkedRepositoryException] when the project has no linked
+  /// repositories — issues can only be created against a repository, so the
+  /// UI surfaces this as "link a repo in GitHub to enable quick-add".
+  Future<IssueData> createIssueInProject({
+    required String projectId,
+    required String title,
+    String? body,
+  });
+}
+
+/// Thrown by [IssueMutations.createIssueInProject] when the selected project
+/// has no linked repositories. The composer catches this to show a targeted
+/// error instead of a generic "failed to create issue" message.
+class NoLinkedRepositoryException implements Exception {
+  final String projectId;
+
+  const NoLinkedRepositoryException(this.projectId);
+
+  @override
+  String toString() =>
+      'NoLinkedRepositoryException: project $projectId has no linked repository';
 }
 
 class CloseIssueResult {
@@ -296,5 +325,77 @@ class _RealIssueMutations implements IssueMutations {
     );
     _unwrap(result);
     _ref.invalidate(projectIssuesProvider(projectId));
+  }
+
+  @override
+  Future<IssueData> createIssueInProject({
+    required String projectId,
+    required String title,
+    String? body,
+  }) async {
+    // Step 1: resolve the target repository. Projects V2 don't have a
+    // "default repo" concept, so we pick the first linked repository
+    // (alphabetical by name) and fail loudly when there's none.
+    final repoResult = await _client.query$ProjectFirstRepository(
+      Options$Query$ProjectFirstRepository(
+        variables: Variables$Query$ProjectFirstRepository(projectId: projectId),
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+    );
+    final repoData = _unwrap(repoResult);
+    final node = repoData.node;
+    final repositoryId =
+        (node is Query$ProjectFirstRepository$node$$ProjectV2)
+            ? node.repositories.nodes?.firstWhere(
+                  (n) => n != null,
+                  orElse: () => null,
+                )?.id
+            : null;
+    if (repositoryId == null) {
+      throw NoLinkedRepositoryException(projectId);
+    }
+
+    // Step 2: create the issue in the repository.
+    final createResult = await _client.mutate$CreateIssue(
+      Options$Mutation$CreateIssue(
+        variables: Variables$Mutation$CreateIssue(
+          repositoryId: repositoryId,
+          title: title,
+          body: body,
+        ),
+      ),
+    );
+    final createData = _unwrap(createResult);
+    final issue = createData.createIssue?.issue;
+    if (issue == null) {
+      throw Exception('createIssue returned no issue payload');
+    }
+
+    // Step 3: attach the new issue to the project.
+    final addResult = await _client.mutate$AddProjectItem(
+      Options$Mutation$AddProjectItem(
+        variables: Variables$Mutation$AddProjectItem(
+          projectId: projectId,
+          contentId: issue.id,
+        ),
+      ),
+    );
+    final addData = _unwrap(addResult);
+    final projectItemId = addData.addProjectV2ItemById?.item?.id;
+
+    // Refresh the feed so the new issue animates in on next build.
+    _ref.invalidate(projectIssuesProvider(projectId));
+
+    return IssueData(
+      id: issue.id,
+      number: issue.number,
+      title: issue.title,
+      commentCount: 0,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      closed: false,
+      projectId: projectId,
+      projectItemId: projectItemId,
+    );
   }
 }
