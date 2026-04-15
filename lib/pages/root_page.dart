@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
-import 'package:gh_todos/compositions/todos/todos_fab.dart';
-import 'package:gh_todos/compositions/todos/todos_hero.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_card.dart';
+import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/github_providers.dart';
@@ -18,8 +17,8 @@ import 'package:mix/mix.dart';
 
 /// The authenticated root page — the "Issues" feed.
 ///
-/// Shows a greeting, project chips for switching, and a list of issues
-/// for the currently selected project. Supports pull-to-refresh.
+/// Shows project chips for switching, an inline quick-add composer, and a
+/// list of issues for the currently selected project. Supports pull-to-refresh.
 class RootPage extends ConsumerWidget {
   static const pageKey = ValueKey('root-page');
   static const scrollKey = ValueKey('root-page-scroll');
@@ -32,29 +31,18 @@ class RootPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final topPadding = AppTopBar.barHeight + MediaQuery.paddingOf(context).top;
     final bottomPadding =
-        AppBottomNav.barHeight + MediaQuery.paddingOf(context).bottom + 120;
+        AppBottomNav.barHeight + MediaQuery.paddingOf(context).bottom + 32;
     final selectedId = ref.watch(selectedProjectProvider);
 
-    return Stack(
+    if (selectedId == null) {
+      return _EmptyState(key: pageKey, topPadding: topPadding);
+    }
+
+    return _IssuesFeed(
       key: pageKey,
-      children: [
-        if (selectedId == null)
-          _EmptyState(topPadding: topPadding)
-        else
-          _IssuesFeed(
-            projectId: selectedId,
-            topPadding: topPadding,
-            bottomPadding: bottomPadding,
-          ),
-        Positioned(
-          right: 24,
-          bottom:
-              AppBottomNav.barHeight +
-              MediaQuery.paddingOf(context).bottom +
-              24,
-          child: TodosFab(onPressed: () {}),
-        ),
-      ],
+      projectId: selectedId,
+      topPadding: topPadding,
+      bottomPadding: bottomPadding,
     );
   }
 }
@@ -62,7 +50,7 @@ class RootPage extends ConsumerWidget {
 class _EmptyState extends StatelessWidget {
   final double topPadding;
 
-  const _EmptyState({required this.topPadding});
+  const _EmptyState({super.key, required this.topPadding});
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +81,7 @@ class _IssuesFeed extends ConsumerWidget {
   final double bottomPadding;
 
   const _IssuesFeed({
+    super.key,
     required this.projectId,
     required this.topPadding,
     required this.bottomPadding,
@@ -114,18 +103,14 @@ class _IssuesFeed extends ConsumerWidget {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.only(
-                top: topPadding + 24,
-                left: 24,
-                right: 24,
-              ),
-              child: const TodosHero(),
+              padding: EdgeInsets.only(top: topPadding + 24),
+              child: const TodosProjectChips(),
             ),
           ),
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.only(top: 20, bottom: 28),
-              child: TodosProjectChips(),
+              child: TodosIssueComposer(),
             ),
           ),
           ...feedAsync.when(
@@ -191,7 +176,7 @@ List<Widget> _dataSlivers(
           left: 24,
           right: 24,
           // Leave room below only when closed section follows; otherwise pad to
-          // bottom for the FAB + nav.
+          // bottom for the nav bar.
           bottom: closed.isEmpty ? bottomPadding : 0,
         ),
         sliver: _IssueSliverList(issues: open),

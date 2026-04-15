@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gh_todos/compositions/todos/todos_fab.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
@@ -21,7 +20,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('deep linking to /settings renders in the shell without FAB', (
+  testWidgets('deep linking to /settings renders in the shell', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
@@ -31,7 +30,6 @@ void main() {
 
     expect(find.byKey(SettingsPage.pageKey), findsOneWidget);
     expect(find.text('GitHub Todos'), findsOneWidget);
-    expect(find.byType(TodosFab), findsNothing);
   });
 
   testWidgets('settings page renders account section and add project button', (
