@@ -1,0 +1,12 @@
+query ProjectFirstRepository($projectId: ID!) {
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      repositories(first: 1, orderBy: { field: NAME, direction: ASC }) {
+        nodes {
+          id
+          nameWithOwner
+        }
+      }
+    }
+  }
+}

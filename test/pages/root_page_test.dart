@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
-import 'package:gh_todos/compositions/todos/todos_fab.dart';
+import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/root_page.dart';
@@ -85,7 +85,8 @@ void main() {
       find.text('Add a project in Settings to get started.'),
       findsOneWidget,
     );
-    expect(find.byType(TodosFab), findsOneWidget);
+    // No project selected → no composer.
+    expect(find.byType(TodosIssueComposer), findsNothing);
   });
 
   testWidgets('renders project chips and issues for selected project', (
@@ -130,7 +131,7 @@ void main() {
     expect(find.text('3'), findsOneWidget);
   });
 
-  testWidgets('tapping settings tab swaps the branch and hides FAB', (
+  testWidgets('tapping settings tab swaps the branch and back', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
@@ -157,20 +158,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
-    expect(find.byType(TodosFab), findsOneWidget);
 
     await tester.tap(find.byKey(AppBottomNav.settingsTabKey));
     await tester.pumpAndSettle();
 
     expect(find.byKey(SettingsPage.pageKey), findsOneWidget);
-    expect(find.byType(TodosFab), findsNothing);
     expect(find.text('GitHub Todos'), findsOneWidget);
 
     await tester.tap(find.byKey(AppBottomNav.todosTabKey));
     await tester.pumpAndSettle();
 
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
-    expect(find.byType(TodosFab), findsOneWidget);
   });
 
   // --------------------------- Swipe actions --------------------------------
