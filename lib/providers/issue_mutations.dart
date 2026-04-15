@@ -355,13 +355,18 @@ class _RealIssueMutations implements IssueMutations {
       throw NoLinkedRepositoryException(projectId);
     }
 
-    // Step 2: create the issue in the repository.
+    // Step 2: create the issue in the repository, assigned to the current
+    // viewer. The root feed's query filters by `assignee:@me`, so without
+    // self-assigning the new issue would be invisible in the todo list.
+    final viewer = await _ref.read(userInfoProvider.future);
+    final viewerId = viewer?.id;
     final createResult = await _client.mutate$CreateIssue(
       Options$Mutation$CreateIssue(
         variables: Variables$Mutation$CreateIssue(
           repositoryId: repositoryId,
           title: title,
           body: body,
+          assigneeIds: viewerId != null ? [viewerId] : null,
         ),
       ),
     );
