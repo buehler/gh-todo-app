@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -133,9 +137,151 @@ void main() {
     expect(find.text('3'), findsOneWidget);
   });
 
-  testWidgets('tapping settings tab swaps the branch and back', (
+  testWidgets(
+    'android compact layout keeps pull-to-refresh and hides manual refresh',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        await _pumpFeed(
+          tester,
+          projects: _testProjects,
+          open: _testIssues,
+          closed: const [],
+          mutations: FakeIssueMutations(),
+          size: const Size(430, 932),
+        );
+
+        expect(find.byType(RefreshIndicator), findsOneWidget);
+        expect(find.byKey(RootPage.refreshButtonKey), findsNothing);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets('android tablet landscape keeps pull-to-refresh in split view', (
     tester,
   ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      await _pumpFeed(
+        tester,
+        projects: _testProjects,
+        open: _testIssues,
+        closed: const [],
+        mutations: FakeIssueMutations(),
+        size: const Size(1180, 820),
+      );
+
+      expect(find.byType(RefreshIndicator), findsOneWidget);
+      expect(find.byKey(RootPage.refreshButtonKey), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets(
+    'desktop layout shows manual refresh instead of pull-to-refresh',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      try {
+        await _pumpFeed(
+          tester,
+          projects: _testProjects,
+          open: _testIssues,
+          closed: const [],
+          mutations: FakeIssueMutations(),
+          size: const Size(1200, 900),
+        );
+
+        expect(find.byType(RefreshIndicator), findsNothing);
+        expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets(
+    'desktop manual refresh re-fetches issues and shows loading state',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+
+      final fakeStorage = FakeFlutterSecureStorage(
+        seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+      );
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      var buildCount = 0;
+      final completers = <Completer<ProjectIssuesFeed>>[];
+
+      try {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              tokenStorageProvider.overrideWithValue(
+                GithubTokenStorageService(storage: fakeStorage),
+              ),
+              sharedPreferencesProvider.overrideWith((_) async => prefs),
+              projectListProvider.overrideWith(
+                () => _FakeProjectList(_testProjects),
+              ),
+              projectIssuesProvider('proj-1').overrideWith(
+                () => _TrackedProjectIssues(
+                  onBuild: () => buildCount++,
+                  load: () {
+                    final completer = Completer<ProjectIssuesFeed>();
+                    completers.add(completer);
+                    return completer.future;
+                  },
+                ),
+              ),
+              issueMutationsProvider.overrideWithValue(FakeIssueMutations()),
+            ],
+            child: const GhTodosApp(),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump();
+
+        expect(completers, hasLength(1));
+        completers[0].complete((
+          open: _testIssues,
+          closed: const <IssueData>[],
+        ));
+        await tester.pumpAndSettle();
+
+        expect(buildCount, 1);
+        expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
+        expect(find.byKey(RootPage.refreshProgressKey), findsNothing);
+
+        await tester.tap(find.byKey(RootPage.refreshButtonKey));
+        await tester.pump();
+
+        expect(buildCount, 2);
+        expect(completers, hasLength(2));
+        expect(find.byKey(RootPage.refreshButtonKey), findsNothing);
+        expect(find.byKey(RootPage.refreshProgressKey), findsOneWidget);
+
+        completers[1].complete((
+          open: _testIssues,
+          closed: const <IssueData>[],
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
+        expect(find.byKey(RootPage.refreshProgressKey), findsNothing);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
+
+  testWidgets('tapping settings tab swaps the branch and back', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -316,10 +462,7 @@ void main() {
       );
       container
           .read(projectIssuesProvider('proj-1').notifier)
-          .applyReopen(
-            'issue-closed-1',
-            updatedAt: '2026-04-20T10:00:00Z',
-          );
+          .applyReopen('issue-closed-1', updatedAt: '2026-04-20T10:00:00Z');
       await tester.pumpAndSettle();
 
       // "Recently closed" section disappears once the only closed issue
@@ -345,17 +488,19 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byKey(RootPage.pageKey)),
       );
-      container.read(projectIssuesProvider('proj-1').notifier).applyCreate(
-        const IssueData(
-          id: 'issue-new',
-          number: 101,
-          title: 'Freshly composed todo',
-          commentCount: 0,
-          createdAt: '2026-04-20T10:00:00Z',
-          updatedAt: '2026-04-20T10:00:00Z',
-          projectId: 'proj-1',
-        ),
-      );
+      container
+          .read(projectIssuesProvider('proj-1').notifier)
+          .applyCreate(
+            const IssueData(
+              id: 'issue-new',
+              number: 101,
+              title: 'Freshly composed todo',
+              commentCount: 0,
+              createdAt: '2026-04-20T10:00:00Z',
+              updatedAt: '2026-04-20T10:00:00Z',
+              projectId: 'proj-1',
+            ),
+          );
       await tester.pumpAndSettle();
 
       expect(find.text('Freshly composed todo'), findsOneWidget);
@@ -372,8 +517,9 @@ Future<void> _pumpFeed(
   required List<IssueData> open,
   required List<IssueData> closed,
   required FakeIssueMutations mutations,
+  Size size = const Size(1200, 900),
 }) async {
-  await tester.binding.setSurfaceSize(const Size(1200, 900));
+  await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
   final fakeStorage = FakeFlutterSecureStorage(
@@ -422,4 +568,17 @@ class _FakeProjectIssues extends ProjectIssues {
 
   @override
   Future<ProjectIssuesFeed> build(String projectId) async => seed;
+}
+
+class _TrackedProjectIssues extends ProjectIssues {
+  final void Function() onBuild;
+  final Future<ProjectIssuesFeed> Function() load;
+
+  _TrackedProjectIssues({required this.onBuild, required this.load});
+
+  @override
+  Future<ProjectIssuesFeed> build(String projectId) {
+    onBuild();
+    return load();
+  }
 }
