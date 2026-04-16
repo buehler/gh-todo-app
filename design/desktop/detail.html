@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#e6effa",
+                    "secondary-fixed-dim": "#c2c7cf",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#adc6ff",
+                    "tertiary": "#913900",
+                    "outline": "#727785",
+                    "on-primary-fixed-variant": "#004493",
+                    "on-tertiary-fixed": "#351000",
+                    "inverse-surface": "#29313a",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#dee3eb",
+                    "surface-container-high": "#e0e9f5",
+                    "surface-container-low": "#ecf4ff",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-container-highest": "#dae3ef",
+                    "tertiary-fixed-dim": "#ffb693",
+                    "surface-tint": "#005bc0",
+                    "on-tertiary-fixed-variant": "#7a2f00",
+                    "on-surface": "#141c25",
+                    "on-secondary-fixed-variant": "#42474e",
+                    "on-primary-container": "#ecefff",
+                    "outline-variant": "#c2c6d6",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#e9f2fd",
+                    "on-secondary-fixed": "#171c22",
+                    "on-tertiary-container": "#ffece5",
+                    "on-surface-variant": "#424753",
+                    "surface-dim": "#d2dbe6",
+                    "on-primary-fixed": "#001a41",
+                    "surface-bright": "#f7f9ff",
+                    "primary-container": "#0969da",
+                    "on-secondary-container": "#60656c",
+                    "primary": "#0051ae",
+                    "surface": "#f7f9ff",
+                    "background": "#f7f9ff",
+                    "tertiary-fixed": "#ffdbcc",
+                    "surface-variant": "#dae3ef",
+                    "secondary": "#5a5f66",
+                    "on-background": "#141c25",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#b84b00",
+                    "secondary-container": "#dee3eb",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<div class="flex">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 space-y-2 z-50">
+<div class="flex items-center gap-3 px-2 py-4 mb-4">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">terminal</span>
+</div>
+<div>
+<p class="font-headline font-bold text-slate-900 dark:text-slate-100 text-sm leading-tight">Editorial Tech</p>
+<p class="font-body text-xs text-slate-500">Precise Artisan</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 transition-all duration-200 rounded-lg font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">home</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg hover:translate-x-1 transition-all duration-200 font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+<span>Issues</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 transition-all duration-200 rounded-lg font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 transition-all duration-200 rounded-lg font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Teams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 transition-all duration-200 rounded-lg font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<button class="mt-auto w-full py-3 px-4 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Issue</span>
+</button>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 min-h-screen relative">
+<!-- TopNavBar -->
+<header class="w-full sticky top-0 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md flex justify-between items-center px-8 py-4 z-40">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 font-headline tracking-tight">The Engineering Editorial</h1>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-slate-500 font-medium text-sm hover:text-blue-600 transition-colors" href="#">Pull Requests</a>
+<a class="text-blue-600 border-b-2 border-blue-600 pb-1 font-medium text-sm" href="#">Issues</a>
+<a class="text-slate-500 font-medium text-sm hover:text-blue-600 transition-colors" href="#">Marketplace</a>
+<a class="text-slate-500 font-medium text-sm hover:text-blue-600 transition-colors" href="#">Explore</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:text-blue-600 transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-2 text-slate-500 hover:text-blue-600 transition-colors"><span class="material-symbols-outlined">add_circle</span></button>
+<img alt="User profile" class="w-8 h-8 rounded-full bg-slate-200" data-alt="professional portrait of a software engineer wearing a modern dark hoodie, soft studio lighting, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3ci5T-YcItWdTEWcaEaQnvy7UAy0vYVsYefCBDo2XwFTMwadXiy2sfKcL2biTcqxJ0br0n0_2aR82SUTRYiBnv9An9pp9WVd8na8N0kCDlfParwVr3ImB42J-vshGZJwvm92zFl68vnfwiY0Aszk7HTEfCtpCiVTJle4lb4tNzzTJRrmLekuwlkIA77O_6_xVSPKFosCvETlfBmYUcmmh_4u79vdq-mmm85kpv8JkyanE6jFCwuCFXLvnuT24rTJ6CykcbWHndkw"/>
+</div>
+</header>
+<!-- Issue Detail Content -->
+<div class="px-8 py-10 max-w-[1400px] mx-auto">
+<!-- Title & Actions Bar -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<span class="bg-primary text-on-primary px-3 py-1 rounded-full text-xs font-bold font-label uppercase tracking-widest">Open</span>
+<span class="text-on-surface-variant font-label text-sm tracking-tight">#EDITORIAL-482</span>
+</div>
+<h2 class="text-4xl font-extrabold font-headline text-on-surface tracking-tight leading-tight max-w-3xl">Refactor GraphQL Mutation logic to use standardized artisan fragment patterns</h2>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-2.5 rounded-xl text-on-surface-variant bg-surface-container-high font-headline font-bold text-sm hover:bg-surface-container-highest transition-colors active:scale-95">
+                            Edit Issue
+                        </button>
+<button class="px-6 py-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-sm hover:opacity-90 transition-all active:scale-95 shadow-sm">
+                            Close Issue
+                        </button>
+</div>
+</div>
+<!-- Two Column Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+<!-- Left Column: Description & Metadata -->
+<div class="lg:col-span-7 space-y-10">
+<!-- Description Card -->
+<section class="bg-surface-container-low rounded-2xl p-8">
+<div class="flex items-center gap-3 mb-6">
+<img class="w-8 h-8 rounded-full" data-alt="avatar icon of a developer with minimal aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOMXEGGi8tWgYzy4Yy4gg_2iGczbYG5yuuiPNnomAltOfCBVbPaSLavIdEfxr7VpL07c6q6e-hUR7C7SnjUR9bWmibLM43uVer_sdv2_xfOqF2tDVAfHtTk4XHUnggy1_9As7eeEQpsHKSF99yaDqscY7tNY1wgFfKjvfs6Gqzp4EcLp8BjHQwAsHxdnBBmOu8DqW4WlzL8JGJR4YLdKE2LKkfDDz85JfEC3ArGY9rgGGOLOK7kpT-KorpFYRAhX_quREPS3hZ6hM"/>
+<div>
+<p class="text-sm font-bold text-on-surface">James Dalton <span class="font-normal text-on-surface-variant ml-1">opened this issue 3 days ago</span></p>
+</div>
+</div>
+<div class="prose prose-slate max-w-none text-on-surface-variant leading-relaxed font-body">
+<p class="mb-4">The current implementation of our GraphQL mutations in the editorial dashboard lacks consistency. Specifically, the <code class="bg-surface-container-high px-1 rounded">UpdateEditorialContent</code> and <code class="bg-surface-container-high px-1 rounded">CreateDraft</code> mutations are using inline fields instead of our shared fragment library.</p>
+<p class="mb-4">This causes maintenance overhead when updating typography tokens or color surface logic, as changes need to be mirrored across multiple files.</p>
+<h4 class="text-on-surface font-bold mb-2">Proposed Changes:</h4>
+<ul class="list-disc pl-5 space-y-2">
+<li>Consolidate metadata fragments into <code class="bg-surface-container-high px-1 rounded">ArtisanCoreFields</code>.</li>
+<li>Update the mutation hook to utilize Apollo's caching mechanism via standardized IDs.</li>
+<li>Remove deprecated type definitions in the local mutation scope.</li>
+</ul>
+</div>
+</section>
+<!-- Metadata Grid (Bento Style) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Priority -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary"></div>
+<p class="text-xs font-bold text-on-surface-variant font-label uppercase tracking-wider mb-2">Priority</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">priority_high</span>
+<p class="text-lg font-headline font-bold text-on-surface">High Priority</p>
+</div>
+</div>
+<!-- Due Date -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl group">
+<p class="text-xs font-bold text-on-surface-variant font-label uppercase tracking-wider mb-2">Due Date</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+<p class="text-lg font-headline font-bold text-on-surface">Oct 24, 2023</p>
+</div>
+</div>
+<!-- Created -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl">
+<p class="text-xs font-bold text-on-surface-variant font-label uppercase tracking-wider mb-2">Created</p>
+<p class="text-lg font-headline font-bold text-on-surface">Oct 12, 2023</p>
+</div>
+<!-- Updated -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl">
+<p class="text-xs font-bold text-on-surface-variant font-label uppercase tracking-wider mb-2">Last Updated</p>
+<p class="text-lg font-headline font-bold text-on-surface">2 hours ago</p>
+</div>
+</div>
+<!-- Labels & Assignees -->
+<div class="flex flex-wrap gap-8">
+<div class="space-y-3">
+<h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest font-label">Labels</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">Refactor</span>
+<span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">GraphQL</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-xs font-semibold">High Priority</span>
+</div>
+</div>
+<div class="space-y-3">
+<h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest font-label">Assignees</h3>
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface" data-alt="avatar of a lead architect with modern glasses and neutral expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBA1Q3hhiC4h4bQ8FVraOrWRDWXiwVT4Ia8xN4IQXOWm0WiCrg18DXhoLRpIpESwkOXGkVUK_58bAPV_eRtp2sR57FHP5KwSbcp5lV95gpzZR8jTnhb6isV9E5SHVcMFP0eQwH78_RpgsH_tpNbBcU3zk2TZRZrDljUPy_Bu-YXQj-oz5Z1rNdXW8_7JxydbZEGFXLRHzKfwtPoZPvxqjvkJ1omXa1Qyo283lpqwBJo6N03WLlMRc41cV0o8LHEiO8guvIyu0DfD1Q"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface" data-alt="avatar of a senior developer with bright creative workspace background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp993Ap8i6U70-hqns1qwoxse3S9hAEtum4NPTM2lb_hXqmYEETOP2cEOkis2boElRPBWRFHj4uSQvm9Fh85462zrDtoAuFRAteG5kJJX9WE6-dtCn542c74C1NlFzCMT_rOVY1Dpr-m8TCRk1EJVqWPTJ6lam9N_YMx3kZsc5KJmFscKTi5bZwlBVovxtqWCAS32uTKZB5IBT4kSyZ1pyxq6By9N_AjhrLoLcilrC4wQCOBJkDJ40FQvjP_X4UUxa4mMz9MG6c1s"/>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border-2 border-surface flex items-center justify-center text-[10px] font-bold text-on-surface-variant">+2</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Conversation -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h3 class="font-headline font-extrabold text-2xl text-on-surface">Conversation</h3>
+<span class="text-sm font-medium text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full">12 Comments</span>
+</div>
+<!-- Newest Comment Entry (Pinned Top) -->
+<div class="bg-surface-container-highest rounded-2xl p-6 shadow-sm ring-1 ring-primary/10">
+<div class="flex gap-4">
+<img class="w-10 h-10 rounded-xl" data-alt="minimalist placeholder profile icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNSkBIk43rxucLf7icgtpMTkfj8fVnKREp1IPQyXFsPj3ZrhSAKFcKnYM_Hpa0EgHQGbdbGHNTGPWf9yVLJamOF32Re4XbFbm3W3kF8TzhOtmt5NLIvkOETA0u1BLnuGrTHkVVFKrSuRmjVmheNhyGgloAuNTBCoDAsPKlb93VcrYKA6ohJaiYRTK7rKRaFcKy7iBUff8cHtFujp8rGjYsRpVxVTjw5ZFmzcEbKvdBRW5qOw8WTbyFZYV_VyCnI05dzUqb7gUPb-c"/>
+<div class="flex-1 space-y-3">
+<textarea class="w-full bg-surface-container-lowest border-none rounded-xl p-4 text-sm font-body text-on-surface focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400 min-h-[100px] resize-none" placeholder="Add a comment or suggest a code change..."></textarea>
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">attach_file</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">alternate_email</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">mood</span></button>
+</div>
+<button class="px-5 py-2 bg-primary text-on-primary rounded-lg font-headline font-bold text-xs hover:opacity-90 active:scale-95 transition-all">Comment</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline -->
+<div class="space-y-8 relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-[2px] before:bg-surface-container-high">
+<!-- Comment Item -->
+<div class="relative pl-12">
+<img class="absolute left-0 top-0 w-10 h-10 rounded-xl z-10 bg-surface shadow-sm" data-alt="modern avatar of a female senior engineer in a minimal home office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWX7383Hx_igFDm9T4Ul_YfsbGHhSQdf8KlrYb4I2Gn3Dp2jGfzFIdxxNVjPSX7jNHMA-Yy90O2aljd4Y7aTRuAgLbhnZh0UKz9ruZhugF1bTw826HtG5fYIfwgDxlXn-rFZXoewkqUhW0oDdlW92JQ8LDu16oS7TEQm51Y4jrcTk6Qxzkr4VhoACCuOOq-Q9npfTAA20F9eCxdFEXAau3t-J-jmZPLvKdzNBOz0X8_7BPWThuC8aoW086gg0AyUAdLij0Cf8RrXk"/>
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-on-surface">Sarah K.</span>
+<span class="text-[11px] text-on-surface-variant font-medium">14 minutes ago</span>
+</div>
+<div class="bg-surface-container-low p-5 rounded-2xl text-sm font-body text-on-surface-variant leading-relaxed">
+                                        I've reviewed the fragment definitions in the <code class="text-primary font-semibold">/core/artisan</code> folder. We should probably expand the <code class="text-primary font-semibold">AssetField</code> fragment to include the blurhash for better loading states on the editorial grid.
+                                    </div>
+<div class="flex gap-4 pl-1">
+<button class="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">thumb_up</span> 4
+                                        </button>
+<button class="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">reply</span> Reply
+                                        </button>
+</div>
+</div>
+</div>
+<!-- System Event -->
+<div class="relative pl-12 flex items-center gap-3">
+<div class="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-container flex items-center justify-center rounded-full z-10 border-2 border-surface">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">label</span>
+</div>
+<p class="text-xs font-medium text-on-surface-variant">
+<span class="font-bold text-on-surface">Marcie J.</span> added <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">Refactor</span> label 2 hours ago
+                                </p>
+</div>
+<!-- Comment Item -->
+<div class="relative pl-12">
+<img class="absolute left-0 top-0 w-10 h-10 rounded-xl z-10 bg-surface shadow-sm" data-alt="headshot of a male dev ops lead with a subtle city view background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBextjH4KC0YH_AON9u7iNsUwfCv5p5nQNY4sxsPPsSuSUK6T28WCuPBKKRov5av7sOM2bW93vWWA8H1QxEs92V30ejtQd-iCZr5XfIkh4sS_aqTRtr8gsSW1RA1fmYrA6HWgpvFsynLk1J-gVzVS8mOO2hC1KDNj1p6psa5ZdMEhzSQd9lY2pqHQgWYD19LEdGa2-JlPBZVAw6Sxi9dhPhqz5rRWtTlCMUFF7LqlCz7l4RKDD_NKDGX6n8CJtuZCiKIxXHrwLJYVU"/>
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-on-surface">Alex M.</span>
+<span class="text-[11px] text-on-surface-variant font-medium">3 hours ago</span>
+</div>
+<div class="bg-surface-container-low p-5 rounded-2xl text-sm font-body text-on-surface-variant leading-relaxed">
+                                        Agreed. I'll handle the backend schema updates to ensure the blurhash is provided by the CDN middleware. We can then pull it into the fragment Sarah mentioned.
+                                    </div>
+<div class="flex gap-4 pl-1">
+<button class="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">add_reaction</span>
+</button>
+<button class="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">reply</span> Reply
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Load More Button -->
+<div class="flex justify-center pt-4">
+<button class="text-xs font-bold text-primary font-headline py-2 px-6 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors">
+                                    Load previous comments
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

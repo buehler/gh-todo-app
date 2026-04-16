@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Engineering Editorial - Issues Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#e6effa",
+                        "secondary-fixed-dim": "#c2c7cf",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#adc6ff",
+                        "tertiary": "#913900",
+                        "outline": "#727785",
+                        "on-primary-fixed-variant": "#004493",
+                        "on-tertiary-fixed": "#351000",
+                        "inverse-surface": "#29313a",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#dee3eb",
+                        "surface-container-high": "#e0e9f5",
+                        "surface-container-low": "#ecf4ff",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-highest": "#dae3ef",
+                        "tertiary-fixed-dim": "#ffb693",
+                        "surface-tint": "#005bc0",
+                        "on-tertiary-fixed-variant": "#7a2f00",
+                        "on-surface": "#141c25",
+                        "on-secondary-fixed-variant": "#42474e",
+                        "on-primary-container": "#ecefff",
+                        "outline-variant": "#c2c6d6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#e9f2fd",
+                        "on-secondary-fixed": "#171c22",
+                        "on-tertiary-container": "#ffece5",
+                        "on-surface-variant": "#424753",
+                        "surface-dim": "#d2dbe6",
+                        "on-primary-fixed": "#001a41",
+                        "surface-bright": "#f7f9ff",
+                        "primary-container": "#0969da",
+                        "on-secondary-container": "#60656c",
+                        "primary": "#0051ae",
+                        "surface": "#f7f9ff",
+                        "background": "#f7f9ff",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-variant": "#dae3ef",
+                        "secondary": "#5a5f66",
+                        "on-background": "#141c25",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#b84b00",
+                        "secondary-container": "#dee3eb",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="h-screen w-64 fixed left-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 space-y-2 z-50">
+<div class="flex items-center gap-3 px-2 mb-8">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="Organization Logo" data-alt="minimalist geometric logo for a tech organization with precise lines and corporate blue color scheme" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUwfi1f7k67QQf2w_BsNRwW0J286yBwXeOLTBeWl-mkXWIe_GZgpZznOrapCP1rBLhAy5x6rN4M7Ovcu3TyMPHGjCcSjHPIPw5gxPmrBSixoVU6GAGXEJOsifXeT5eBD9BSIVQKAyzXW0OzN2oU8cgxCGUj9M0152WcQZkH2aek8M50fOkUbZbgohxmgIdsxIHNpl4Sca3LIx5UWWpfEgRFMZKurontBXzecgXNHbzfVFLOk_lb6e5HN9YUZcQAyTuiewhcJQ6tKw"/>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface leading-tight">Editorial Tech</p>
+<p class="text-xs text-on-surface-variant">Precise Artisan</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Navigation Items Mapping -->
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-medium text-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span>Issues</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-medium text-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-medium text-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Teams</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-medium text-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-4">
+<button class="w-full py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 active:scale-95 duration-150 shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined text-sm" data-icon="add_circle">add_circle</span>
+                New Issue
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 min-h-screen flex flex-col">
+<!-- TopNavBar (Authority Source: JSON) -->
+<header class="w-full top-0 sticky bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md flex justify-between items-center px-8 py-4 z-40">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 font-headline tracking-tight">The Engineering Editorial</h1>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors" href="#">Pull Requests</a>
+<a class="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-1" href="#">Issues</a>
+<a class="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors" href="#">Marketplace</a>
+<a class="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors" href="#">Explore</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors text-lg" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20 bg-slate-100 dark:bg-slate-800 focus:bg-white transition-all" placeholder="Search workspace..." type="text"/>
+</div>
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-surface-container-high" data-alt="professional headshot of a developer in a modern workspace with natural soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmbyYZURxkVCD3oFWhuPPzKM0MJfHjgnCJetgdbw-4uiS9LX_IXCRyB8mGjtLZO4Z7cve3CnmJcS6uBwsqDxKbIPFChBjwNkVN8rv-NneyI8-so78LWJo5B9SQGzjJ3VkunnkLyd63G12nQ0nNGq18Z8RJ96KrnhgJk6Xx03LZ_uFuCzzdkELKYQB5yEET1OuycV4B36obxWaa4WpMIM7ih4n5I7Jw3KdD76FgxoagELDxb7JdytaamSOyC4sxLu4F09tbPKl13Qw"/>
+</div>
+</header>
+<div class="p-8 max-w-7xl mx-auto w-full flex-1">
+<!-- Page Header & Filters -->
+<div class="flex flex-col gap-8 mb-12">
+<div class="flex justify-between items-end">
+<div>
+<span class="text-primary font-headline font-bold text-sm tracking-wider uppercase">Active Sprints</span>
+<h2 class="text-4xl font-headline font-extrabold text-on-surface mt-1">Issues Overview</h2>
+</div>
+<div class="flex gap-2 p-1 bg-surface-container-low rounded-xl">
+<button class="px-4 py-2 bg-surface-container-lowest text-primary font-medium text-sm rounded-lg shadow-sm">My Issues</button>
+<button class="px-4 py-2 text-on-surface-variant font-medium text-sm rounded-lg hover:bg-surface-container-high transition-colors">All Reports</button>
+</div>
+</div>
+<!-- Bento Style Filter Chips -->
+<div class="flex flex-wrap gap-3">
+<button class="px-4 py-1.5 bg-primary text-white rounded-full text-sm font-medium flex items-center gap-2">
+                        All Projects
+                        <span class="bg-white/20 px-1.5 rounded text-xs">12</span>
+</button>
+<button class="px-4 py-1.5 bg-surface-container-low text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-high transition-colors">
+                        Core Engine
+                    </button>
+<button class="px-4 py-1.5 bg-surface-container-low text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-high transition-colors">
+                        Design System
+                    </button>
+<button class="px-4 py-1.5 bg-surface-container-low text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-high transition-colors">
+                        Marketing Site
+                    </button>
+<button class="px-4 py-1.5 bg-surface-container-low text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-high transition-colors">
+                        API v2
+                    </button>
+<button class="ml-auto flex items-center gap-2 text-primary font-medium text-sm">
+<span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+                        More Filters
+                    </button>
+</div>
+</div>
+<!-- Grouped Issues Layout (Asymmetric/Bento-inspired) -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Project Section 1: Core Engine -->
+<section class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-3">
+<span class="w-2 h-6 bg-primary rounded-full"></span>
+<h3 class="text-xl font-headline font-bold">Core Engine</h3>
+<span class="text-sm text-on-surface-variant font-medium opacity-60">4 Issues</span>
+</div>
+<a class="text-sm text-primary font-medium" href="#">View Project</a>
+</div>
+<div class="space-y-4">
+<!-- Issue Card 1: Urgent -->
+<div class="group bg-surface-container-low hover:bg-surface-container-highest rounded-xl p-5 transition-all cursor-pointer flex items-center gap-6 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary"></div>
+<div class="flex flex-col gap-1 flex-1">
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-tertiary bg-tertiary-fixed px-2 py-0.5 rounded uppercase tracking-tighter">Urgent</span>
+<span class="text-sm font-medium text-on-secondary-container bg-secondary-container rounded-full px-2 py-0.5 font-label">#ENG-102</span>
+</div>
+<h4 class="text-lg font-bold text-on-surface mt-1 group-hover:text-primary transition-colors">Memory leak in WebAssembly worker threads</h4>
+<p class="text-sm text-on-surface-variant line-clamp-1">The garbage collection cycle isn't properly reclaiming buffers in long-running sessions.</p>
+</div>
+<div class="flex flex-col items-end gap-2 shrink-0">
+<div class="flex -space-x-2">
+<img alt="Assignee" class="w-8 h-8 rounded-full border-2 border-surface-container-low group-hover:border-surface-container-highest transition-all" data-alt="portrait of a focused software engineer with glasses in a modern office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUjSg1QaHpCLIujn6Dj-kHmC1bNMAYi5_p_GJDFn4oUCZGZO8Mpmn4m3B5eArGFzdJIdQe2gMVl5sFtVfXszqnwABL_LFR0udOVGrCQcyPfCSunoxIBWYp-utHAfT-OjUTpka7n7Fo4h7ivoKZWocxZl_OmrLziAXAfehAKn4MfxyU3_dqfGbAfYjhEIiGZmaIGrtI1FKndW74Uzs9y3zJPinzSHF8haPvp1K1NDsMxZGeMSMq81sEFzSPBQDSX4CR-D9GphtDu34"/>
+<div class="w-8 h-8 rounded-full bg-primary-container text-white text-[10px] flex items-center justify-center font-bold border-2 border-surface-container-low group-hover:border-surface-container-highest">+2</div>
+</div>
+<span class="text-xs font-medium text-on-surface-variant">2h ago</span>
+</div>
+</div>
+<!-- Issue Card 2: High -->
+<div class="group bg-surface-container-low hover:bg-surface-container-highest rounded-xl p-5 transition-all cursor-pointer flex items-center gap-6 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex flex-col gap-1 flex-1">
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-primary-container bg-primary-fixed px-2 py-0.5 rounded uppercase tracking-tighter">High</span>
+<span class="text-sm font-medium text-on-secondary-container bg-secondary-container rounded-full px-2 py-0.5 font-label">#ENG-098</span>
+</div>
+<h4 class="text-lg font-bold text-on-surface mt-1 group-hover:text-primary transition-colors">Implement OAuth2 state validation</h4>
+<p class="text-sm text-on-surface-variant line-clamp-1">Security hardening for the authentication flow in staging environments.</p>
+</div>
+<div class="flex flex-col items-end gap-2 shrink-0">
+<img alt="Assignee" class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="professional woman tech lead smiling in a bright creative studio environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3O2kKOFO18czwdU9sY7MgiJ3VcWQdB4_kVMFTHG7J2RL4J_oPTS97B5CTUMbe214pT0jz48WoEXByUeH2_foCgkq5FpOKeV9gbGTXlaXBarM2bUKVY-1OyB7nj5r77qDP_9NmeYpCTHThtE3CAypoyNkVS9zgXIvm9He_Zsa3d8fuupvWcqKi0lGGStfg1WFihD2xtVqJprF9KNrnovtvuEn8cbu5k44z-Ut1B-E-YLuz8KU6e0h9EDBV0VnSJILSydIaDiY6yok"/>
+<span class="text-xs font-medium text-on-surface-variant">5h ago</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Project Section 2: Design System (Side Bento) -->
+<section class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<div class="flex items-center gap-3">
+<span class="w-2 h-6 bg-tertiary-container rounded-full"></span>
+<h3 class="text-xl font-headline font-bold">Design System</h3>
+</div>
+</div>
+<div class="bg-surface-container-high/50 rounded-2xl p-6 h-full flex flex-col gap-6">
+<!-- Trivial Issue -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+<div class="flex items-center justify-between mb-3">
+<span class="text-[10px] font-bold text-on-secondary-fixed-variant bg-secondary-fixed px-2 py-0.5 rounded uppercase">Trivial</span>
+<span class="text-xs font-medium text-on-surface-variant opacity-60">#DS-44</span>
+</div>
+<h5 class="text-md font-bold text-on-surface leading-snug">Update documentation for border radius tokens</h5>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-xs font-medium text-on-surface-variant">3</span>
+</div>
+<span class="text-[10px] bg-surface-container-low px-2 py-1 rounded text-on-surface-variant">v3.2-beta</span>
+</div>
+</div>
+<!-- Moderate Issue -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-4 border-primary/40">
+<div class="flex items-center justify-between mb-3">
+<span class="text-[10px] font-bold text-primary bg-primary-fixed px-2 py-0.5 rounded uppercase">Moderate</span>
+<span class="text-xs font-medium text-on-surface-variant opacity-60">#DS-51</span>
+</div>
+<h5 class="text-md font-bold text-on-surface leading-snug">Refactor Glassmorphism component for Safari compat</h5>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="attachment">attachment</span>
+<span class="text-xs font-medium text-on-surface-variant">1</span>
+</div>
+<img alt="Assignee" class="w-6 h-6 rounded-full" data-alt="developer working in a stylish urban loft office with soft sunset lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDS_mYV42cmiHckmS83NlwMLVpmI3MK0apyp6V-ptok8Sqg6rdD0HySUHh608X8L1bQWMoXib4fYcUstIlh23XEo099jRp6hwQKDzKDvFwzLj57tu8GTbDJcb7PgJOJtrxLJqt8YEJ9hHc7S6gUCVXu9JDLb4bGQAUyJlz_gRyoDhGVFxrG9HwE_yxmB9pkwq1JzPrGb8d2goDs0pgjq0XbycfivFo4-WIhBcJsaTUJqJzPmyr8Z4qhWksSdATLxsDEXhv1xTCHmGA"/>
+</div>
+</div>
+<!-- Status Quick View -->
+<div class="mt-auto pt-4 border-t border-outline-variant/10">
+<h6 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Project Health</h6>
+<div class="flex items-center gap-4">
+<div class="flex-1 h-2 bg-surface-container-low rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary rounded-full"></div>
+</div>
+<span class="text-xs font-bold text-on-surface">75%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Project Section 3: Marketing Site -->
+<section class="col-span-12 flex flex-col gap-4">
+<div class="flex items-center gap-3 px-2">
+<span class="w-2 h-6 bg-outline-variant rounded-full"></span>
+<h3 class="text-xl font-headline font-bold">Marketing Site</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Issue Card: Grid Style -->
+<div class="bg-surface-container-low p-6 rounded-2xl hover:-translate-y-1 transition-all duration-300 group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="bug_report">bug_report</span>
+</div>
+<span class="text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-2 py-0.5 rounded uppercase">Low Priority</span>
+</div>
+<h4 class="text-lg font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">Favicon missing on 404 page</h4>
+<p class="text-sm text-on-surface-variant mb-6">Small visual glitch reported by the marketing team during the last audit.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(0,81,174,0.4)]"></div>
+<span class="text-xs font-medium text-on-surface">Assigned</span>
+</div>
+<span class="text-xs font-medium text-on-surface-variant">Aug 14</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-low p-6 rounded-2xl hover:-translate-y-1 transition-all duration-300 group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="speed">speed</span>
+</div>
+<span class="text-xs font-bold text-primary-container bg-primary-fixed px-2 py-0.5 rounded uppercase">Medium</span>
+</div>
+<h4 class="text-lg font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">LCP optimization for hero image</h4>
+<p class="text-sm text-on-surface-variant mb-6">Convert the main hero banner to WebP and implement lazy loading.</p>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-primary rounded-full opacity-30"></div>
+<span class="text-xs font-medium text-on-surface">Unassigned</span>
+</div>
+<span class="text-xs font-medium text-on-surface-variant">Aug 12</span>
+</div>
+</div>
+<!-- Card 3: CTA Card -->
+<div class="bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex flex-col items-center justify-center p-6 text-center group cursor-pointer hover:bg-primary/10 transition-all">
+<div class="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</div>
+<h4 class="text-md font-bold text-primary">Add Issue to Marketing</h4>
+<p class="text-xs text-on-surface-variant mt-1">Quick report for the growth team</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Sticky FAB for Mobile (Implicit in requirement for mobile ref) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-primary-container text-white rounded-full shadow-xl shadow-primary/20 flex items-center justify-center lg:hidden active:scale-90 transition-transform z-50">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</main>
+</body></html>

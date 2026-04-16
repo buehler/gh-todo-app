@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#e6effa",
+                        "secondary-fixed-dim": "#c2c7cf",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#adc6ff",
+                        "tertiary": "#913900",
+                        "outline": "#727785",
+                        "on-primary-fixed-variant": "#004493",
+                        "on-tertiary-fixed": "#351000",
+                        "inverse-surface": "#29313a",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#dee3eb",
+                        "surface-container-high": "#e0e9f5",
+                        "surface-container-low": "#ecf4ff",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-highest": "#dae3ef",
+                        "tertiary-fixed-dim": "#ffb693",
+                        "surface-tint": "#005bc0",
+                        "on-tertiary-fixed-variant": "#7a2f00",
+                        "on-surface": "#141c25",
+                        "on-secondary-fixed-variant": "#42474e",
+                        "on-primary-container": "#ecefff",
+                        "outline-variant": "#c2c6d6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#e9f2fd",
+                        "on-secondary-fixed": "#171c22",
+                        "on-tertiary-container": "#ffece5",
+                        "on-surface-variant": "#424753",
+                        "surface-dim": "#d2dbe6",
+                        "on-primary-fixed": "#001a41",
+                        "surface-bright": "#f7f9ff",
+                        "primary-container": "#0969da",
+                        "on-secondary-container": "#60656c",
+                        "primary": "#0051ae",
+                        "surface": "#f7f9ff",
+                        "background": "#f7f9ff",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-variant": "#dae3ef",
+                        "secondary": "#5a5f66",
+                        "on-background": "#141c25",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#b84b00",
+                        "secondary-container": "#dee3eb",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- SideNavBar (Shared Component Execution) -->
+<aside class="h-screen w-64 fixed left-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 space-y-2 z-50">
+<div class="flex items-center gap-3 px-2 py-4 mb-4">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+</div>
+<div>
+<p class="font-headline font-bold text-slate-900 leading-tight">Editorial Tech</p>
+<p class="text-xs text-slate-500">Precise Artisan</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+                Home
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+                Issues
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+                Projects
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:translate-x-1 duration-200 transition-all font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                Teams
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg hover:translate-x-1 duration-200 transition-all font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</nav>
+<button class="mt-auto bg-gradient-to-br from-primary to-primary-container text-white rounded-xl py-3 px-4 font-headline text-sm font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="add_circle">add_circle</span>
+            New Issue
+        </button>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col">
+<!-- TopNavBar (Shared Component Execution) -->
+<header class="w-full top-0 sticky z-40 bg-slate-50/80 backdrop-blur-md flex justify-between items-center px-6 py-3">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold text-slate-900 font-headline tracking-tight">Settings</h1>
+<nav class="hidden md:flex gap-6">
+<a class="text-slate-500 text-sm font-medium hover:text-blue-600 transition-colors" href="#">Pull Requests</a>
+<a class="text-slate-500 text-sm font-medium hover:text-blue-600 transition-colors" href="#">Issues</a>
+<a class="text-slate-500 text-sm font-medium hover:text-blue-600 transition-colors" href="#">Marketplace</a>
+<a class="text-blue-600 border-b-2 border-blue-600 pb-1 text-sm font-medium" href="#">Explore</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant/20" data-alt="close-up portrait of a professional software engineer in a clean studio setting with soft blue ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMacVT1vodySn5-A17Xy_UaH0GCHM-gQ373_D7pE1efm00zZT_Cvt0fSwRzuvao34BlK3omuOD7tmo93gJ656fvk6g1dOOWs_26hFGjvhQViJxqLQtMEeWHaVQrwJVammlsNeILGdXDhn_RKnaWL7HG7ScvbJMKqK61APDrNV-o2LtuWcoqwi5GDyroFc184pFCCOUotL1uNa2x3asK9CbhqOw06ApRTrE_0Iv8UNj94yHYurS4mIGgdg5Ttpe3VdS8CCd2Bev9MU"/>
+</div>
+</header>
+<div class="p-10 space-y-12 max-w-6xl">
+<!-- Header Section -->
+<section>
+<h2 class="text-4xl font-headline font-extrabold text-on-surface tracking-tighter mb-2">Workspace Configuration</h2>
+<p class="text-on-surface-variant font-body">Refine your editorial workflow and manage cross-repository integration.</p>
+</section>
+<!-- Personal Access Token Section (Bento Style) -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-surface-container-low p-8 rounded-xl flex flex-col justify-between">
+<div>
+<h3 class="text-xl font-headline font-bold mb-4">GitHub Personal Access Token</h3>
+<p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Your token enables "Editorial Tech" to synchronize issues, manage pull requests, and deploy code directly from this dashboard. Keep it secure.</p>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10 shadow-sm">
+<span class="material-symbols-outlined text-primary" data-icon="key">key</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm font-mono flex-1 text-on-surface" readonly="" type="password" value="ghp_************************"/>
+<button class="text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary-container/10 px-3 py-1 rounded-full transition-colors">Rotate</button>
+</div>
+<div class="flex gap-2">
+<span class="text-[10px] bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-bold">REPO_READ</span>
+<span class="text-[10px] bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-bold">WORKFLOW_WRITE</span>
+<span class="text-[10px] bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-bold">GIST</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-high p-8 rounded-xl flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 bg-surface-container-lowest rounded-full flex items-center justify-center mb-4 shadow-sm">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="security" data-weight="fill" style="font-variation-settings: 'FILL' 1;">security</span>
+</div>
+<h4 class="font-headline font-bold text-on-surface mb-2">Two-Factor Auth</h4>
+<p class="text-xs text-on-surface-variant mb-6">Status: Active &amp; Protected</p>
+<button class="w-full bg-surface-container-lowest text-on-surface font-semibold py-3 rounded-xl hover:bg-white transition-colors text-sm">View Security Log</button>
+</div>
+</section>
+<!-- Project Management Section -->
+<section class="space-y-6">
+<div class="flex justify-between items-end">
+<div>
+<h3 class="text-2xl font-headline font-bold text-on-surface">Active Project Pipelines</h3>
+<p class="text-sm text-on-surface-variant">Manage deadlines and repository mapping for active sprints.</p>
+</div>
+<button class="text-primary font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                        View All Repository <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Project Card 1 -->
+<div class="group relative bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high">
+<div class="absolute left-0 top-6 bottom-6 w-1 bg-tertiary rounded-r-full"></div>
+<div class="flex justify-between items-start mb-6 pl-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h4 class="font-headline font-bold text-lg">NextGen-API Core</h4>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-bold px-2 py-0.5 rounded-full">CRITICAL</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,81,174,0.4)]"></div>
+<span class="text-xs font-mono text-on-surface-variant">#8fa2b10</span>
+</div>
+</div>
+<button class="bg-surface-container-lowest p-2 rounded-lg text-primary shadow-sm active:scale-95 duration-150 flex items-center gap-2 font-bold text-xs">
+<span class="material-symbols-outlined text-sm" data-icon="map">map</span>
+                                MAP DUE DATE
+                            </button>
+</div>
+<div class="pl-4 space-y-4">
+<div class="flex justify-between text-xs text-on-surface-variant font-medium">
+<span>Infrastructure migration</span>
+<span>85% Complete</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[85%]"></div>
+</div>
+</div>
+</div>
+<!-- Project Card 2 -->
+<div class="group relative bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high">
+<div class="absolute left-0 top-6 bottom-6 w-1 bg-primary rounded-r-full"></div>
+<div class="flex justify-between items-start mb-6 pl-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h4 class="font-headline font-bold text-lg">Design-Ops Library</h4>
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded-full">STABLE</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-slate-400"></div>
+<span class="text-xs font-mono text-on-surface-variant">#4c11e92</span>
+</div>
+</div>
+<button class="bg-surface-container-lowest p-2 rounded-lg text-primary shadow-sm active:scale-95 duration-150 flex items-center gap-2 font-bold text-xs">
+<span class="material-symbols-outlined text-sm" data-icon="map">map</span>
+                                MAP DUE DATE
+                            </button>
+</div>
+<div class="pl-4 space-y-4">
+<div class="flex justify-between text-xs text-on-surface-variant font-medium">
+<span>Token system audit</span>
+<span>42% Complete</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[42%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Asymmetric Grid Action Section -->
+<section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+<div class="lg:col-span-3 bg-inverse-surface text-inverse-on-surface p-8 rounded-xl relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="text-2xl font-headline font-bold mb-4 leading-tight">Advanced Repository <br/>Insight Metrics</h3>
+<p class="text-slate-400 text-sm max-w-sm mb-8">Utilize our proprietary engine to predict commit bottlenecks before they happen.</p>
+<button class="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all">Launch Diagnostics</button>
+</div>
+<!-- Decorative Background Element -->
+<div class="absolute right-[-10%] top-[-10%] w-64 h-64 bg-primary/20 blur-[80px] rounded-full"></div>
+</div>
+<div class="lg:col-span-2 bg-primary-container text-on-primary-container p-8 rounded-xl flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-4xl mb-4" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="text-xl font-headline font-bold mb-2">Automated Editorial</h3>
+<p class="text-blue-100 text-sm">Let AI write your release notes based on commit messages.</p>
+</div>
+<div class="flex items-center gap-2 mt-4">
+<div class="flex -space-x-2">
+<img alt="Team member" class="w-8 h-8 rounded-full border-2 border-primary-container" data-alt="professional woman in tech smiling, high quality photography, soft workspace lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDULTmswLJhBWQ3lr6XusaxzpoRf1UNDvtA3iRxG-UizAhQiMZlmkjW9YGOB6oM3mguuPXcGvNQ3sbyatCUuRsfe7MjFz0dZ9kVHRBSQe8LcrXQXqJlNAWvFIH-En23FMz-w3XuUFnk35sWDKBZGWhX1TfN67KcxgWD1Br2uwEH5E-LRhf4ZoLHpU_3at4irS5Xss1DYC8y1GQD7FSsSCMIOGqTDNGWwriSEH6-Bogf4E9ZPxG-zn6uRcMxUxERwwjW9ystbW9eDpM"/>
+<img alt="Team member" class="w-8 h-8 rounded-full border-2 border-primary-container" data-alt="close up of a software developer with glasses, professional portrait, cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5bqEqxvrq5UX6ynSpxdaNhXSJGHIVNTf_EIKOmyTbZ8A6Lggl9NFwtTP912jB584avv-7Gck9eUXpePwvTqrCQfzWYWYPWEFcl2QAZtSWGOQxt0s0Mk-sSiVXbDW80uXEXuevFnNMlcyaSZqSPV5VN6RDfA2pCCGH850jBMl3iFNKj55qHI8DDdwFdX4U8WZI1zxKN8zAENqGmXJaMe2d6THlOdTGZrQQRxmt-ZHEg0sECDXQK0QNSmZ-qNGrZ70x1iDghcXBQzQ"/>
+<div class="w-8 h-8 rounded-full bg-primary text-[10px] flex items-center justify-center font-bold border-2 border-primary-container">+12</div>
+</div>
+<span class="text-xs font-medium">Used by your team</span>
+</div>
+</div>
+</section>
+</div>
+<footer class="mt-auto px-10 py-8 text-on-surface-variant flex justify-between items-center border-t border-outline-variant/5">
+<p class="text-xs font-medium">© 2024 The Engineering Editorial. All rights reserved.</p>
+<div class="flex gap-6 text-xs font-bold">
+<a class="hover:text-primary transition-colors" href="#">API Status</a>
+<a class="hover:text-primary transition-colors" href="#">Terms</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+</div>
+</footer>
+</main>
+</body></html>
