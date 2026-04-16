@@ -9,6 +9,7 @@ import 'package:gh_todos/compositions/setup/connect_security_notice.dart';
 import 'package:gh_todos/compositions/setup/connect_token_form.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/providers/session_provider.dart';
+import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -184,41 +185,40 @@ class _ConnectBackgroundLayer extends StatelessWidget {
     final primaryFixed = resolveColor(context, ColorTokens.primary.fixed);
     final tertiaryFixed = resolveColor(context, ColorTokens.tertiary.fixedDim);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 1100;
+    // Promote the decorative panel only on `large` (≥1280). Below that the
+    // connect form already reads as a deliberate hero; the extra rotated
+    // card would just crowd tablet-landscape and smaller desktop windows.
+    final showDecorativePanel = isLarge(context);
 
-        return StackBox(
-          style: setupPageStackStyle(),
-          children: [
-            Positioned.fill(
-              child: Box(style: setupPageBackgroundStyle(context)),
-            ),
-            Positioned(
-              top: -120,
-              left: -120,
-              child: _AmbientOrb(
-                color: withOpacity(primaryFixed, 0.28),
-                size: 320,
-              ),
-            ),
-            Positioned(
-              right: -80,
-              bottom: -80,
-              child: _AmbientOrb(
-                color: withOpacity(tertiaryFixed, 0.2),
-                size: 240,
-              ),
-            ),
-            if (isDesktop)
-              const Positioned(
-                right: 84,
-                top: 180,
-                child: ConnectDecorativePanel(),
-              ),
-          ],
-        );
-      },
+    return StackBox(
+      style: setupPageStackStyle(),
+      children: [
+        Positioned.fill(
+          child: Box(style: setupPageBackgroundStyle(context)),
+        ),
+        Positioned(
+          top: -120,
+          left: -120,
+          child: _AmbientOrb(
+            color: withOpacity(primaryFixed, 0.28),
+            size: 320,
+          ),
+        ),
+        Positioned(
+          right: -80,
+          bottom: -80,
+          child: _AmbientOrb(
+            color: withOpacity(tertiaryFixed, 0.2),
+            size: 240,
+          ),
+        ),
+        if (showDecorativePanel)
+          const Positioned(
+            right: 84,
+            top: 180,
+            child: ConnectDecorativePanel(),
+          ),
+      ],
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/src/adaptive_sheet.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
+import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
@@ -17,11 +19,13 @@ Future<Project?> showAddProjectSheet(
   BuildContext context, {
   Set<String> excludeProjectIds = const {},
 }) {
-  return showModalBottomSheet<Project>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => _AddProjectSheet(excludeProjectIds: excludeProjectIds),
+  return showAdaptiveSheet<Project>(
+    context,
+    dialogMaxWidth: 560,
+    builder: (_, isDialog) => _AddProjectSheet(
+      excludeProjectIds: excludeProjectIds,
+      isDialog: isDialog,
+    ),
   );
 }
 
@@ -34,8 +38,12 @@ class _Owner {
 
 class _AddProjectSheet extends ConsumerStatefulWidget {
   final Set<String> excludeProjectIds;
+  final bool isDialog;
 
-  const _AddProjectSheet({required this.excludeProjectIds});
+  const _AddProjectSheet({
+    required this.excludeProjectIds,
+    required this.isDialog,
+  });
 
   @override
   ConsumerState<_AddProjectSheet> createState() => _AddProjectSheetState();
@@ -48,12 +56,85 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(userInfoProvider);
+
+    if (widget.isDialog) return _buildDialogBody(context, userAsync);
+    return _buildSheetBody(context, userAsync);
+  }
+
+  Widget _buildInner(
+    BuildContext context,
+    AsyncValue<Query$UserInformation$viewer?> userAsync,
+    ScrollController? scrollController,
+  ) {
+    return userAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => const Center(child: Text('Failed to load user')),
+      data: (viewer) {
+        if (viewer == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final viewerOwner = _Owner(id: viewer.id, login: viewer.login);
+        final activeOwner = _explicitOwner ?? viewerOwner;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AdaptiveSheetDragHandle(isDialog: widget.isDialog),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                widget.isDialog ? 24 : 0,
+                24,
+                16,
+              ),
+              child: _SheetHeader(),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _OwnerDropdownLoader(
+                viewerOwner: viewerOwner,
+                selectedId: activeOwner.id,
+                onChanged: _selectOwner,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _Divider(),
+            Expanded(
+              child: _ProjectList(
+                ownerId: activeOwner.id,
+                ownerLogin: activeOwner.login,
+                excludeProjectIds: widget.excludeProjectIds,
+                scrollController: scrollController,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogBody(
+    BuildContext context,
+    AsyncValue<Query$UserInformation$viewer?> userAsync,
+  ) {
+    // Dialog has a bounded height courtesy of the adapter's maxHeight cap; the
+    // inner list uses its default scroll physics (no shared scrollController).
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.88,
+      child: _buildInner(context, userAsync, null),
+    );
+  }
+
+  Widget _buildSheetBody(
+    BuildContext context,
+    AsyncValue<Query$UserInformation$viewer?> userAsync,
+  ) {
     final surfaceLowest = resolveColor(
       context,
       ColorTokens.surface.containerLowest,
     );
-
-    final userAsync = ref.watch(userInfoProvider);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.65,
@@ -65,47 +146,7 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
             color: surfaceLowest,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: userAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => const Center(child: Text('Failed to load user')),
-            data: (viewer) {
-              if (viewer == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final viewerOwner = _Owner(id: viewer.id, login: viewer.login);
-              final activeOwner = _explicitOwner ?? viewerOwner;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DragHandle(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                    child: _SheetHeader(),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _OwnerDropdownLoader(
-                      viewerOwner: viewerOwner,
-                      selectedId: activeOwner.id,
-                      onChanged: _selectOwner,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _Divider(),
-                  Expanded(
-                    child: _ProjectList(
-                      ownerId: activeOwner.id,
-                      ownerLogin: activeOwner.login,
-                      excludeProjectIds: widget.excludeProjectIds,
-                      scrollController: scrollController,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+          child: _buildInner(context, userAsync, scrollController),
         );
       },
     );
@@ -146,25 +187,6 @@ class _OwnerDropdownLoader extends ConsumerWidget {
           onChanged: onChanged,
         );
       },
-    );
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final outlineVariant = resolveColor(context, ColorTokens.outline.variant);
-
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 12),
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: withOpacity(outlineVariant, 0.3),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
     );
   }
 }
@@ -257,7 +279,7 @@ class _ProjectList extends ConsumerWidget {
   final String ownerId;
   final String ownerLogin;
   final Set<String> excludeProjectIds;
-  final ScrollController scrollController;
+  final ScrollController? scrollController;
 
   const _ProjectList({
     required this.ownerId,

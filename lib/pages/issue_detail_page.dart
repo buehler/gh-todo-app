@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_comment_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_issue_sheet.dart';
@@ -11,6 +12,7 @@ import 'package:gh_todos/compositions/issue_detail/issue_detail_menu.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_detail_top_bar.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_header_section.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
+import 'package:gh_todos/compositions/shell/app_top_bar.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/priority.dart';
@@ -18,8 +20,10 @@ import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/issue_mutations.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -40,9 +44,16 @@ class IssueDetailPage extends ConsumerStatefulWidget {
   final String issueId;
   final IssueData issue;
 
+  /// When `true`, the page renders without its own [Scaffold] and its back
+  /// button clears [selectedIssueProvider] instead of calling `context.pop`.
+  /// Used when the page is embedded in [TodosSplitView]'s right pane on
+  /// wide layouts.
+  final bool embedded;
+
   const IssueDetailPage({
     required this.issueId,
     required this.issue,
+    this.embedded = false,
     super.key,
   });
 
@@ -277,71 +288,113 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding =
-        IssueDetailTopBar.barHeight + MediaQuery.paddingOf(context).top;
+    final safeTop = MediaQuery.paddingOf(context).top;
     // Leave a bit of breathing room below the composer for the safe-area
     // (home-indicator) and the on-screen keyboard's clearance.
     final bottomPadding = MediaQuery.paddingOf(context).bottom + 32;
 
     final viewerLogin = ref.watch(userInfoProvider).asData?.value?.login;
 
+    // In embedded mode the outer AppTopBar already fills the top-edge space
+    // (and is rendered *above* the pane in the shell's Stack, so we can't put
+    // our own top bar there). The inline toolbar sits just below it, giving
+    // Edit / Open-in-GitHub / Close the desktop-grade visibility a kebab
+    // would hide.
+    final contentTopPadding = widget.embedded
+        ? 16.0
+        : IssueDetailTopBar.barHeight + safeTop + 24;
+
+    final content = SingleChildScrollView(
+      key: IssueDetailPage.scrollKey,
+      padding: EdgeInsets.only(
+        top: contentTopPadding,
+        left: 24,
+        right: 24,
+        bottom: bottomPadding,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          // Reading-column clamp keeps issue descriptions and conversation
+          // threads comfortable even on ultra-wide windows.
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: ColumnBox(
+            style: FlexBoxStyler().flex(
+              FlexStyler()
+                  .direction(Axis.vertical)
+                  .crossAxisAlignment(CrossAxisAlignment.stretch)
+                  .mainAxisSize(MainAxisSize.min)
+                  .spacing(32),
+            ),
+            children: [
+              IssueHeaderSection(issue: _issue),
+              IssueStateAction(
+                issue: _issue,
+                enabled: !_stateActionBusy,
+                onPressed: _stateActionBusy
+                    ? null
+                    : () => unawaited(_toggleIssueState()),
+              ),
+              IssueDescriptionSection(issueId: _issueId),
+              IssueConversationSection(
+                issueId: _issueId,
+                commentCount: _issue.commentCount,
+                viewerLogin: viewerLogin,
+                onPostComment: _postComment,
+                onEditComment: (c) => unawaited(_editComment(c)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (widget.embedded) {
+      // The shell hides AppTopBar on wide, so we only reserve the safe-area
+      // inset. The inline toolbar provides the pane's top chrome directly.
+      return Column(
+        children: [
+          SizedBox(height: AppTopBar.effectiveHeight(context) + safeTop),
+          _EmbeddedDetailToolbar(
+            onEdit: () => unawaited(_editIssue()),
+            onOpenInBrowser: () => unawaited(_openInBrowser()),
+            onClose: _handleBack,
+          ),
+          Expanded(child: content),
+        ],
+      );
+    }
+
+    final stack = Stack(
+      children: [
+        Positioned.fill(child: content),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IssueDetailTopBar(
+            onBack: _handleBack,
+            onMenuAction: _handleMenuAction,
+          ),
+        ),
+      ],
+    );
+
     return Scaffold(
       key: IssueDetailPage.pageKey,
       backgroundColor: resolveColor(context, ColorTokens.background.$default),
       extendBody: true,
       extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: SingleChildScrollView(
-              key: IssueDetailPage.scrollKey,
-              padding: EdgeInsets.only(
-                top: topPadding + 24,
-                left: 24,
-                right: 24,
-                bottom: bottomPadding,
-              ),
-              child: ColumnBox(
-                style: FlexBoxStyler().flex(
-                  FlexStyler()
-                      .direction(Axis.vertical)
-                      .crossAxisAlignment(CrossAxisAlignment.stretch)
-                      .mainAxisSize(MainAxisSize.min)
-                      .spacing(32),
-                ),
-                children: [
-                  IssueHeaderSection(issue: _issue),
-                  IssueStateAction(
-                    issue: _issue,
-                    enabled: !_stateActionBusy,
-                    onPressed: _stateActionBusy
-                        ? null
-                        : () => unawaited(_toggleIssueState()),
-                  ),
-                  IssueDescriptionSection(issueId: _issueId),
-                  IssueConversationSection(
-                    issueId: _issueId,
-                    commentCount: _issue.commentCount,
-                    viewerLogin: viewerLogin,
-                    onPostComment: _postComment,
-                    onEditComment: (c) => unawaited(_editComment(c)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: IssueDetailTopBar(
-              onBack: () => context.pop(),
-              onMenuAction: _handleMenuAction,
-            ),
-          ),
-        ],
-      ),
+      body: stack,
     );
+  }
+
+  void _handleBack() {
+    if (widget.embedded) {
+      // Detail pane owns the selected-issue state on wide.
+      ref.read(selectedIssueProvider.notifier).clear();
+      return;
+    }
+    context.pop();
   }
 
   void _handleMenuAction(IssueDetailMenuAction action) {
@@ -374,5 +427,68 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
+/// Desktop-style inline action row for the embedded (split-view) detail
+/// pane.
+///
+/// Replaces the mobile `IssueDetailTopBar`'s kebab menu — icons are always
+/// visible, labeled via tooltips, and grouped on the right. Less "mobile-y"
+/// than a hidden overflow menu and gives the detail pane a clear "close"
+/// affordance (which otherwise only exists via tapping another row).
+class _EmbeddedDetailToolbar extends StatelessWidget {
+  static const editKey = ValueKey('issue-detail-embedded-edit');
+  static const openInBrowserKey = ValueKey(
+    'issue-detail-embedded-open-in-browser',
+  );
+  static const closeKey = ValueKey('issue-detail-embedded-close');
+
+  final VoidCallback onEdit;
+  final VoidCallback onOpenInBrowser;
+  final VoidCallback onClose;
+
+  const _EmbeddedDetailToolbar({
+    required this.onEdit,
+    required this.onOpenInBrowser,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          const Spacer(),
+          EditorialIconButton(
+            key: editKey,
+            icon: LucideIcons.pencil,
+            tooltip: 'Edit issue',
+            variation: IconButtonVariation.ghost,
+            size: 40,
+            onPressed: onEdit,
+          ),
+          const SizedBox(width: 4),
+          EditorialIconButton(
+            key: openInBrowserKey,
+            icon: LucideIcons.externalLink,
+            tooltip: 'Open in GitHub',
+            variation: IconButtonVariation.ghost,
+            size: 40,
+            onPressed: onOpenInBrowser,
+          ),
+          const SizedBox(width: 4),
+          EditorialIconButton(
+            key: closeKey,
+            icon: LucideIcons.x,
+            tooltip: 'Close detail',
+            variation: IconButtonVariation.ghost,
+            size: 40,
+            onPressed: onClose,
+          ),
+        ],
+      ),
+    );
   }
 }

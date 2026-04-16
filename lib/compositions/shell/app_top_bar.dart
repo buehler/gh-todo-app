@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
-/// Sticky frosted-glass app bar shown above every shell route.
+/// Sticky frosted-glass app bar shown above shell routes on compact/medium
+/// widths (phones, tablet portrait).
 ///
-/// Shows the app title on the left and the authenticated user's avatar +
-/// username on the right, fetched via the GitHub GraphQL API.
+/// On wide widths (≥ 900) the shell hides this bar entirely — the nav rail
+/// owns branding + identity. Pages size their top padding through
+/// [AppTopBar.effectiveHeight] so they collapse the reserved space on wide.
 class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
   static const double barHeight = 64;
   static const pageKey = ValueKey('app-top-bar');
@@ -20,6 +23,16 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(barHeight);
+
+  /// Height pages should reserve at the top for the shell's top bar.
+  ///
+  /// Zero on wide layouts (tablet landscape / desktop) because the shell
+  /// hides the bar entirely — the nav rail owns branding + identity and
+  /// each pane handles its own top chrome. Callers combine this with
+  /// `MediaQuery.paddingOf(context).top` for their final top padding.
+  static double effectiveHeight(BuildContext context) {
+    return isWide(context) ? 0 : barHeight;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

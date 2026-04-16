@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/components.dart';
+import 'package:gh_todos/components/src/adaptive_sheet.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
-/// Opens an "Edit Comment" bottom sheet pre-populated with [comment]'s body.
-/// Returns the updated body on save, or `null` if dismissed / unchanged.
+/// Opens an "Edit Comment" sheet pre-populated with [comment]'s body. Adapts
+/// to a centered dialog on wide screens. Returns the updated body on save,
+/// or `null` if dismissed / unchanged.
 Future<String?> showEditCommentSheet(
   BuildContext context, {
   required IssueComment comment,
 }) {
-  return showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => _EditCommentSheet(comment: comment),
+  return showAdaptiveSheet<String>(
+    context,
+    builder: (_, isDialog) => _EditCommentSheet(
+      comment: comment,
+      isDialog: isDialog,
+    ),
   );
 }
 
 class _EditCommentSheet extends StatefulWidget {
   final IssueComment comment;
+  final bool isDialog;
 
-  const _EditCommentSheet({required this.comment});
+  const _EditCommentSheet({required this.comment, required this.isDialog});
 
   @override
   State<_EditCommentSheet> createState() => _EditCommentSheetState();
@@ -65,7 +68,68 @@ class _EditCommentSheetState extends State<_EditCommentSheet> {
       ColorTokens.surface.containerLowest,
     );
     final onSurface = resolveColor(context, ColorTokens.surface.on);
-    final outlineVariant = resolveColor(context, ColorTokens.outline.variant);
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AdaptiveSheetDragHandle(isDialog: widget.isDialog),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24, widget.isDialog ? 24 : 0, 24, 16),
+          child: StyledText(
+            'Edit Comment',
+            style: editorialTextStyle(
+              TextTokens.title.$large,
+              color: onSurface,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: EditorialTextField(
+            controller: _controller,
+            hintText: 'Update the comment…',
+            onChanged: _onChanged,
+            keyboardType: TextInputType.multiline,
+            textInputAction: TextInputAction.newline,
+            minLines: 4,
+            maxLines: 10,
+            autofocus: true,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: EditorialButton(
+                  label: 'Cancel',
+                  variation: ButtonVariation.secondary,
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: EditorialButton(
+                  label: 'Save',
+                  enabled: _canSave,
+                  onPressed: _canSave ? _save : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!widget.isDialog)
+          SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
+      ],
+    );
+
+    if (widget.isDialog) {
+      // Adapter provides the rounded surface + shadow. We only supply content.
+      return content;
+    }
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -74,71 +138,7 @@ class _EditCommentSheetState extends State<_EditCommentSheet> {
           color: surfaceLowest,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: withOpacity(outlineVariant, 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: StyledText(
-                'Edit Comment',
-                style: editorialTextStyle(
-                  TextTokens.title.$large,
-                  color: onSurface,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: EditorialTextField(
-                controller: _controller,
-                hintText: 'Update the comment…',
-                onChanged: _onChanged,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                minLines: 4,
-                maxLines: 10,
-                autofocus: true,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: EditorialButton(
-                      label: 'Cancel',
-                      variation: ButtonVariation.secondary,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: EditorialButton(
-                      label: 'Save',
-                      enabled: _canSave,
-                      onPressed: _canSave ? _save : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
-          ],
-        ),
+        child: content,
       ),
     );
   }

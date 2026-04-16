@@ -12,6 +12,7 @@ import 'package:gh_todos/compositions/shell/app_top_bar.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
+import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
@@ -26,9 +27,12 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final projects = ref.watch(projectListProvider);
 
-    final topPadding = AppTopBar.barHeight + MediaQuery.paddingOf(context).top;
-    final bottomPadding =
-        AppBottomNav.barHeight + MediaQuery.paddingOf(context).bottom + 24;
+    final topPadding =
+        AppTopBar.effectiveHeight(context) + MediaQuery.paddingOf(context).top;
+    // On wide, the bottom nav is replaced by the side rail — skip its height.
+    final bottomPadding = (isWide(context) ? 0 : AppBottomNav.barHeight) +
+        MediaQuery.paddingOf(context).bottom +
+        24;
 
     return Align(
       alignment: Alignment.topCenter,

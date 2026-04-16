@@ -1,10 +1,12 @@
 import 'package:flutter/widgets.dart';
+import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mix/mix.dart';
 
 MixScope octanePrime(Widget child) => MixScope(
+  breakpoints: appBreakpoints,
   colors: {
     ColorTokens.primary.$default: const Color(0xFF0051AE),
     ColorTokens.primary.container: const Color(0xFF0969DA),

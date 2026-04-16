@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
+import 'package:gh_todos/components/src/adaptive_sheet.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/settings/edit_project_sheet/priority_level_chip.dart';
 import 'package:gh_todos/models/issue_data.dart';
@@ -62,15 +63,14 @@ Future<EditIssueResult?> showEditIssueSheet(
   required String? currentBody,
   required Project? project,
 }) {
-  return showModalBottomSheet<EditIssueResult>(
-    context: context,
-    isScrollControlled: true,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => _EditIssueSheet(
+  return showAdaptiveSheet<EditIssueResult>(
+    context,
+    dialogMaxWidth: 640,
+    builder: (_, isDialog) => _EditIssueSheet(
       issue: issue,
       initialBody: currentBody ?? '',
       project: project,
+      isDialog: isDialog,
     ),
   );
 }
@@ -79,11 +79,13 @@ class _EditIssueSheet extends ConsumerStatefulWidget {
   final IssueData issue;
   final String initialBody;
   final Project? project;
+  final bool isDialog;
 
   const _EditIssueSheet({
     required this.issue,
     required this.initialBody,
     required this.project,
+    required this.isDialog,
   });
 
   @override
@@ -202,6 +204,97 @@ class _EditIssueSheetState extends ConsumerState<_EditIssueSheet> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isDialog) {
+      return _buildDialogBody(context);
+    }
+    return _buildSheetBody(context);
+  }
+
+  Widget _buildFormColumn() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Header(issue: widget.issue),
+        const SizedBox(height: 24),
+        _SectionLabel(label: 'Title'),
+        const SizedBox(height: 8),
+        EditorialTextField(
+          controller: _titleController,
+          hintText: 'Issue title',
+          onChanged: (_) => setState(() {}),
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 20),
+        _SectionLabel(label: 'Description'),
+        const SizedBox(height: 8),
+        EditorialTextField(
+          controller: _bodyController,
+          hintText: 'Describe the issue…',
+          onChanged: (_) => setState(() {}),
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          minLines: 4,
+          maxLines: 10,
+        ),
+        if (_showDueDate) ...[
+          const SizedBox(height: 24),
+          _DueDateSection(
+            selected: _dueDate,
+            onPick: _pickDate,
+            onClear: _clearDate,
+          ),
+        ],
+        if (_showPriority) ...[
+          const SizedBox(height: 24),
+          _PrioritySection(
+            priorities: _mappedPriorities,
+            selected: _priority,
+            onChanged: (p) => setState(() => _priority = p),
+          ),
+        ],
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: EditorialButton(
+                label: 'Cancel',
+                variation: ButtonVariation.secondary,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: EditorialButton(
+                label: 'Save',
+                enabled: _canSave,
+                onPressed: _canSave ? _save : null,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDialogBody(BuildContext context) {
+    // Dialog: adapter provides rounded surface. Column + scrollable inner
+    // region fills the adapter's maxHeight cap.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            child: _buildFormColumn(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSheetBody(BuildContext context) {
     final surfaceLowest = resolveColor(
       context,
       ColorTokens.surface.containerLowest,
@@ -225,7 +318,7 @@ class _EditIssueSheetState extends ConsumerState<_EditIssueSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _DragHandle(),
+                AdaptiveSheetDragHandle(isDialog: false),
                 Expanded(
                   child: SingleChildScrollView(
                     controller: scrollController,
@@ -234,64 +327,7 @@ class _EditIssueSheetState extends ConsumerState<_EditIssueSheet> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _Header(issue: widget.issue),
-                        const SizedBox(height: 24),
-                        _SectionLabel(label: 'Title'),
-                        const SizedBox(height: 8),
-                        EditorialTextField(
-                          controller: _titleController,
-                          hintText: 'Issue title',
-                          onChanged: (_) => setState(() {}),
-                          textInputAction: TextInputAction.next,
-                        ),
-                        const SizedBox(height: 20),
-                        _SectionLabel(label: 'Description'),
-                        const SizedBox(height: 8),
-                        EditorialTextField(
-                          controller: _bodyController,
-                          hintText: 'Describe the issue…',
-                          onChanged: (_) => setState(() {}),
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          minLines: 4,
-                          maxLines: 10,
-                        ),
-                        if (_showDueDate) ...[
-                          const SizedBox(height: 24),
-                          _DueDateSection(
-                            selected: _dueDate,
-                            onPick: _pickDate,
-                            onClear: _clearDate,
-                          ),
-                        ],
-                        if (_showPriority) ...[
-                          const SizedBox(height: 24),
-                          _PrioritySection(
-                            priorities: _mappedPriorities,
-                            selected: _priority,
-                            onChanged: (p) => setState(() => _priority = p),
-                          ),
-                        ],
-                        const SizedBox(height: 32),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: EditorialButton(
-                                label: 'Cancel',
-                                variation: ButtonVariation.secondary,
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: EditorialButton(
-                                label: 'Save',
-                                enabled: _canSave,
-                                onPressed: _canSave ? _save : null,
-                              ),
-                            ),
-                          ],
-                        ),
+                        _buildFormColumn(),
                         SizedBox(height: MediaQuery.paddingOf(context).bottom),
                       ],
                     ),
@@ -302,26 +338,6 @@ class _EditIssueSheetState extends ConsumerState<_EditIssueSheet> {
           ),
         );
       },
-    );
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  const _DragHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    final outlineVariant = resolveColor(context, ColorTokens.outline.variant);
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 12),
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: withOpacity(outlineVariant, 0.3),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
     );
   }
 }
