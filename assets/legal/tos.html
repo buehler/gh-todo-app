@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>gh_todos Terms of Service</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #f7f9ff;
+        --surface: #f7f9ff;
+        --surface-low: #ecf4ff;
+        --surface-high: #e0e9f5;
+        --surface-highest: #dae3ef;
+        --surface-lowest: #ffffff;
+        --primary: #0051ae;
+        --primary-strong: #0969da;
+        --primary-fixed: #d8e2ff;
+        --secondary-container: #dee3eb;
+        --tertiary: #913900;
+        --tertiary-fixed: #ffdbcc;
+        --error: #ba1a1a;
+        --on-surface: #141c25;
+        --on-surface-variant: #424753;
+        --outline-ghost: rgba(194, 198, 214, 0.15);
+        --shadow: 0 12px 32px rgba(20, 28, 37, 0.06);
+        --hero-glow-a: rgba(216, 226, 255, 0.9);
+        --hero-glow-b: rgba(222, 227, 235, 0.8);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", sans-serif;
+        color: var(--on-surface);
+        background:
+          radial-gradient(circle at top left, var(--hero-glow-a), transparent 42%),
+          radial-gradient(circle at bottom right, var(--hero-glow-b), transparent 34%),
+          linear-gradient(180deg, #f9fbff 0%, var(--background) 100%);
+      }
+
+      a {
+        color: var(--primary);
+      }
+
+      .page {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .shell {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(20px);
+        background: rgba(247, 249, 255, 0.78);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        color: #ffffff;
+        font-family: "Manrope", sans-serif;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+        box-shadow: var(--shadow);
+      }
+
+      .brand-copy strong,
+      .eyebrow,
+      h1,
+      h2,
+      h3,
+      .stat-value {
+        font-family: "Manrope", sans-serif;
+      }
+
+      .brand-copy strong {
+        display: block;
+        font-size: 1rem;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-copy span,
+      .meta,
+      .nav a,
+      .jump a,
+      .stat-label {
+        color: var(--on-surface-variant);
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .nav a,
+      .jump a {
+        text-decoration: none;
+      }
+
+      .nav a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(236, 244, 255, 0.82);
+        font-size: 0.9rem;
+      }
+
+      .hero {
+        padding: 44px 0 28px;
+      }
+
+      .hero-grid {
+        display: grid;
+        gap: 24px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .section-surface,
+      .callout {
+        border: 1px solid var(--outline-ghost);
+      }
+
+      .hero-main {
+        background: rgba(255, 255, 255, 0.56);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0 0 16px;
+        font-size: 0.76rem;
+        line-height: 1.2;
+        letter-spacing: 0.18em;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--primary);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.6rem, 6vw, 4.8rem);
+        line-height: 0.96;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-main p {
+        max-width: 52rem;
+        margin: 20px 0 0;
+        font-size: 1.05rem;
+        line-height: 1.75;
+        color: var(--on-surface-variant);
+      }
+
+      .hero-side {
+        background: var(--surface-low);
+        border-radius: 28px;
+        padding: 22px;
+      }
+
+      .hero-side h2,
+      .section-header h2,
+      .callout h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      .stat {
+        padding: 16px;
+        border-radius: 22px;
+        background: var(--surface-lowest);
+      }
+
+      .stat-value {
+        display: block;
+        font-weight: 800;
+        font-size: 1.65rem;
+        letter-spacing: -0.04em;
+      }
+
+      .stat-label {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+
+      .jump {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 6px 0 0;
+      }
+
+      .jump a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--surface-low);
+        font-size: 0.88rem;
+      }
+
+      .content {
+        padding: 16px 0 72px;
+      }
+
+      .content-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .section-surface {
+        background: rgba(236, 244, 255, 0.7);
+        border-radius: 28px;
+        padding: 24px;
+      }
+
+      .section-header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .section-header p,
+      .lede,
+      li,
+      .footnote,
+      .contact-list {
+        color: var(--on-surface-variant);
+      }
+
+      .section-header p,
+      .lede,
+      .contact-list,
+      li,
+      .footnote {
+        line-height: 1.75;
+      }
+
+      .lede {
+        margin: 0 0 20px;
+      }
+
+      .cards {
+        display: grid;
+        gap: 14px;
+      }
+
+      .card {
+        background: var(--surface-lowest);
+        border-radius: 24px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+      }
+
+      .card.tertiary::before {
+        background: linear-gradient(180deg, var(--tertiary) 0%, #b84b00 100%);
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+        line-height: 1.2;
+        letter-spacing: -0.03em;
+      }
+
+      .card p,
+      .card ul {
+        margin: 0;
+        color: var(--on-surface-variant);
+        line-height: 1.7;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .callout {
+        margin-top: 20px;
+        background: linear-gradient(135deg, rgba(0, 81, 174, 0.08), rgba(9, 105, 218, 0.02));
+        border-radius: 28px;
+        padding: 22px 24px;
+      }
+
+      .contact-list {
+        margin: 0;
+      }
+
+      .contact-list strong {
+        color: var(--on-surface);
+      }
+
+      .footnote {
+        margin-top: 18px;
+        font-size: 0.9rem;
+      }
+
+      @media (min-width: 900px) {
+        .hero-grid {
+          grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+          align-items: stretch;
+        }
+
+        .content-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .content-grid .span-2 {
+          grid-column: 1 / -1;
+        }
+
+        .cards.two-up {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="shell topbar-inner">
+          <div class="brand">
+            <div class="brand-mark">gh</div>
+            <div class="brand-copy">
+              <strong>gh_todos</strong>
+              <span>Terms of Service</span>
+            </div>
+          </div>
+          <nav class="nav" aria-label="Secondary">
+            <a href="privacy.html">Privacy</a>
+            <a href="tos.html">Terms</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="shell">
+        <section class="hero">
+          <div class="hero-grid">
+            <div class="hero-main">
+              <p class="eyebrow">Engineering Editorial / Service Terms</p>
+              <h1>Default terms, cut to fit the app.</h1>
+              <p>
+                These Terms of Service govern use of <strong>gh_todos</strong>, a
+                GitHub Projects V2 client that lets users connect a GitHub Personal
+                Access Token, view issues, and create or update GitHub content from
+                the app interface.
+              </p>
+              <p class="meta">
+                Last updated: April 16, 2026
+              </p>
+            </div>
+
+            <aside class="hero-side" aria-label="Terms summary">
+              <h2>At a glance</h2>
+              <div class="stat-grid">
+                <div class="stat">
+                  <span class="stat-value">1</span>
+                  <span class="stat-label">external dependency that matters: GitHub and your access to it</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">0</span>
+                  <span class="stat-label">promise that the service will always be uninterrupted, error-free, or available</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">1</span>
+                  <span class="stat-label">license granted to you: limited, revocable, non-exclusive use of the app</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">1</span>
+                  <span class="stat-label">main user duty: use a valid GitHub token and comply with GitHub’s rules</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <nav class="jump" aria-label="Jump links">
+            <a href="#operator">Operator</a>
+            <a href="#service">Service</a>
+            <a href="#eligibility">Eligibility</a>
+            <a href="#acceptable-use">Use Rules</a>
+            <a href="#github">GitHub Dependency</a>
+            <a href="#disclaimers">Disclaimers</a>
+            <a href="#liability">Liability</a>
+          </nav>
+        </section>
+
+        <section class="content">
+          <div class="content-grid">
+            <section class="section-surface span-2" id="operator">
+              <div class="section-header">
+                <p class="eyebrow">01 / Operator</p>
+                <h2>Who offers the service</h2>
+                <p>
+                  Complete this section before publishing. A real operator identity
+                  and contact method should appear in the live terms.
+                </p>
+              </div>
+              <p class="contact-list">
+                <strong>Operator:</strong> [Insert legal name of the individual or
+                company operating gh_todos]<br />
+                <strong>Support contact:</strong> [Insert support email address]<br />
+                <strong>Business address:</strong> [Insert mailing address, if
+                applicable]
+              </p>
+            </section>
+
+            <section class="section-surface" id="service">
+              <div class="section-header">
+                <p class="eyebrow">02 / Service</p>
+                <h2>What the app does</h2>
+              </div>
+              <p class="lede">
+                gh_todos is a client application for GitHub Projects V2. It lets
+                you:
+              </p>
+              <ul>
+                <li>connect a GitHub Personal Access Token;</li>
+                <li>list available GitHub Projects V2 workspaces;</li>
+                <li>view issue feeds and issue details;</li>
+                <li>create issues in linked repositories and add them to projects; and</li>
+                <li>update issue state, comments, priority mappings, and due dates.</li>
+              </ul>
+            </section>
+
+            <section class="section-surface" id="eligibility">
+              <div class="section-header">
+                <p class="eyebrow">03 / Eligibility</p>
+                <h2>Who may use it</h2>
+              </div>
+              <ul>
+                <li>You must be legally able to enter into a binding agreement.</li>
+                <li>You must have any GitHub account rights and permissions required for the projects, repositories, and issues you access through the app.</li>
+                <li>If you use the app on behalf of an organization, you represent that you have authority to bind that organization to these terms.</li>
+              </ul>
+            </section>
+
+            <section class="section-surface span-2">
+              <div class="section-header">
+                <p class="eyebrow">04 / Acceptance</p>
+                <h2>When these terms apply</h2>
+              </div>
+              <p class="lede">
+                By downloading, installing, accessing, or using gh_todos, you agree
+                to these Terms of Service and the Privacy Policy. If you do not
+                agree, do not use the app.
+              </p>
+            </section>
+
+            <section class="section-surface" id="acceptable-use">
+              <div class="section-header">
+                <p class="eyebrow">05 / Use Rules</p>
+                <h2>Acceptable use</h2>
+              </div>
+              <div class="cards">
+                <article class="card">
+                  <h3>You must not misuse the service</h3>
+                  <ul>
+                    <li>do not use the app to violate GitHub’s rules, another party’s rights, or applicable law;</li>
+                    <li>do not attempt to interfere with the app, reverse engineer protected parts except where law cannot restrict that right, or bypass security controls;</li>
+                    <li>do not use the app to transmit malicious code or automate abusive traffic; and</li>
+                    <li>do not use another person’s token or access credentials without authorization.</li>
+                  </ul>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface">
+              <div class="section-header">
+                <p class="eyebrow">06 / Your GitHub Token</p>
+                <h2>Account and credential responsibility</h2>
+              </div>
+              <ul>
+                <li>You are responsible for creating, storing, revoking, and rotating your GitHub Personal Access Token.</li>
+                <li>You should grant only the minimum scopes needed for your intended use.</li>
+                <li>You are responsible for all actions performed through your GitHub account and token when used with the app.</li>
+                <li>If you suspect compromise, revoke the token immediately through GitHub.</li>
+              </ul>
+            </section>
+
+            <section class="section-surface span-2" id="github">
+              <div class="section-header">
+                <p class="eyebrow">07 / Third-Party Dependency</p>
+                <h2>GitHub remains upstream</h2>
+                <p>
+                  gh_todos depends on GitHub infrastructure and GitHub data. The app
+                  is not GitHub, is not offered by GitHub unless separately stated,
+                  and cannot guarantee GitHub availability or permissions.
+                </p>
+              </div>
+              <div class="cards two-up">
+                <article class="card">
+                  <h3>GitHub terms still apply</h3>
+                  <p>
+                    Your use of GitHub through the app remains subject to GitHub’s
+                    own terms, policies, API rules, repository permissions, and
+                    rate limits.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Service availability depends on GitHub</h3>
+                  <p>
+                    If GitHub is unavailable, changes its APIs, changes its
+                    permissions model, or blocks or limits your token, parts of
+                    gh_todos may stop working.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface">
+              <div class="section-header">
+                <p class="eyebrow">08 / Content</p>
+                <h2>Your content stays yours</h2>
+              </div>
+              <p class="lede">
+                You retain rights you hold in issue text, comments, project data,
+                or other content you submit through the app. You grant only the
+                permissions technically necessary for the app and GitHub to process
+                that content on your behalf.
+              </p>
+            </section>
+
+            <section class="section-surface">
+              <div class="section-header">
+                <p class="eyebrow">09 / App License</p>
+                <h2>What you are allowed to do</h2>
+              </div>
+              <p class="lede">
+                Subject to these terms, the operator grants you a limited,
+                non-exclusive, non-transferable, revocable license to use gh_todos
+                for its intended purpose on devices and platforms you control.
+              </p>
+            </section>
+
+            <section class="section-surface span-2">
+              <div class="section-header">
+                <p class="eyebrow">10 / Updates and Changes</p>
+                <h2>The app may change</h2>
+              </div>
+              <div class="cards two-up">
+                <article class="card">
+                  <h3>Functional changes</h3>
+                  <p>
+                    The operator may modify, suspend, or discontinue features at
+                    any time, including to respond to GitHub API changes, platform
+                    requirements, security issues, or product direction.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Terms changes</h3>
+                  <p>
+                    These terms may be updated from time to time. Continued use of
+                    the app after an update takes effect means you accept the
+                    revised terms, to the extent permitted by law.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface">
+              <div class="section-header">
+                <p class="eyebrow">11 / Suspension</p>
+                <h2>When access may end</h2>
+              </div>
+              <ul>
+                <li>The operator may suspend or terminate your access if you violate these terms, create risk for the service, or use the app unlawfully.</li>
+                <li>You may stop using the app at any time.</li>
+                <li>Termination does not erase content already stored on GitHub.</li>
+              </ul>
+            </section>
+
+            <section class="section-surface" id="disclaimers">
+              <div class="section-header">
+                <p class="eyebrow">12 / Disclaimers</p>
+                <h2>No broad warranty promises</h2>
+              </div>
+              <p class="lede">
+                To the maximum extent permitted by law, gh_todos is provided on an
+                “as is” and “as available” basis. The operator does not guarantee
+                uninterrupted availability, error-free operation, compatibility with
+                all future GitHub changes, or fitness for a particular purpose.
+              </p>
+              <div class="callout">
+                <h3>Consumer-law carve-out</h3>
+                <p class="lede">
+                  Nothing in these terms is intended to exclude rights that cannot
+                  legally be excluded under applicable consumer protection law.
+                </p>
+              </div>
+            </section>
+
+            <section class="section-surface" id="liability">
+              <div class="section-header">
+                <p class="eyebrow">13 / Liability</p>
+                <h2>Liability limits</h2>
+              </div>
+              <p class="lede">
+                To the maximum extent permitted by law, the operator is not liable
+                for indirect, incidental, special, consequential, exemplary, or
+                punitive damages, or for loss of profits, revenue, goodwill, or
+                data arising out of or relating to the app. Any direct liability is
+                limited to the greater of:
+              </p>
+              <ul>
+                <li>the amount you paid for the app in the 12 months before the claim arose; or</li>
+                <li>EUR 50.</li>
+              </ul>
+              <p class="footnote">
+                This clause should be reviewed for the launch jurisdiction because
+                some countries restrict liability limitations, especially for
+                consumer contracts.
+              </p>
+            </section>
+
+            <section class="section-surface span-2">
+              <div class="section-header">
+                <p class="eyebrow">14 / Governing Law</p>
+                <h2>Jurisdiction placeholder</h2>
+              </div>
+              <p class="lede">
+                Insert a real governing-law clause before publication. Example
+                placeholder:
+              </p>
+              <p class="contact-list">
+                These terms are governed by the laws of [insert country/state],
+                excluding its conflict-of-laws rules. Courts located in
+                [insert venue] will have exclusive jurisdiction, except where
+                mandatory consumer law gives you the right to bring claims in your
+                home jurisdiction.
+              </p>
+            </section>
+
+            <section class="section-surface span-2">
+              <div class="section-header">
+                <p class="eyebrow">15 / Contact</p>
+                <h2>Questions about these terms</h2>
+              </div>
+              <p class="contact-list">
+                Contact: [Insert support or legal contact email]
+              </p>
+              <p class="footnote">
+                Publishing note: fill in the operator, contact, and governing-law
+                placeholders before release. If you later add subscriptions,
+                payments, enterprise seats, SLAs, or website accounts, these terms
+                will need to be expanded.
+              </p>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

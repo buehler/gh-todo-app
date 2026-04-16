@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>gh_todos Privacy Policy</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #f7f9ff;
+        --surface: #f7f9ff;
+        --surface-low: #ecf4ff;
+        --surface-high: #e0e9f5;
+        --surface-highest: #dae3ef;
+        --surface-lowest: #ffffff;
+        --primary: #0051ae;
+        --primary-strong: #0969da;
+        --primary-fixed: #d8e2ff;
+        --secondary-container: #dee3eb;
+        --tertiary: #913900;
+        --tertiary-fixed: #ffdbcc;
+        --error: #ba1a1a;
+        --on-surface: #141c25;
+        --on-surface-variant: #424753;
+        --outline-ghost: rgba(194, 198, 214, 0.15);
+        --shadow: 0 12px 32px rgba(20, 28, 37, 0.06);
+        --hero-glow-a: rgba(216, 226, 255, 0.9);
+        --hero-glow-b: rgba(255, 219, 204, 0.55);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", sans-serif;
+        color: var(--on-surface);
+        background:
+          radial-gradient(circle at top left, var(--hero-glow-a), transparent 42%),
+          radial-gradient(circle at bottom right, var(--hero-glow-b), transparent 34%),
+          linear-gradient(180deg, #f9fbff 0%, var(--background) 100%);
+      }
+
+      a {
+        color: var(--primary);
+      }
+
+      .page {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .shell {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(20px);
+        background: rgba(247, 249, 255, 0.78);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        color: #ffffff;
+        font-family: "Manrope", sans-serif;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+        box-shadow: var(--shadow);
+      }
+
+      .brand-copy strong,
+      .eyebrow,
+      h1,
+      h2,
+      h3,
+      .stat-value {
+        font-family: "Manrope", sans-serif;
+      }
+
+      .brand-copy strong {
+        display: block;
+        font-size: 1rem;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-copy span,
+      .meta,
+      .nav a,
+      .jump a,
+      .stat-label {
+        color: var(--on-surface-variant);
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .nav a,
+      .jump a {
+        text-decoration: none;
+      }
+
+      .nav a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(236, 244, 255, 0.82);
+        font-size: 0.9rem;
+      }
+
+      .hero {
+        padding: 44px 0 28px;
+      }
+
+      .hero-grid {
+        display: grid;
+        gap: 24px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .section-surface,
+      .callout {
+        border: 1px solid var(--outline-ghost);
+      }
+
+      .hero-main {
+        background: rgba(255, 255, 255, 0.56);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0 0 16px;
+        font-size: 0.76rem;
+        line-height: 1.2;
+        letter-spacing: 0.18em;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--primary);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.6rem, 6vw, 4.8rem);
+        line-height: 0.96;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-main p {
+        max-width: 52rem;
+        margin: 20px 0 0;
+        font-size: 1.05rem;
+        line-height: 1.75;
+        color: var(--on-surface-variant);
+      }
+
+      .hero-side {
+        background: var(--surface-low);
+        border-radius: 28px;
+        padding: 22px;
+      }
+
+      .hero-side h2,
+      .section-header h2,
+      .callout h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      .stat {
+        padding: 16px;
+        border-radius: 22px;
+        background: var(--surface-lowest);
+      }
+
+      .stat-value {
+        display: block;
+        font-weight: 800;
+        font-size: 1.65rem;
+        letter-spacing: -0.04em;
+      }
+
+      .stat-label {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+
+      .jump {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 6px 0 0;
+      }
+
+      .jump a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--surface-low);
+        font-size: 0.88rem;
+      }
+
+      .content {
+        padding: 16px 0 72px;
+      }
+
+      .content-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .section-surface {
+        background: rgba(236, 244, 255, 0.7);
+        border-radius: 28px;
+        padding: 24px;
+      }
+
+      .section-header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .section-header p,
+      .lede,
+      li,
+      .footnote,
+      .contact-list {
+        color: var(--on-surface-variant);
+      }
+
+      .section-header p,
+      .lede,
+      .contact-list,
+      li,
+      .footnote {
+        line-height: 1.75;
+      }
+
+      .lede {
+        margin: 0 0 20px;
+      }
+
+      .cards {
+        display: grid;
+        gap: 14px;
+      }
+
+      .card {
+        background: var(--surface-lowest);
+        border-radius: 24px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+      }
+
+      .card.tertiary::before {
+        background: linear-gradient(180deg, var(--tertiary) 0%, #b84b00 100%);
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+        line-height: 1.2;
+        letter-spacing: -0.03em;
+      }
+
+      .card p,
+      .card ul {
+        margin: 0;
+        color: var(--on-surface-variant);
+        line-height: 1.7;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .callout {
+        margin-top: 20px;
+        background: linear-gradient(135deg, rgba(0, 81, 174, 0.08), rgba(9, 105, 218, 0.02));
+        border-radius: 28px;
+        padding: 22px 24px;
+      }
+
+      .contact-list {
+        margin: 0;
+      }
+
+      .contact-list strong {
+        color: var(--on-surface);
+      }
+
+      .footnote {
+        margin-top: 18px;
+        font-size: 0.9rem;
+      }
+
+      @media (min-width: 900px) {
+        .hero-grid {
+          grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+          align-items: stretch;
+        }
+
+        .content-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .content-grid .span-2 {
+          grid-column: 1 / -1;
+        }
+
+        .cards.two-up {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="shell topbar-inner">
+          <div class="brand">
+            <div class="brand-mark">gh</div>
+            <div class="brand-copy">
+              <strong>gh_todos</strong>
+              <span>Privacy Policy</span>
+            </div>
+          </div>
+          <nav class="nav" aria-label="Secondary">
+            <a href="privacy.html">Privacy</a>
+            <a href="tos.html">Terms</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="shell">
+        <section class="hero">
+          <div class="hero-grid">
+            <div class="hero-main">
+              <p class="eyebrow">Engineering Editorial / Data Notice</p>
+              <h1>Privacy, kept narrow.</h1>
+              <p>
+                This Privacy Policy explains how <strong>gh_todos</strong> handles
+                information when you use the app to connect a GitHub Personal
+                Access Token, read GitHub Projects and issues, and write issue or
+                project updates back to GitHub. The app is designed to keep data
+                collection limited to what is needed for those functions.
+              </p>
+              <p class="meta">
+                Last updated: April 16, 2026
+              </p>
+            </div>
+
+            <aside class="hero-side" aria-label="Policy summary">
+              <h2>At a glance</h2>
+              <div class="stat-grid">
+                <div class="stat">
+                  <span class="stat-value">1</span>
+                  <span class="stat-label">secret stored locally: your GitHub Personal Access Token</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">0</span>
+                  <span class="stat-label">ads, trackers, or third-party analytics libraries found in the app code</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">2</span>
+                  <span class="stat-label">main storage buckets: secure token storage and local app preferences</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">1</span>
+                  <span class="stat-label">main external recipient: GitHub, which receives API requests needed to run the app</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <nav class="jump" aria-label="Jump links">
+            <a href="#controller">Controller</a>
+            <a href="#data-we-handle">Data We Handle</a>
+            <a href="#how-we-use-it">Use</a>
+            <a href="#sharing">Sharing</a>
+            <a href="#retention">Retention</a>
+            <a href="#rights">Rights</a>
+            <a href="#children">Children</a>
+          </nav>
+        </section>
+
+        <section class="content">
+          <div class="content-grid">
+            <section class="section-surface span-2" id="controller">
+              <div class="section-header">
+                <p class="eyebrow">01 / Controller</p>
+                <h2>Who operates this app</h2>
+                <p>
+                  Complete this section before publishing. App stores and privacy
+                  laws generally require a real operator identity and a working
+                  contact method.
+                </p>
+              </div>
+              <p class="contact-list">
+                <strong>Operator / controller:</strong> [Insert legal name of the
+                individual or company that operates gh_todos]<br />
+                <strong>Privacy contact:</strong> [Insert support or privacy email
+                address]<br />
+                <strong>Mailing address:</strong> [Insert business mailing
+                address, if applicable]
+              </p>
+            </section>
+
+            <section class="section-surface" id="data-we-handle">
+              <div class="section-header">
+                <p class="eyebrow">02 / Data Inventory</p>
+                <h2>What information the app handles</h2>
+              </div>
+              <div class="cards">
+                <article class="card">
+                  <h3>Information you enter directly</h3>
+                  <ul>
+                    <li>Your GitHub Personal Access Token.</li>
+                    <li>Issue titles, issue bodies, and comments you create or edit in the app.</li>
+                    <li>Project-mapping choices you configure, such as priority-field mappings and due-date-field mappings.</li>
+                  </ul>
+                </article>
+                <article class="card tertiary">
+                  <h3>Information the app reads from GitHub</h3>
+                  <ul>
+                    <li>Your GitHub account and organization context needed to list available Projects V2 workspaces.</li>
+                    <li>Project metadata such as project IDs, owner login, field IDs, and field options.</li>
+                    <li>Issue and comment data needed to render the feed and detail views, including titles, issue numbers, timestamps, comment counts, due dates, priority mappings, and open/closed state.</li>
+                    <li>Linked repository metadata required for quick-add issue creation.</li>
+                  </ul>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface">
+              <div class="section-header">
+                <p class="eyebrow">03 / Local Storage</p>
+                <h2>What stays on your device</h2>
+              </div>
+              <div class="cards">
+                <article class="card">
+                  <h3>Secure token storage</h3>
+                  <p>
+                    The app stores your GitHub Personal Access Token locally using
+                    platform-secure storage where supported. In the app code, the
+                    token is stored under the local key
+                    <code>github.personal_access_token</code>.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Preferences and cached configuration</h3>
+                  <p>
+                    The app also stores selected project identifiers and mapped
+                    project settings locally so it can restore your workspace
+                    between sessions. This includes the selected project ID and
+                    your saved project mappings.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface span-2" id="how-we-use-it">
+              <div class="section-header">
+                <p class="eyebrow">04 / Use</p>
+                <h2>Why the app processes this information</h2>
+                <p>
+                  The app uses data only for the core product workflow described in
+                  the repository: connecting to GitHub, selecting Projects V2,
+                  reading assigned issues, and letting you create or update items.
+                </p>
+              </div>
+              <div class="cards two-up">
+                <article class="card">
+                  <h3>To authenticate API requests</h3>
+                  <p>
+                    Your token is read locally and attached to requests sent to the
+                    GitHub GraphQL API at
+                    <code>https://api.github.com/graphql</code> in the
+                    <code>Authorization</code> header.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>To render your workspace</h3>
+                  <p>
+                    GitHub account, project, issue, and comment data is processed
+                    so the app can show your selected project feed, detail pages,
+                    recently closed issues, priority badges, and due dates.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>To apply your changes</h3>
+                  <p>
+                    When you post comments, update issue text, close or reopen
+                    issues, set due dates, set project single-select values, or
+                    create issues through quick-add, the app sends the necessary
+                    data to GitHub to complete that action.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>To preserve your local setup</h3>
+                  <p>
+                    Selected project IDs and project mapping preferences are stored
+                    locally so the app can reopen the same workspace without
+                    requiring you to configure it again.
+                  </p>
+                </article>
+              </div>
+              <div class="callout">
+                <h3>Legal bases</h3>
+                <p class="lede">
+                  If privacy law requires a legal basis, the likely bases are:
+                </p>
+                <ul>
+                  <li>performance of a contract or taking steps at your request to provide the app’s core functionality;</li>
+                  <li>legitimate interests in operating, securing, and improving a narrow GitHub productivity client; and</li>
+                  <li>consent where law specifically requires consent for a given processing activity.</li>
+                </ul>
+              </div>
+            </section>
+
+            <section class="section-surface" id="sharing">
+              <div class="section-header">
+                <p class="eyebrow">05 / Sharing</p>
+                <h2>Who receives data</h2>
+              </div>
+              <div class="cards">
+                <article class="card">
+                  <h3>GitHub</h3>
+                  <p>
+                    The app sends your token and requested mutation/query data to
+                    GitHub because GitHub hosts the Projects, repositories, issues,
+                    and comments the app works with.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Platform and hosting providers</h3>
+                  <p>
+                    Apple, Google, browser vendors, or other platform operators may
+                    separately process data through their operating systems,
+                    app-store infrastructure, or browser/runtime environment under
+                    their own terms and privacy notices.
+                  </p>
+                </article>
+                <article class="card tertiary">
+                  <h3>No sale, advertising, or analytics sharing stated here</h3>
+                  <p>
+                    Based on the repository code reviewed for this draft, the app
+                    does not include advertising SDKs, marketing trackers, or
+                    third-party analytics packages. This policy assumes those are
+                    not added elsewhere before release.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface" id="retention">
+              <div class="section-header">
+                <p class="eyebrow">06 / Retention</p>
+                <h2>How long information is kept</h2>
+              </div>
+              <div class="cards">
+                <article class="card">
+                  <h3>Token</h3>
+                  <p>
+                    Stored locally until you replace it, remove it through the app,
+                    clear app data, or uninstall the app.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Local preferences</h3>
+                  <p>
+                    Stored locally until you change or remove them, clear app data,
+                    or uninstall the app.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>GitHub-hosted content</h3>
+                  <p>
+                    Issue, comment, and project data created or updated through the
+                    app remains subject to GitHub’s own retention practices until
+                    you modify or delete it through GitHub or another authorized
+                    client.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface span-2">
+              <div class="section-header">
+                <p class="eyebrow">07 / Security</p>
+                <h2>How the app protects data</h2>
+              </div>
+              <div class="cards two-up">
+                <article class="card">
+                  <h3>Local secret handling</h3>
+                  <p>
+                    The token is intentionally stored in a dedicated local secure
+                    storage service rather than in ordinary app state, route
+                    parameters, or URLs.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Transport</h3>
+                  <p>
+                    GitHub API requests are sent over HTTPS to the GitHub GraphQL
+                    endpoint.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Data minimization</h3>
+                  <p>
+                    The app is structured around a narrow GitHub workflow and does
+                    not, based on the reviewed code, request unrelated categories
+                    such as contacts, photos, health data, location, advertising
+                    identifiers, or payment data.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Limits</h3>
+                  <p>
+                    No storage or transmission method is perfectly secure. You
+                    should grant the minimum GitHub token scopes needed for your own
+                    use and revoke any token you no longer trust.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-surface" id="rights">
+              <div class="section-header">
+                <p class="eyebrow">08 / Rights</p>
+                <h2>Your privacy choices</h2>
+              </div>
+              <ul>
+                <li>You can remove the locally stored token from within the app.</li>
+                <li>You can delete saved projects and mappings by clearing app data or removing them in the app.</li>
+                <li>You can revoke or replace your GitHub token directly in GitHub.</li>
+                <li>You can exercise access, correction, deletion, or related rights for GitHub-hosted content through GitHub where that data is controlled by GitHub or your GitHub account.</li>
+                <li>If applicable law gives you additional rights, contact the operator using the contact details listed in this policy.</li>
+              </ul>
+            </section>
+
+            <section class="section-surface">
+              <div class="section-header">
+                <p class="eyebrow">09 / International Transfers</p>
+                <h2>Cross-border processing</h2>
+              </div>
+              <p class="lede">
+                Because the app communicates with GitHub and may be distributed
+                globally, information may be processed in countries other than the
+                country where you live. GitHub’s own terms and privacy disclosures
+                govern GitHub’s handling of data after it receives it.
+              </p>
+            </section>
+
+            <section class="section-surface" id="children">
+              <div class="section-header">
+                <p class="eyebrow">10 / Children</p>
+                <h2>Children’s privacy</h2>
+              </div>
+              <p class="lede">
+                gh_todos is not directed to children under 13 and is not designed
+                for child-oriented use. If you believe a child has provided
+                information through the app, contact the operator and revoke any
+                token involved.
+              </p>
+            </section>
+
+            <section class="section-surface span-2">
+              <div class="section-header">
+                <p class="eyebrow">11 / Changes</p>
+                <h2>Policy updates</h2>
+              </div>
+              <p class="lede">
+                This policy may be updated if the app’s data practices, distribution
+                channels, or legal obligations change. Update the “Last updated”
+                date whenever the policy changes. For material changes, provide a
+                clear in-app or store-listing notice where required.
+              </p>
+              <p class="footnote">
+                Publishing note: fill in the controller/contact placeholders before
+                release. If you later add analytics, crash reporting, sign-in,
+                payments, newsletters, support forms, or a website account system,
+                this document will need to be expanded.
+              </p>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
