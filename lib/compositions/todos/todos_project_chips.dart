@@ -15,7 +15,7 @@ class TodosProjectChips extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final projects = ref.watch(projectListProvider);
-    final selectedId = ref.watch(selectedProjectProvider);
+    final selectedId = ref.watch(selectedProjectProvider).asData?.value;
 
     if (projects.isEmpty) return const SizedBox.shrink();
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
@@ -27,6 +28,7 @@ class IssueDescriptionSection extends ConsumerWidget {
       ColorTokens.surface.onVariant,
     );
     final detailsAsync = ref.watch(issueDetailsProvider(issueId));
+    final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
 
     return ColumnBox(
       key: pageKey,
@@ -59,7 +61,9 @@ class IssueDescriptionSection extends ConsumerWidget {
               ),
             ),
             error: (_, _) => StyledText(
-              'Failed to load description.',
+              isOffline
+                  ? 'Offline. Description is unavailable until this issue has been loaded once.'
+                  : 'Failed to load description.',
               style: editorialTextStyle(
                 TextTokens.body.$medium,
                 color: onSurfaceVariant,

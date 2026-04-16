@@ -50,59 +50,68 @@ class ProjectFieldInfo {
 /// fields exist in theory but are rare; re-add pagination variables to the
 /// query if that bites someone.
 @riverpod
-Future<List<ProjectFieldInfo>> projectFields(
+Stream<List<ProjectFieldInfo>> projectFields(
   Ref ref,
   String projectId,
-) async {
+) {
   final client = ref.watch(graphqlClientProvider);
-  final result = await client.query$ProjectFields(
-    Options$Query$ProjectFields(
+  final observable = client.watchQuery$ProjectFields(
+    WatchOptions$Query$ProjectFields(
       variables: Variables$Query$ProjectFields(projectId: projectId),
-      fetchPolicy: FetchPolicy.networkOnly,
+      fetchPolicy: FetchPolicy.cacheAndNetwork,
+      eagerlyFetchResults: true,
+      fetchResults: true,
     ),
   );
+  ref.onDispose(observable.close);
 
-  if (result.hasException) {
-    throw result.exception!;
-  }
-
-  final node = result.parsedData?.node;
-  if (node is! Query$ProjectFields$node$$ProjectV2) return [];
-
-  final fields = <ProjectFieldInfo>[];
-  for (final raw in node.fields.nodes ?? const []) {
-    if (raw == null) continue;
-
-    if (raw is Query$ProjectFields$node$$ProjectV2$fields$nodes$$ProjectV2Field &&
-        raw.dataType == Enum$ProjectV2FieldType.DATE) {
-      fields.add(
-        ProjectFieldInfo(
-          id: raw.id,
-          name: raw.name,
-          kind: ProjectFieldKind.date,
-        ),
-      );
-    } else if (raw
-            is Query$ProjectFields$node$$ProjectV2$fields$nodes$$ProjectV2SingleSelectField &&
-        raw.dataType == Enum$ProjectV2FieldType.SINGLE_SELECT) {
-      fields.add(
-        ProjectFieldInfo(
-          id: raw.id,
-          name: raw.name,
-          kind: ProjectFieldKind.singleSelect,
-          options: raw.options
-              .map(
-                (o) => ProjectFieldOption(
-                  id: o.id,
-                  name: o.name,
-                  color: o.color.name,
-                ),
-              )
-              .toList(growable: false),
-        ),
-      );
+  return observable.stream.map((result) {
+    if (result.parsedData == null) {
+      if (!result.isLoading && result.hasException) {
+        throw result.exception!;
+      }
+      return const <ProjectFieldInfo>[];
     }
-  }
 
-  return fields;
+    final node = result.parsedData?.node;
+    if (node is! Query$ProjectFields$node$$ProjectV2) return [];
+
+    final fields = <ProjectFieldInfo>[];
+    for (final raw in node.fields.nodes ?? const []) {
+      if (raw == null) continue;
+
+      if (raw
+              is Query$ProjectFields$node$$ProjectV2$fields$nodes$$ProjectV2Field &&
+          raw.dataType == Enum$ProjectV2FieldType.DATE) {
+        fields.add(
+          ProjectFieldInfo(
+            id: raw.id,
+            name: raw.name,
+            kind: ProjectFieldKind.date,
+          ),
+        );
+      } else if (raw
+              is Query$ProjectFields$node$$ProjectV2$fields$nodes$$ProjectV2SingleSelectField &&
+          raw.dataType == Enum$ProjectV2FieldType.SINGLE_SELECT) {
+        fields.add(
+          ProjectFieldInfo(
+            id: raw.id,
+            name: raw.name,
+            kind: ProjectFieldKind.singleSelect,
+            options: raw.options
+                .map(
+                  (o) => ProjectFieldOption(
+                    id: o.id,
+                    name: o.name,
+                    color: o.color.name,
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        );
+      }
+    }
+
+    return fields;
+  });
 }

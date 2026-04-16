@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/models/project.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/issue_mutations.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 import 'package:gh_todos/style/colors.dart';
+import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
@@ -93,8 +95,9 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedId = ref.watch(selectedProjectProvider);
+    final selectedId = ref.watch(selectedProjectProvider).asData?.value;
     if (selectedId == null) return const SizedBox.shrink();
+    final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
 
     final projects = ref.watch(projectListProvider);
     final Project? project = projects
@@ -109,6 +112,7 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
       context,
       ColorTokens.surface.containerLowest,
     );
+    final enabled = !isOffline && !_submitting;
 
     return Padding(
       key: TodosIssueComposer.pageKey,
@@ -118,25 +122,42 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
             .color(surfaceLowest)
             .borderRounded(editorialRadiusMedium)
             .paddingOnly(left: 16, right: 12, top: 12, bottom: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: ColumnBox(
+          style: editorialColumnStyle(spacing: 10),
           children: [
-            Expanded(
-              child: EditorialTextField(
-                key: TodosIssueComposer.inputKey,
-                controller: _controller,
-                hintText: hintText,
-                enabled: !_submitting,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(selectedId),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: EditorialTextField(
+                    key: TodosIssueComposer.inputKey,
+                    controller: _controller,
+                    hintText: hintText,
+                    enabled: enabled,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => enabled ? _submit(selectedId) : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _GradientPlusButton(
+                  key: TodosIssueComposer.submitKey,
+                  enabled: _hasText && enabled,
+                  onPressed: () => _submit(selectedId),
+                ),
+              ],
+            ),
+            if (isOffline)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: StyledText(
+                  'Reconnect to add new todos.',
+                  style: editorialTextStyle(
+                    TextTokens.label.$medium,
+                    color: resolveColor(context, ColorTokens.surface.onVariant),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            _GradientPlusButton(
-              key: TodosIssueComposer.submitKey,
-              enabled: _hasText && !_submitting,
-              onPressed: () => _submit(selectedId),
-            ),
           ],
         ),
       ),

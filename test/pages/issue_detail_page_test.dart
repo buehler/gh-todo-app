@@ -9,13 +9,14 @@ import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/priority.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/issue_detail_page.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/issue_mutations.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/style/themes.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_issue_mutations.dart';
 import '../support/fakes.dart';
@@ -100,28 +101,29 @@ Future<({FakeIssueMutations mutations})> _pump(
   await tester.binding.setSurfaceSize(const Size(800, 1400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
   final fakeStorage = FakeFlutterSecureStorage(
     seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
   );
   final mutations = FakeIssueMutations();
+  final sessionPrefs = FakeSessionPrefsService(selectedProjectId: _projectId);
 
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        hiveBootstrapProvider.overrideWith((_) async {}),
+        offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
         tokenStorageProvider.overrideWithValue(
           GithubTokenStorageService(storage: fakeStorage),
         ),
-        sharedPreferencesProvider.overrideWith((_) async => prefs),
+        sessionPrefsProvider.overrideWithValue(sessionPrefs),
         projectListProvider.overrideWith(() => _FakeProjectList([project])),
-        userInfoProvider.overrideWith((_) async => _viewer),
+        userInfoProvider.overrideWith((_) => Stream.value(_viewer)),
         issueDetailsProvider(_issueId).overrideWith(
-          (ref) async => IssueDetails(
+          (ref) => Stream.value(IssueDetails(
             description: 'Original description.',
             url: 'https://github.com/acme/repo/issues/42',
             comments: comments,
-          ),
+          )),
         ),
         issueMutationsProvider.overrideWithValue(mutations),
       ],
@@ -135,6 +137,11 @@ Future<({FakeIssueMutations mutations})> _pump(
   );
   await tester.pumpAndSettle();
   return (mutations: mutations);
+}
+
+class _FakeOfflineStatus extends OfflineStatus {
+  @override
+  Future<bool> build() async => false;
 }
 
 void main() {

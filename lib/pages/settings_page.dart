@@ -105,6 +105,7 @@ class SettingsPage extends ConsumerWidget {
     switch (action) {
       case PatAction.remove:
         await ref.read(projectStorageProvider).save([]);
+        await ref.read(sessionPrefsProvider).clearSelectedProjectId();
         await ref.read(sessionProvider.notifier).clearToken();
         break;
       case PatAction.update:

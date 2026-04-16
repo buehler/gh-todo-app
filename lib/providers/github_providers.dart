@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/issue_detail.graphql.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
@@ -17,45 +15,63 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'github_providers.g.dart';
 
-/// Time after which cached project issues are considered stale and refetched
-/// the next time the project is viewed.
-const projectIssuesCacheTtl = Duration(hours: 1);
-
 /// The result of the project feed query: two independently sorted lists.
 /// Matches the GraphQL response shape (`open` + `recentlyClosed`).
 typedef ProjectIssuesFeed = ({List<IssueData> open, List<IssueData> closed});
 
 final userInfoProvider =
-    FutureProvider.autoDispose<Query$UserInformation$viewer?>((ref) async {
+    StreamProvider.autoDispose<Query$UserInformation$viewer?>((ref) {
       final client = ref.watch(graphqlClientProvider);
-      final result = await client.query$UserInformation();
-      return result.parsedData?.viewer;
+      return _watchQueryStream(
+        ref,
+        client.watchQuery$UserInformation(
+          WatchOptions$Query$UserInformation(
+            fetchPolicy: FetchPolicy.cacheAndNetwork,
+            eagerlyFetchResults: true,
+            fetchResults: true,
+          ),
+        ),
+        (data) => data?.viewer,
+      );
     });
 
 final userOrganizationsProvider =
-    FutureProvider.autoDispose<
+    StreamProvider.autoDispose<
       List<Query$UserOrganizations$viewer$organizations$nodes>
-    >((ref) async {
+    >((ref) {
       final client = ref.watch(graphqlClientProvider);
-      final result = await client.query$UserOrganizations(
-        Options$Query$UserOrganizations(fetchPolicy: FetchPolicy.networkOnly),
+      return _watchQueryStream(
+        ref,
+        client.watchQuery$UserOrganizations(
+          WatchOptions$Query$UserOrganizations(
+            fetchPolicy: FetchPolicy.cacheAndNetwork,
+            eagerlyFetchResults: true,
+            fetchResults: true,
+          ),
+        ),
+        (data) =>
+            data?.viewer.organizations.nodes
+                ?.whereType<Query$UserOrganizations$viewer$organizations$nodes>()
+                .toList() ??
+            [],
       );
-      return result.parsedData?.viewer.organizations.nodes
-              ?.whereType<Query$UserOrganizations$viewer$organizations$nodes>()
-              .toList() ??
-          [];
     });
 
-final ownerProjectsProvider = FutureProvider.autoDispose
-    .family<Query$OwnerProjects$node?, String>((ref, ownerId) async {
+final ownerProjectsProvider = StreamProvider.autoDispose
+    .family<Query$OwnerProjects$node?, String>((ref, ownerId) {
       final client = ref.watch(graphqlClientProvider);
-      final result = await client.query$OwnerProjects(
-        Options$Query$OwnerProjects(
+      return _watchQueryStream(
+        ref,
+        client.watchQuery$OwnerProjects(
+          WatchOptions$Query$OwnerProjects(
           variables: Variables$Query$OwnerProjects(ownerId: ownerId),
-          fetchPolicy: FetchPolicy.networkOnly,
+            fetchPolicy: FetchPolicy.cacheAndNetwork,
+            eagerlyFetchResults: true,
+            fetchResults: true,
+          ),
         ),
+        (data) => data?.node,
       );
-      return result.parsedData?.node;
     });
 
 /// Owns the open + recently-closed issue lists for a single GitHub Project.
@@ -70,21 +86,7 @@ final ownerProjectsProvider = FutureProvider.autoDispose
 @riverpod
 class ProjectIssues extends _$ProjectIssues {
   @override
-  Future<ProjectIssuesFeed> build(String projectId) async {
-    // Keep this provider's result alive in Riverpod's cache for
-    // [projectIssuesCacheTtl] even when no widget is watching it. This makes
-    // switching between projects instant (cached data is returned
-    // immediately). After the TTL expires, the provider auto-disposes so the
-    // next watch triggers a fresh fetch. Pull-to-refresh bypasses this by
-    // calling ref.invalidate(provider).
-    final link = ref.keepAlive();
-    final timer = Timer(projectIssuesCacheTtl, link.close);
-    ref.onDispose(timer.cancel);
-
-    // Resolve the project (for its optional priority/due-date mappings) from
-    // the local project list. Missing here means the project was removed
-    // locally after the UI requested its issues; fall back to no-mapping
-    // behaviour.
+  Stream<ProjectIssuesFeed> build(String projectId) {
     final projects = ref.watch(projectListProvider);
     final Project? project = projects
         .where((p) => p.id == projectId)
@@ -92,43 +94,48 @@ class ProjectIssues extends _$ProjectIssues {
         .firstOrNull;
 
     final client = ref.watch(graphqlClientProvider);
-    final result = await client.query$ProjectAssignedIssues(
-      Options$Query$ProjectAssignedIssues(
-        variables: Variables$Query$ProjectAssignedIssues(projectId: projectId),
-        fetchPolicy: FetchPolicy.networkOnly,
+    return _watchQueryStream(
+      ref,
+      client.watchQuery$ProjectAssignedIssues(
+        WatchOptions$Query$ProjectAssignedIssues(
+          variables: Variables$Query$ProjectAssignedIssues(projectId: projectId),
+          fetchPolicy: FetchPolicy.cacheAndNetwork,
+          eagerlyFetchResults: true,
+          fetchResults: true,
+        ),
       ),
+      (parsed) {
+        final openNodes =
+            (parsed?.open is Query$ProjectAssignedIssues$open$$ProjectV2)
+            ? (parsed!.open as Query$ProjectAssignedIssues$open$$ProjectV2)
+                  .items
+                  .nodes
+            : null;
+        final closedNodes =
+            (parsed?.recentlyClosed
+                is Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
+            ? (parsed!.recentlyClosed
+                      as Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
+                  .items
+                  .nodes
+            : null;
+
+        final open = _issuesFromNodes(
+          openNodes,
+          project: project,
+          projectId: projectId,
+          closed: false,
+        )..sort(_compareOpenIssues);
+        final closed = _issuesFromNodes(
+          closedNodes,
+          project: project,
+          projectId: projectId,
+          closed: true,
+        )..sort(_compareClosedIssues);
+
+        return (open: open, closed: closed);
+      },
     );
-
-    final parsed = result.parsedData;
-    final openNodes =
-        (parsed?.open is Query$ProjectAssignedIssues$open$$ProjectV2)
-        ? (parsed!.open as Query$ProjectAssignedIssues$open$$ProjectV2)
-              .items
-              .nodes
-        : null;
-    final closedNodes =
-        (parsed?.recentlyClosed
-            is Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
-        ? (parsed!.recentlyClosed
-                  as Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
-              .items
-              .nodes
-        : null;
-
-    final open = _issuesFromNodes(
-      openNodes,
-      project: project,
-      projectId: projectId,
-      closed: false,
-    )..sort(_compareOpenIssues);
-    final closed = _issuesFromNodes(
-      closedNodes,
-      project: project,
-      projectId: projectId,
-      closed: true,
-    )..sort(_compareClosedIssues);
-
-    return (open: open, closed: closed);
   }
 
   /// Moves [issueId] from the open list to the closed list, stamping it with
@@ -319,51 +326,71 @@ int _compareClosedIssues(IssueData a, IssueData b) {
 /// comment bodies for issues the user never opens. Comments are returned in
 /// chronological order (oldest first) — the conversation reads top-to-bottom
 /// like a transcript, with the newest reply anchored at the bottom.
-final issueDetailsProvider = FutureProvider.autoDispose
-    .family<IssueDetails, String>((ref, issueId) async {
+final issueDetailsProvider = StreamProvider.autoDispose
+    .family<IssueDetails, String>((ref, issueId) {
       final client = ref.watch(graphqlClientProvider);
-      final result = await client.query$IssueDetail(
-        Options$Query$IssueDetail(
+      return _watchQueryStream(
+        ref,
+        client.watchQuery$IssueDetail(
+          WatchOptions$Query$IssueDetail(
           variables: Variables$Query$IssueDetail(id: issueId),
-          fetchPolicy: FetchPolicy.networkOnly,
-        ),
-      );
-
-      if (result.hasException) {
-        throw result.exception!;
-      }
-
-      final node = result.parsedData?.node;
-      if (node is! Query$IssueDetail$node$$Issue) {
-        return const IssueDetails(description: null, url: null, comments: []);
-      }
-
-      final commentNodes = node.comments.nodes ?? const [];
-      final comments = <IssueComment>[];
-      for (final c in commentNodes) {
-        if (c == null) continue;
-        comments.add(
-          IssueComment(
-            id: c.id,
-            authorLogin: c.author?.login,
-            body: c.bodyText,
-            createdAt: c.createdAt,
+            fetchPolicy: FetchPolicy.cacheAndNetwork,
+            eagerlyFetchResults: true,
+            fetchResults: true,
           ),
-        );
-      }
+        ),
+        (parsed) {
+          final node = parsed?.node;
+          if (node is! Query$IssueDetail$node$$Issue) {
+            return const IssueDetails(description: null, url: null, comments: []);
+          }
 
-      // Oldest-first; stable secondary sort on id ascending to avoid flicker
-      // on equal timestamps.
-      comments.sort((a, b) {
-        final cmp = a.createdAt.compareTo(b.createdAt);
-        if (cmp != 0) return cmp;
-        return a.id.compareTo(b.id);
-      });
+          final commentNodes = node.comments.nodes ?? const [];
+          final comments = <IssueComment>[];
+          for (final c in commentNodes) {
+            if (c == null) continue;
+            comments.add(
+              IssueComment(
+                id: c.id,
+                authorLogin: c.author?.login,
+                body: c.bodyText,
+                createdAt: c.createdAt,
+              ),
+            );
+          }
 
-      final description = node.bodyText.trim();
-      return IssueDetails(
-        description: description.isEmpty ? null : description,
-        url: node.url,
-        comments: comments,
+          comments.sort((a, b) {
+            final cmp = a.createdAt.compareTo(b.createdAt);
+            if (cmp != 0) return cmp;
+            return a.id.compareTo(b.id);
+          });
+
+          final description = node.bodyText.trim();
+          return IssueDetails(
+            description: description.isEmpty ? null : description,
+            url: node.url,
+            comments: comments,
+          );
+        },
       );
     });
+
+Stream<T> _watchQueryStream<TParsed, T>(
+  Ref ref,
+  ObservableQuery<TParsed> observable,
+  T Function(TParsed? data) mapper,
+) async* {
+  ref.onDispose(observable.close);
+
+  await for (final result in observable.stream) {
+    final parsed = result.parsedData;
+    if (parsed != null) {
+      yield mapper(parsed);
+      continue;
+    }
+
+    if (!result.isLoading && result.hasException) {
+      throw result.exception!;
+    }
+  }
+}

@@ -17,6 +17,7 @@ enum IssueDetailMenuAction { editIssue, openInBrowser }
 Future<IssueDetailMenuAction?> showIssueDetailMenu(
   BuildContext context,
   RelativeRect position,
+  bool canEditIssue,
 ) {
   final surfaceLowest = resolveColor(
     context,
@@ -47,6 +48,7 @@ Future<IssueDetailMenuAction?> showIssueDetailMenu(
         value: IssueDetailMenuAction.editIssue,
         icon: LucideIcons.pencil,
         label: 'Edit Issue',
+        enabled: canEditIssue,
         iconColor: primary,
         labelColor: onSurface,
         hoverColor: surfaceHighest,
@@ -57,6 +59,7 @@ Future<IssueDetailMenuAction?> showIssueDetailMenu(
         value: IssueDetailMenuAction.openInBrowser,
         icon: LucideIcons.externalLink,
         label: 'Open in Browser',
+        enabled: true,
         iconColor: primary,
         labelColor: onSurface,
         hoverColor: surfaceHighest,
@@ -73,6 +76,7 @@ PopupMenuItem<IssueDetailMenuAction> _menuItem(
   required IssueDetailMenuAction value,
   required IconData icon,
   required String label,
+  required bool enabled,
   required Color iconColor,
   required Color labelColor,
   required Color hoverColor,
@@ -80,6 +84,7 @@ PopupMenuItem<IssueDetailMenuAction> _menuItem(
   return PopupMenuItem<IssueDetailMenuAction>(
     key: key,
     value: value,
+    enabled: enabled,
     padding: EdgeInsets.zero,
     height: 48,
     child: Padding(
@@ -90,11 +95,15 @@ PopupMenuItem<IssueDetailMenuAction> _menuItem(
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: withOpacity(iconColor, 0.1),
+              color: withOpacity(iconColor, enabled ? 0.1 : 0.05),
               borderRadius: BorderRadius.circular(editorialRadiusSmall),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, color: iconColor, size: 16),
+            child: Icon(
+              icon,
+              color: enabled ? iconColor : withOpacity(labelColor, 0.45),
+              size: 16,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -103,7 +112,10 @@ PopupMenuItem<IssueDetailMenuAction> _menuItem(
               style: resolveTextStyle(
                 context,
                 TextTokens.body.$medium,
-              ).copyWith(color: labelColor, fontWeight: FontWeight.w600),
+              ).copyWith(
+                color: enabled ? labelColor : withOpacity(labelColor, 0.45),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

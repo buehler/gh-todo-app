@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
@@ -13,12 +12,13 @@ import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/issue_mutations.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_issue_mutations.dart';
 import '../support/fakes.dart';
@@ -66,16 +66,15 @@ void main() {
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          hiveBootstrapProvider.overrideWith((_) async {}),
+          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
           tokenStorageProvider.overrideWithValue(
             GithubTokenStorageService(storage: fakeStorage),
           ),
-          sharedPreferencesProvider.overrideWith((_) async => prefs),
+          sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
           projectListProvider.overrideWith(() => _FakeProjectList(const [])),
         ],
         child: const GhTodosApp(),
@@ -102,16 +101,17 @@ void main() {
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          hiveBootstrapProvider.overrideWith((_) async {}),
+          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
           tokenStorageProvider.overrideWithValue(
             GithubTokenStorageService(storage: fakeStorage),
           ),
-          sharedPreferencesProvider.overrideWith((_) async => prefs),
+          sessionPrefsProvider.overrideWithValue(
+            FakeSessionPrefsService(selectedProjectId: 'proj-1'),
+          ),
           projectListProvider.overrideWith(
             () => _FakeProjectList(_testProjects),
           ),
@@ -212,9 +212,6 @@ void main() {
       final fakeStorage = FakeFlutterSecureStorage(
         seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
       );
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-
       var buildCount = 0;
       final completers = <Completer<ProjectIssuesFeed>>[];
 
@@ -222,10 +219,14 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              hiveBootstrapProvider.overrideWith((_) async {}),
+              offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
               tokenStorageProvider.overrideWithValue(
                 GithubTokenStorageService(storage: fakeStorage),
               ),
-              sharedPreferencesProvider.overrideWith((_) async => prefs),
+              sessionPrefsProvider.overrideWithValue(
+                FakeSessionPrefsService(selectedProjectId: 'proj-1'),
+              ),
               projectListProvider.overrideWith(
                 () => _FakeProjectList(_testProjects),
               ),
@@ -288,16 +289,15 @@ void main() {
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          hiveBootstrapProvider.overrideWith((_) async {}),
+          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
           tokenStorageProvider.overrideWithValue(
             GithubTokenStorageService(storage: fakeStorage),
           ),
-          sharedPreferencesProvider.overrideWith((_) async => prefs),
+          sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
           projectListProvider.overrideWith(() => _FakeProjectList(const [])),
         ],
         child: const GhTodosApp(),
@@ -525,16 +525,17 @@ Future<void> _pumpFeed(
   final fakeStorage = FakeFlutterSecureStorage(
     seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
   );
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        hiveBootstrapProvider.overrideWith((_) async {}),
+        offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
         tokenStorageProvider.overrideWithValue(
           GithubTokenStorageService(storage: fakeStorage),
         ),
-        sharedPreferencesProvider.overrideWith((_) async => prefs),
+        sessionPrefsProvider.overrideWithValue(
+          FakeSessionPrefsService(selectedProjectId: projects.first.id),
+        ),
         projectListProvider.overrideWith(() => _FakeProjectList(projects)),
         projectIssuesProvider(projects.first.id).overrideWith(
           () => _FakeProjectIssues(seed: (open: open, closed: closed)),
@@ -567,7 +568,7 @@ class _FakeProjectIssues extends ProjectIssues {
   final ProjectIssuesFeed seed;
 
   @override
-  Future<ProjectIssuesFeed> build(String projectId) async => seed;
+  Stream<ProjectIssuesFeed> build(String projectId) => Stream.value(seed);
 }
 
 class _TrackedProjectIssues extends ProjectIssues {
@@ -577,8 +578,13 @@ class _TrackedProjectIssues extends ProjectIssues {
   _TrackedProjectIssues({required this.onBuild, required this.load});
 
   @override
-  Future<ProjectIssuesFeed> build(String projectId) {
+  Stream<ProjectIssuesFeed> build(String projectId) {
     onBuild();
-    return load();
+    return Stream.fromFuture(load());
   }
+}
+
+class _FakeOfflineStatus extends OfflineStatus {
+  @override
+  Future<bool> build() async => false;
 }

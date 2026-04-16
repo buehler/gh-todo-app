@@ -33,12 +33,14 @@ class SwipeableIssueRow extends ConsumerStatefulWidget {
   const SwipeableIssueRow({
     required this.issue,
     required this.projectId,
+    this.enabled = true,
     this.onTap,
     super.key,
   });
 
   final IssueData issue;
   final String projectId;
+  final bool enabled;
   final VoidCallback? onTap;
 
   /// Key on the outer [Slidable], scoped per issue id — used by widget tests
@@ -93,6 +95,9 @@ class _SwipeableIssueRowState extends ConsumerState<SwipeableIssueRow> {
   @override
   Widget build(BuildContext context) {
     final isClosed = widget.issue.closed;
+    if (!widget.enabled) {
+      return TodosIssueCard(issue: widget.issue, onTap: widget.onTap);
+    }
 
     return Slidable(
       key: SwipeableIssueRow.rowKey(widget.issue.id),

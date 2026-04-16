@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/compositions/shared/offline_notice.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_comment_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_issue_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_conversation_section.dart';
@@ -17,6 +18,7 @@ import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/priority.dart';
 import 'package:gh_todos/models/project.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/issue_mutations.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
@@ -77,6 +79,9 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     try {
       await mutations.postComment(issueId: _issueId, body: body);
       return true;
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to post comments.');
+      return false;
     } catch (_) {
       _showError('Failed to post comment.');
       return false;
@@ -93,6 +98,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
         commentId: comment.id,
         body: updated,
       );
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to edit comments.');
     } catch (_) {
       _showError('Failed to update comment.');
     }
@@ -138,6 +145,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
           );
         });
       }
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to change issue state.');
     } catch (_) {
       _showError(
         _issue.closed
@@ -253,6 +262,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
           setState(() => _issue = _issue.copyWith(priority: result.priority));
         }
       }
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to edit this issue.');
     } catch (_) {
       _showError('Failed to update the issue.');
     }
@@ -294,6 +305,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     final bottomPadding = MediaQuery.paddingOf(context).bottom + 32;
 
     final viewerLogin = ref.watch(userInfoProvider).asData?.value?.login;
+    final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
 
     // In embedded mode the outer AppTopBar already fills the top-edge space
     // (and is rendered *above* the pane in the shell's Stack, so we can't put
@@ -327,10 +339,14 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
             ),
             children: [
               IssueHeaderSection(issue: _issue),
+              if (isOffline)
+                const OfflineNotice(
+                  message: 'Offline. Reconnect to edit, comment, or change state.',
+                ),
               IssueStateAction(
                 issue: _issue,
-                enabled: !_stateActionBusy,
-                onPressed: _stateActionBusy
+                enabled: !_stateActionBusy && !isOffline,
+                onPressed: _stateActionBusy || isOffline
                     ? null
                     : () => unawaited(_toggleIssueState()),
               ),
@@ -339,6 +355,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
                 issueId: _issueId,
                 commentCount: _issue.commentCount,
                 viewerLogin: viewerLogin,
+                writeEnabled: !isOffline,
                 onPostComment: _postComment,
                 onEditComment: (c) => unawaited(_editComment(c)),
               ),
@@ -355,7 +372,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
         children: [
           SizedBox(height: AppTopBar.effectiveHeight(context) + safeTop),
           _EmbeddedDetailToolbar(
-            onEdit: () => unawaited(_editIssue()),
+            canEdit: !isOffline,
+            onEdit: isOffline ? null : () => unawaited(_editIssue()),
             onOpenInBrowser: () => unawaited(_openInBrowser()),
             onClose: _handleBack,
           ),
@@ -373,6 +391,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
           right: 0,
           child: IssueDetailTopBar(
             onBack: _handleBack,
+            canEditIssue: !isOffline,
             onMenuAction: _handleMenuAction,
           ),
         ),
@@ -444,11 +463,13 @@ class _EmbeddedDetailToolbar extends StatelessWidget {
   );
   static const closeKey = ValueKey('issue-detail-embedded-close');
 
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
+  final bool canEdit;
   final VoidCallback onOpenInBrowser;
   final VoidCallback onClose;
 
   const _EmbeddedDetailToolbar({
+    required this.canEdit,
     required this.onEdit,
     required this.onOpenInBrowser,
     required this.onClose,
@@ -467,6 +488,7 @@ class _EmbeddedDetailToolbar extends StatelessWidget {
             tooltip: 'Edit issue',
             variation: IconButtonVariation.ghost,
             size: 40,
+            enabled: canEdit,
             onPressed: onEdit,
           ),
           const SizedBox(width: 4),

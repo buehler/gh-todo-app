@@ -11,6 +11,7 @@ import 'package:gh_todos/graphql/update_issue.graphql.dart';
 import 'package:gh_todos/graphql/update_issue_comment.graphql.dart';
 import 'package:gh_todos/graphql/update_project_item_field.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:graphql/client.dart';
@@ -93,6 +94,13 @@ class NoLinkedRepositoryException implements Exception {
       'NoLinkedRepositoryException: project $projectId has no linked repository';
 }
 
+class OfflineWriteBlockedException implements Exception {
+  const OfflineWriteBlockedException();
+
+  @override
+  String toString() => 'OfflineWriteBlockedException';
+}
+
 class CloseIssueResult {
   final bool closed;
   final String? closedAt;
@@ -135,6 +143,11 @@ class _RealIssueMutations implements IssueMutations {
 
   GraphQLClient get _client => _ref.read(graphqlClientProvider);
 
+  void _ensureOnline() {
+    final isOffline = _ref.read(offlineStatusProvider).asData?.value ?? false;
+    if (isOffline) throw const OfflineWriteBlockedException();
+  }
+
   /// Throws the GraphQL exception wrapped in [result] when present so the
   /// caller can `try/catch` and surface a SnackBar. Also guards against the
   /// `parsedData == null` case where the server accepted the request but
@@ -153,6 +166,7 @@ class _RealIssueMutations implements IssueMutations {
     required String issueId,
     required String body,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$AddIssueComment(
       Options$Mutation$AddIssueComment(
         variables: Variables$Mutation$AddIssueComment(
@@ -171,6 +185,7 @@ class _RealIssueMutations implements IssueMutations {
     required String commentId,
     required String body,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$UpdateIssueComment(
       Options$Mutation$UpdateIssueComment(
         variables: Variables$Mutation$UpdateIssueComment(
@@ -188,6 +203,7 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$CloseIssue(
       Options$Mutation$CloseIssue(
         variables: Variables$Mutation$CloseIssue(issueId: issueId),
@@ -226,6 +242,7 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$ReopenIssue(
       Options$Mutation$ReopenIssue(
         variables: Variables$Mutation$ReopenIssue(issueId: issueId),
@@ -253,6 +270,7 @@ class _RealIssueMutations implements IssueMutations {
     String? title,
     String? body,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$UpdateIssueCore(
       Options$Mutation$UpdateIssueCore(
         variables: Variables$Mutation$UpdateIssueCore(
@@ -287,6 +305,7 @@ class _RealIssueMutations implements IssueMutations {
     required String fieldId,
     required String isoDate,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$UpdateProjectItemField(
       Options$Mutation$UpdateProjectItemField(
         variables: Variables$Mutation$UpdateProjectItemField(
@@ -308,6 +327,7 @@ class _RealIssueMutations implements IssueMutations {
     required String fieldId,
     required String optionId,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$UpdateProjectItemField(
       Options$Mutation$UpdateProjectItemField(
         variables: Variables$Mutation$UpdateProjectItemField(
@@ -328,6 +348,7 @@ class _RealIssueMutations implements IssueMutations {
     required String itemId,
     required String fieldId,
   }) async {
+    _ensureOnline();
     final result = await _client.mutate$ClearProjectItemField(
       Options$Mutation$ClearProjectItemField(
         variables: Variables$Mutation$ClearProjectItemField(
@@ -347,6 +368,7 @@ class _RealIssueMutations implements IssueMutations {
     required String title,
     String? body,
   }) async {
+    _ensureOnline();
     // Step 1: resolve the target repository. Projects V2 don't have a
     // "default repo" concept, so we pick the first linked repository
     // (alphabetical by name) and fail loudly when there's none.

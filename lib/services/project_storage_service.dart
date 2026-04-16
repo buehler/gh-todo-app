@@ -1,46 +1,39 @@
 import 'dart:convert';
 
 import 'package:gh_todos/models/project.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 
 class ProjectStorageService {
-  static const storageKey = 'settings.mapped_projects';
+  static const boxName = 'mappedProjects';
 
-  final SharedPreferences _prefs;
+  final Box<String> _box;
 
-  ProjectStorageService(this._prefs);
+  ProjectStorageService(this._box);
 
   List<Project> readAll() {
-    final raw = _prefs.getString(storageKey);
-    if (raw == null) return [];
-    final list = jsonDecode(raw) as List;
-    return list
-        .map((e) => Project.fromJson(e as Map<String, dynamic>))
+    return _box.values
+        .map((raw) => Project.fromJson(jsonDecode(raw) as Map<String, dynamic>))
         .toList();
   }
 
   Future<void> save(List<Project> projects) async {
-    final json = jsonEncode(projects.map((p) => p.toJson()).toList());
-    await _prefs.setString(storageKey, json);
+    await _box.clear();
+    await _box.putAll({
+      for (final project in projects) project.id: jsonEncode(project.toJson()),
+    });
   }
 
   Future<void> add(Project project) async {
-    final current = readAll();
-    if (current.any((p) => p.id == project.id)) return;
-    current.add(project);
-    await save(current);
+    if (_box.containsKey(project.id)) return;
+    await _box.put(project.id, jsonEncode(project.toJson()));
   }
 
   Future<void> update(Project project) async {
-    final current = readAll();
-    final idx = current.indexWhere((p) => p.id == project.id);
-    if (idx == -1) return;
-    current[idx] = project;
-    await save(current);
+    if (!_box.containsKey(project.id)) return;
+    await _box.put(project.id, jsonEncode(project.toJson()));
   }
 
   Future<void> remove(String id) async {
-    final current = readAll()..removeWhere((p) => p.id == id);
-    await save(current);
+    await _box.delete(id);
   }
 }

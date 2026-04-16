@@ -23,8 +23,13 @@ class AddCommentComposer extends StatefulWidget {
   static const submitKey = ValueKey('add-comment-composer-submit');
 
   final Future<bool> Function(String body)? onSubmit;
+  final bool enabled;
 
-  const AddCommentComposer({this.onSubmit, super.key});
+  const AddCommentComposer({
+    this.onSubmit,
+    this.enabled = true,
+    super.key,
+  });
 
   @override
   State<AddCommentComposer> createState() => _AddCommentComposerState();
@@ -54,7 +59,7 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     final handler = widget.onSubmit;
-    if (handler == null) return;
+    if (handler == null || !widget.enabled) return;
 
     setState(() => _submitting = true);
     try {
@@ -79,7 +84,7 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
           onChanged: _onChanged,
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
-          enabled: !_submitting,
+          enabled: widget.enabled && !_submitting,
           minLines: 3,
           maxLines: 6,
         ),
@@ -90,9 +95,9 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
             key: AddCommentComposer.submitKey,
             label: 'Post Comment',
             variation: ButtonVariation.secondary,
-            enabled: _canSubmit,
+            enabled: widget.enabled && _canSubmit,
             loading: _submitting,
-            onPressed: _canSubmit ? _submit : null,
+            onPressed: widget.enabled && _canSubmit ? _submit : null,
           ),
         ),
       ],

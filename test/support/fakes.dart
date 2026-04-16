@@ -2,15 +2,16 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gh_todos/app.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
+import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/services/project_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gh_todos/services/session_prefs_service.dart';
+import 'package:hive/hive.dart';
 
 Future<ProjectStorageService> createTestProjectStorage() async {
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-  return ProjectStorageService(prefs);
+  return ProjectStorageService(_InMemoryStringBox());
 }
 
 /// Creates a test app wrapped in a [ProviderScope] with overridden providers.
@@ -28,21 +29,48 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
     seed: tokenSeed,
     throwOnWrite: throwOnWrite,
   );
-
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
+  final sessionPrefs = FakeSessionPrefsService();
+  final projectStorage = await createTestProjectStorage();
 
   final app = ProviderScope(
     overrides: [
+      hiveBootstrapProvider.overrideWith((_) async {}),
+      offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
       tokenStorageProvider.overrideWithValue(
         GithubTokenStorageService(storage: fakeStorage),
       ),
-      sharedPreferencesProvider.overrideWith((_) async => prefs),
+      projectStorageProvider.overrideWithValue(projectStorage),
+      sessionPrefsProvider.overrideWithValue(sessionPrefs),
     ],
     child: GhTodosApp(initialLocation: initialLocation),
   );
 
   return (app: app, storage: fakeStorage);
+}
+
+class FakeSessionPrefsService implements SessionPrefsService {
+  String? _selectedProjectId;
+
+  FakeSessionPrefsService({String? selectedProjectId})
+    : _selectedProjectId = selectedProjectId;
+
+  @override
+  Future<void> clearSelectedProjectId() async {
+    _selectedProjectId = null;
+  }
+
+  @override
+  Future<String?> readSelectedProjectId() async => _selectedProjectId;
+
+  @override
+  Future<void> saveSelectedProjectId(String id) async {
+    _selectedProjectId = id;
+  }
+}
+
+class _FakeOfflineStatus extends OfflineStatus {
+  @override
+  Future<bool> build() async => false;
 }
 
 class FakeFlutterSecureStorage extends FlutterSecureStorage {
@@ -117,4 +145,39 @@ class FakeFlutterSecureStorage extends FlutterSecureStorage {
   }) async {
     _values.remove(key);
   }
+}
+
+class _InMemoryStringBox implements Box<String> {
+  final Map<dynamic, String> _values = {};
+
+  @override
+  bool containsKey(dynamic key) => _values.containsKey(key);
+
+  @override
+  Future<int> clear() async {
+    final count = _values.length;
+    _values.clear();
+    return count;
+  }
+
+  @override
+  Future<void> delete(dynamic key) async {
+    _values.remove(key);
+  }
+
+  @override
+  Future<void> put(dynamic key, String value) async {
+    _values[key] = value;
+  }
+
+  @override
+  Future<void> putAll(Map<dynamic, String> entries) async {
+    _values.addAll(entries);
+  }
+
+  @override
+  Iterable<String> get values => _values.values;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

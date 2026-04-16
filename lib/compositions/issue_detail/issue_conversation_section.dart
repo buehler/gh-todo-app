@@ -4,6 +4,7 @@ import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
 import 'package:gh_todos/models/issue_details.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
@@ -28,6 +29,7 @@ class IssueConversationSection extends ConsumerWidget {
   final String? viewerLogin;
   final Future<bool> Function(String body)? onPostComment;
   final void Function(IssueComment comment)? onEditComment;
+  final bool writeEnabled;
 
   const IssueConversationSection({
     required this.issueId,
@@ -35,6 +37,7 @@ class IssueConversationSection extends ConsumerWidget {
     this.viewerLogin,
     this.onPostComment,
     this.onEditComment,
+    this.writeEnabled = true,
     super.key,
   });
 
@@ -50,6 +53,7 @@ class IssueConversationSection extends ConsumerWidget {
       ColorTokens.surface.containerHigh,
     );
     final detailsAsync = ref.watch(issueDetailsProvider(issueId));
+    final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
     // Prefer the live comment count from the details provider so it reflects
     // freshly-posted / deleted comments after the provider invalidates.
     // Falls back to the feed-provided [commentCount] while details are still
@@ -104,7 +108,9 @@ class IssueConversationSection extends ConsumerWidget {
             ),
           ),
           error: (_, _) => StyledText(
-            'Failed to load conversation.',
+            isOffline
+                ? 'Offline. Conversation is unavailable until this issue has been loaded once.'
+                : 'Failed to load conversation.',
             style: editorialTextStyle(
               TextTokens.body.$medium,
               color: onSurfaceVariant,
@@ -117,7 +123,10 @@ class IssueConversationSection extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
-        AddCommentComposer(onSubmit: onPostComment),
+        AddCommentComposer(
+          onSubmit: onPostComment,
+          enabled: writeEnabled,
+        ),
       ],
     );
   }

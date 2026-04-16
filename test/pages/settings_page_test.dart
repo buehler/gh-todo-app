@@ -11,13 +11,19 @@ void main() {
     WidgetTester tester,
     String location,
   ) async {
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+
     final result = await createTestApp(
       tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
       initialLocation: location,
     );
 
     await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
   }
 
   testWidgets('deep linking to /settings renders in the shell', (

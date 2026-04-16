@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
@@ -7,11 +8,21 @@ import 'package:gh_todos/services/github_token_storage_service.dart';
 import '../support/fakes.dart';
 
 void main() {
+  Future<void> pumpApp(WidgetTester tester, Widget app) async {
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+
+    await tester.pumpWidget(app);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+  }
+
   testWidgets('app start with no token lands on setup', (tester) async {
     final result = await createTestApp();
 
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await pumpApp(tester, result.app);
 
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
   });
@@ -21,8 +32,7 @@ void main() {
       tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
 
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await pumpApp(tester, result.app);
 
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
   });
@@ -35,8 +45,7 @@ void main() {
       initialLocation: AppRoutes.setupPath,
     );
 
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await pumpApp(tester, result.app);
 
     expect(find.byKey(RootPage.pageKey), findsOneWidget);
   });
@@ -46,8 +55,7 @@ void main() {
   ) async {
     final result = await createTestApp(initialLocation: AppRoutes.rootPath);
 
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await pumpApp(tester, result.app);
 
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
   });
@@ -56,13 +64,11 @@ void main() {
     var result = await createTestApp(
       initialLocation: AppRoutes.privacyPath,
     );
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await pumpApp(tester, result.app);
     expect(find.text('Privacy Policy'), findsOneWidget);
 
     result = await createTestApp(initialLocation: AppRoutes.termsPath);
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
+    await pumpApp(tester, result.app);
     expect(find.text('Terms of Service'), findsOneWidget);
   });
 }

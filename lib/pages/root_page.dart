@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/editorial_icon_button.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/compositions/shared/offline_notice.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
 import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
 import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
@@ -43,17 +45,23 @@ class RootPage extends ConsumerWidget {
         (isWide(context) ? 0 : AppBottomNav.barHeight) +
         MediaQuery.paddingOf(context).bottom +
         32;
-    final selectedId = ref.watch(selectedProjectProvider);
+    final selectedIdAsync = ref.watch(selectedProjectProvider);
 
-    if (selectedId == null) {
-      return _EmptyState(key: pageKey, topPadding: topPadding);
-    }
+    return selectedIdAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => _EmptyState(key: pageKey, topPadding: topPadding),
+      data: (selectedId) {
+        if (selectedId == null) {
+          return _EmptyState(key: pageKey, topPadding: topPadding);
+        }
 
-    return _IssuesFeed(
-      key: pageKey,
-      projectId: selectedId,
-      topPadding: topPadding,
-      bottomPadding: bottomPadding,
+        return _IssuesFeed(
+          key: pageKey,
+          projectId: selectedId,
+          topPadding: topPadding,
+          bottomPadding: bottomPadding,
+        );
+      },
     );
   }
 }
@@ -132,6 +140,7 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
   @override
   Widget build(BuildContext context) {
     final feedAsync = ref.watch(projectIssuesProvider(widget.projectId));
+    final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
 
     final scrollView = CustomScrollView(
       key: RootPage.scrollKey,
@@ -146,6 +155,13 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
             ),
           ),
         ),
+        if (isOffline)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: OfflineNotice(message: 'Offline. Showing cached issues.'),
+            ),
+          ),
         const SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.only(top: 20, bottom: 28),
@@ -162,7 +178,9 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
             SliverFillRemaining(
               child: Center(
                 child: StyledText(
-                  'Failed to load issues.',
+                  isOffline
+                      ? 'Offline. No cached issues are available yet.'
+                      : 'Failed to load issues.',
                   style: editorialTextStyle(
                     TextTokens.body.$large,
                     color: resolveColor(context, ColorTokens.surface.onVariant),
@@ -176,6 +194,7 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
             feed,
             projectId: widget.projectId,
             bottomPadding: widget.bottomPadding,
+            isOffline: isOffline,
           ),
         ),
       ],
@@ -276,6 +295,7 @@ List<Widget> _dataSlivers(
   ProjectIssuesFeed feed, {
   required String projectId,
   required double bottomPadding,
+  required bool isOffline,
 }) {
   final open = feed.open;
   final closed = feed.closed;
@@ -285,7 +305,9 @@ List<Widget> _dataSlivers(
       SliverFillRemaining(
         child: Center(
           child: StyledText(
-            'No open issues assigned to you.',
+            isOffline
+                ? 'Offline. No cached issues are available yet.'
+                : 'No open issues assigned to you.',
             style: editorialTextStyle(
               TextTokens.body.$large,
               color: resolveColor(context, ColorTokens.surface.onVariant),
@@ -308,7 +330,11 @@ List<Widget> _dataSlivers(
           // bottom for the nav bar.
           bottom: closed.isEmpty ? bottomPadding : 0,
         ),
-        sliver: _IssueSliverList(issues: open, projectId: projectId),
+        sliver: _IssueSliverList(
+          issues: open,
+          projectId: projectId,
+          writeEnabled: !isOffline,
+        ),
       ),
     );
   } else {
@@ -351,7 +377,11 @@ List<Widget> _dataSlivers(
     slivers.add(
       SliverPadding(
         padding: EdgeInsets.only(left: 24, right: 24, bottom: bottomPadding),
-        sliver: _IssueSliverList(issues: closed, projectId: projectId),
+        sliver: _IssueSliverList(
+          issues: closed,
+          projectId: projectId,
+          writeEnabled: !isOffline,
+        ),
       ),
     );
   }
@@ -362,8 +392,13 @@ List<Widget> _dataSlivers(
 class _IssueSliverList extends ConsumerWidget {
   final List<IssueData> issues;
   final String projectId;
+  final bool writeEnabled;
 
-  const _IssueSliverList({required this.issues, required this.projectId});
+  const _IssueSliverList({
+    required this.issues,
+    required this.projectId,
+    required this.writeEnabled,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -375,6 +410,7 @@ class _IssueSliverList extends ConsumerWidget {
         return SwipeableIssueRow(
           issue: issue,
           projectId: projectId,
+          enabled: writeEnabled,
           onTap: () => _openIssue(context, ref, issue),
         );
       },

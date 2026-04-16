@@ -6,10 +6,11 @@ import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_nav_rail.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/models/project.dart';
+import 'package:gh_todos/providers/connectivity_provider.dart';
+import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fakes.dart';
 
@@ -24,18 +25,17 @@ void main() {
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(size: Size(1280, 900)),
         child: ProviderScope(
           overrides: [
+            hiveBootstrapProvider.overrideWith((_) async {}),
+            offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
             tokenStorageProvider.overrideWithValue(
               GithubTokenStorageService(storage: fakeStorage),
             ),
-            sharedPreferencesProvider.overrideWith((_) async => prefs),
+            sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
             projectListProvider.overrideWith(() => _EmptyProjectList()),
           ],
           child: const GhTodosApp(),
@@ -54,18 +54,17 @@ void main() {
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(size: Size(390, 844)),
         child: ProviderScope(
           overrides: [
+            hiveBootstrapProvider.overrideWith((_) async {}),
+            offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
             tokenStorageProvider.overrideWithValue(
               GithubTokenStorageService(storage: fakeStorage),
             ),
-            sharedPreferencesProvider.overrideWith((_) async => prefs),
+            sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
             projectListProvider.overrideWith(() => _EmptyProjectList()),
           ],
           child: const GhTodosApp(),
@@ -83,18 +82,17 @@ void main() {
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(size: Size(1280, 900)),
         child: ProviderScope(
           overrides: [
+            hiveBootstrapProvider.overrideWith((_) async {}),
+            offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
             tokenStorageProvider.overrideWithValue(
               GithubTokenStorageService(storage: fakeStorage),
             ),
-            sharedPreferencesProvider.overrideWith((_) async => prefs),
+            sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
             projectListProvider.overrideWith(() => _EmptyProjectList()),
           ],
           child: const GhTodosApp(),
@@ -113,4 +111,9 @@ void main() {
 class _EmptyProjectList extends ProjectList {
   @override
   List<Project> build() => const [];
+}
+
+class _FakeOfflineStatus extends OfflineStatus {
+  @override
+  Future<bool> build() async => false;
 }
