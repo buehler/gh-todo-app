@@ -8,8 +8,10 @@ import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
+import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:go_router/go_router.dart';
@@ -29,9 +31,12 @@ class RootPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final topPadding = AppTopBar.barHeight + MediaQuery.paddingOf(context).top;
-    final bottomPadding =
-        AppBottomNav.barHeight + MediaQuery.paddingOf(context).bottom + 32;
+    final topPadding =
+        AppTopBar.effectiveHeight(context) + MediaQuery.paddingOf(context).top;
+    // On wide, the bottom nav is replaced by the side rail — skip its height.
+    final bottomPadding = (isWide(context) ? 0 : AppBottomNav.barHeight) +
+        MediaQuery.paddingOf(context).bottom +
+        32;
     final selectedId = ref.watch(selectedProjectProvider);
 
     if (selectedId == null) {
@@ -91,7 +96,7 @@ class _IssuesFeed extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final feedAsync = ref.watch(projectIssuesProvider(projectId));
 
-    return RefreshIndicator(
+    final refresher = RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(projectIssuesProvider(projectId));
         // Wait for the provider to complete after invalidation.
@@ -145,6 +150,20 @@ class _IssuesFeed extends ConsumerWidget {
         ],
       ),
     );
+
+    // On wide layouts the list pane lives inside TodosSplitView's flex-4
+    // column — still enforce a reading-column clamp so even an ultra-wide
+    // window keeps issue rows comfortable to scan.
+    if (isWide(context)) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: refresher,
+        ),
+      );
+    }
+    return refresher;
   }
 }
 
@@ -236,14 +255,14 @@ List<Widget> _dataSlivers(
   return slivers;
 }
 
-class _IssueSliverList extends StatelessWidget {
+class _IssueSliverList extends ConsumerWidget {
   final List<IssueData> issues;
   final String projectId;
 
   const _IssueSliverList({required this.issues, required this.projectId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SliverList.separated(
       itemCount: issues.length,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
@@ -252,13 +271,25 @@ class _IssueSliverList extends StatelessWidget {
         return SwipeableIssueRow(
           issue: issue,
           projectId: projectId,
-          onTap: () => context.pushNamed(
-            AppRoutes.issueDetailName,
-            pathParameters: {'id': issue.id},
-            extra: issue,
-          ),
+          onTap: () => _openIssue(context, ref, issue),
         );
       },
     );
   }
+}
+
+/// Opens an issue. On wide layouts (`≥ 900px`) this stays in-shell by
+/// setting [selectedIssueProvider] — [TodosSplitView] then fills the detail
+/// pane. On compact/medium widths it pushes the full-screen
+/// [IssueDetailPage] route as before.
+void _openIssue(BuildContext context, WidgetRef ref, IssueData issue) {
+  if (isWide(context)) {
+    ref.read(selectedIssueProvider.notifier).select(issue);
+    return;
+  }
+  context.pushNamed(
+    AppRoutes.issueDetailName,
+    pathParameters: {'id': issue.id},
+    extra: issue,
+  );
 }

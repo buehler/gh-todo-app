@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
+import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/pages/issue_detail_page.dart';
 import 'package:gh_todos/pages/privacy_policy_page.dart';
@@ -59,7 +60,8 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
               GoRoute(
                 path: AppRoutes.rootPath,
                 name: AppRoutes.rootName,
-                builder: (context, state) => const RootPage(),
+                builder: (context, state) =>
+                    const TodosSplitView(child: RootPage()),
               ),
             ],
           ),

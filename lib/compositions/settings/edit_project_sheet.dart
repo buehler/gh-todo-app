@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
+import 'package:gh_todos/components/src/adaptive_sheet.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/settings/edit_project_sheet/due_date_field_section.dart';
 import 'package:gh_todos/compositions/settings/edit_project_sheet/priority_field_section.dart';
@@ -40,23 +41,26 @@ Future<EditProjectResult?> showEditProjectSheet(
   BuildContext context,
   Project project,
 ) {
-  return showModalBottomSheet<EditProjectResult>(
-    context: context,
-    isScrollControlled: true,
-    // Push onto the root navigator so the sheet (and any DropdownButton
-    // overlays it opens) render above AppShell's persistent bottom nav.
-    // Without this the branch's nested navigator sits underneath the nav
-    // bar, clipping dropdown options that extend near the bottom.
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => _EditProjectSheet(project: project),
+  // useRootNavigator defaults to true on the adapter, so (on narrow) the sheet
+  // (and any DropdownButton overlays it opens) render above AppShell's
+  // persistent bottom nav. Without that the branch's nested navigator would
+  // sit underneath the nav bar, clipping dropdown options that extend near
+  // the bottom.
+  return showAdaptiveSheet<EditProjectResult>(
+    context,
+    dialogMaxWidth: 640,
+    builder: (_, isDialog) => _EditProjectSheet(
+      project: project,
+      isDialog: isDialog,
+    ),
   );
 }
 
 class _EditProjectSheet extends ConsumerStatefulWidget {
   final Project project;
+  final bool isDialog;
 
-  const _EditProjectSheet({required this.project});
+  const _EditProjectSheet({required this.project, required this.isDialog});
 
   @override
   ConsumerState<_EditProjectSheet> createState() => _EditProjectSheetState();
@@ -129,6 +133,61 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isDialog) return _buildDialogBody(context);
+    return _buildSheetBody(context);
+  }
+
+  Widget _buildFormColumn() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Header(project: widget.project),
+        const SizedBox(height: 24),
+        DueDateFieldSection(
+          projectId: widget.project.id,
+          selectedFieldId: _dueDateFieldId,
+          onChanged: _onDueDateFieldChanged,
+        ),
+        const SizedBox(height: 28),
+        PriorityFieldSection(
+          projectId: widget.project.id,
+          selectedFieldId: _priorityFieldId,
+          optionMap: _priorityOptionMap,
+          onFieldChanged: _onPriorityFieldChanged,
+          onOptionChanged: _onPriorityOptionChanged,
+        ),
+        const SizedBox(height: 32),
+        _SaveActions(
+          isDirty: _isDirty,
+          onCancel: () => Navigator.pop(context),
+          onSave: _save,
+        ),
+        const SizedBox(height: 32),
+        _RemoveRow(
+          onPressed: () =>
+              Navigator.pop(context, const RemoveProjectResult()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDialogBody(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            child: _buildFormColumn(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSheetBody(BuildContext context) {
     final surfaceLowest = resolveColor(
       context,
       ColorTokens.surface.containerLowest,
@@ -148,7 +207,7 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _DragHandle(),
+              AdaptiveSheetDragHandle(isDialog: false),
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -157,34 +216,7 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _Header(project: widget.project),
-                      const SizedBox(height: 24),
-                      DueDateFieldSection(
-                        projectId: widget.project.id,
-                        selectedFieldId: _dueDateFieldId,
-                        onChanged: _onDueDateFieldChanged,
-                      ),
-                      const SizedBox(height: 28),
-                      PriorityFieldSection(
-                        projectId: widget.project.id,
-                        selectedFieldId: _priorityFieldId,
-                        optionMap: _priorityOptionMap,
-                        onFieldChanged: _onPriorityFieldChanged,
-                        onOptionChanged: _onPriorityOptionChanged,
-                      ),
-                      const SizedBox(height: 32),
-                      _SaveActions(
-                        isDirty: _isDirty,
-                        onCancel: () => Navigator.pop(context),
-                        onSave: _save,
-                      ),
-                      const SizedBox(height: 32),
-                      _RemoveRow(
-                        onPressed: () => Navigator.pop(
-                          context,
-                          const RemoveProjectResult(),
-                        ),
-                      ),
+                      _buildFormColumn(),
                       SizedBox(height: MediaQuery.paddingOf(context).bottom),
                     ],
                   ),
@@ -194,26 +226,6 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
           ),
         );
       },
-    );
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  const _DragHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    final outlineVariant = resolveColor(context, ColorTokens.outline.variant);
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 12),
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: withOpacity(outlineVariant, 0.3),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
     );
   }
 }
