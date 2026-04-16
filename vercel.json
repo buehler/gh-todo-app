@@ -1,18 +1,12 @@
 {
-  "builds": [
-    {
-      "src": "build/web/**/*",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
       "src": "/(.*\\.(js|mjs|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|otf|mp3|wav|ogg|json|webmanifest|wasm))",
-      "dest": "build/web/$1"
+      "dest": "$1"
     },
     {
       "src": "/(.*)",
-      "dest": "build/web/index.html"
+      "dest": "index.html"
     }
   ]
 }
