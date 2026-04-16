@@ -462,9 +462,8 @@
                 <p class="eyebrow">01 / Controller</p>
                 <h2>Who operates this app</h2>
                 <p>
-                  Complete this section before publishing. App stores and privacy
-                  laws generally require a real operator identity and a working
-                  contact method.
+                  The operator information for this policy will be completed with
+                  the legal name and contact details used for release.
                 </p>
               </div>
               <p class="contact-list">
@@ -527,6 +526,17 @@
                     your saved project mappings.
                   </p>
                 </article>
+                <article class="card tertiary">
+                  <h3>Local performance and offline cache</h3>
+                  <p>
+                    The app uses local Hive storage to cache GraphQL responses and
+                    related workspace data so the interface can render more quickly
+                    and, where available, show cached issue data while offline. In
+                    the current codebase, this includes a GraphQL cache box named
+                    <code>graphqlClientStore</code> and a Hive box named
+                    <code>mappedProjects</code>.
+                  </p>
+                </article>
               </div>
             </section>
 
@@ -556,6 +566,15 @@
                     GitHub account, project, issue, and comment data is processed
                     so the app can show your selected project feed, detail pages,
                     recently closed issues, priority badges, and due dates.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>To support fast local reads and offline fallback</h3>
+                  <p>
+                    Cached GraphQL responses and locally stored project mappings
+                    are used to reduce load times, preserve recently viewed
+                    workspace state, and display cached issue information when the
+                    device is offline and cached data is available.
                   </p>
                 </article>
                 <article class="card">
@@ -615,7 +634,7 @@
                 <article class="card tertiary">
                   <h3>No sale, advertising, or analytics sharing stated here</h3>
                   <p>
-                    Based on the repository code reviewed for this draft, the app
+                    Based on the repository code reviewed for this policy, the app
                     does not include advertising SDKs, marketing trackers, or
                     third-party analytics packages. This policy assumes those are
                     not added elsewhere before release.
@@ -642,6 +661,14 @@
                   <p>
                     Stored locally until you change or remove them, clear app data,
                     or uninstall the app.
+                  </p>
+                </article>
+                <article class="card">
+                  <h3>Local cache copies</h3>
+                  <p>
+                    Cached GraphQL data and other Hive-backed local cache entries
+                    remain on the device until they are overwritten, cleared, the
+                    app data is reset, or the app is uninstalled.
                   </p>
                 </article>
                 <article class="card">
@@ -749,10 +776,12 @@
                 clear in-app or store-listing notice where required.
               </p>
               <p class="footnote">
-                Publishing note: fill in the controller/contact placeholders before
-                release. If you later add analytics, crash reporting, sign-in,
-                payments, newsletters, support forms, or a website account system,
-                this document will need to be expanded.
+                This policy reflects the app behavior visible in the current
+                repository, including secure token storage, SharedPreferences-based
+                session preferences, and Hive-backed local caching. If future
+                releases add analytics, crash reporting, account systems,
+                newsletters, payments, or other data flows, this policy should be
+                updated accordingly.
               </p>
             </section>
           </div>
