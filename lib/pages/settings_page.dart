@@ -10,6 +10,7 @@ import 'package:gh_todos/compositions/settings/settings_projects_section.dart';
 import 'package:gh_todos/compositions/settings/settings_section_header.dart';
 import 'package:gh_todos/compositions/shared/legal_links_row.dart';
 import 'package:gh_todos/compositions/shared/pat_scope_help_card.dart';
+import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
 import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
@@ -113,7 +114,7 @@ class SettingsPage extends ConsumerWidget {
   Future<void> _onProjectTapped(
     BuildContext context,
     WidgetRef ref,
-    project,
+    Project project,
   ) async {
     final result = await showEditProjectSheet(context, project);
     if (result == null) return;
@@ -165,7 +166,7 @@ class SettingsPage extends ConsumerWidget {
       category: 'settings',
     );
     if (!context.mounted) return;
-    context.pushNamed(AppRoutes.settingsLogsName);
+    await context.pushNamed<void>(AppRoutes.settingsLogsName);
   }
 
   VoidCallback _urlOpener(String url) {

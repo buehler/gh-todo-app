@@ -5,7 +5,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 
-import 'app_log_file_sink_factory.dart';
+import 'package:gh_todos/services/app_log_file_sink_factory.dart';
 
 enum AppLogLevel { debug, info, warn, error }
 

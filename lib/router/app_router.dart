@@ -16,7 +16,7 @@ import 'package:go_router/go_router.dart';
 /// bridging Riverpod state into GoRouter's [refreshListenable].
 class _SessionRefreshNotifier extends ChangeNotifier {
   _SessionRefreshNotifier(Ref ref) {
-    ref.listen(sessionProvider, (_, __) => notifyListeners());
+    ref.listen(sessionProvider, (previous, next) => notifyListeners());
   }
 }
 

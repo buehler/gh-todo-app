@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,7 +61,7 @@ class SwipeableIssueRow extends ConsumerStatefulWidget {
 
 class _SwipeableIssueRowState extends ConsumerState<SwipeableIssueRow> {
   Future<void> _toggleState() async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
 
     final mutations = ref.read(issueMutationsProvider);
     final wasClosed = widget.issue.closed;

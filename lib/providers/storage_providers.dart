@@ -9,8 +9,8 @@ import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'hive_bootstrap_provider.dart';
-import 'app_logger_provider.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
+import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 
 part 'storage_providers.g.dart';
 

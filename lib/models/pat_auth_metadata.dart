@@ -1,4 +1,4 @@
-import 'authenticated_user_snapshot.dart';
+import 'package:gh_todos/models/authenticated_user_snapshot.dart';
 
 class PatAuthMetadata {
   static const requiredScopes = ['project', 'repo'];

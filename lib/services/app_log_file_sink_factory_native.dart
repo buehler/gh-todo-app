@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-import 'app_logger_service.dart';
+import 'package:gh_todos/services/app_logger_service.dart';
 
 class RollingFileAppLogSink implements AppLogSink {
   RollingFileAppLogSink._(this._directory);

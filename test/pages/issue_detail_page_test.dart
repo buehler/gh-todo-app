@@ -146,7 +146,7 @@ class _FakeOfflineStatus extends OfflineStatus {
 
 void main() {
   setUp(() async {
-    await tester_setSurfaceSize();
+    await testerSetSurfaceSize();
   });
 
   tearDown(() async {
@@ -312,7 +312,7 @@ void main() {
 
 // ----------------------------- Helpers ---------------------------------------
 
-Future<void> tester_setSurfaceSize() async {
+Future<void> testerSetSurfaceSize() async {
   // Placeholder for consistency with existing tests; no-op here because each
   // test pumps in the default size, which is large enough.
 }
