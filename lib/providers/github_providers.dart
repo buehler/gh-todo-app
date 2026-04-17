@@ -22,16 +22,12 @@ typedef ProjectIssuesFeed = ({List<IssueData> open, List<IssueData> closed});
 final userInfoProvider =
     StreamProvider.autoDispose<Query$UserInformation$viewer?>((ref) {
       final client = ref.watch(graphqlClientProvider);
-      return _watchQueryStream(
-        ref,
-        client.watchQuery$UserInformation(
-          WatchOptions$Query$UserInformation(
-            fetchPolicy: FetchPolicy.cacheAndNetwork,
-            eagerlyFetchResults: true,
-            fetchResults: true,
-          ),
+      return _cacheThenNetworkStream(
+        readCache: () => client.readQuery$UserInformation(),
+        fetchNetwork: () => client.query$UserInformation(
+          Options$Query$UserInformation(fetchPolicy: FetchPolicy.networkOnly),
         ),
-        (data) => data?.viewer,
+        mapper: (data) => data?.viewer,
       );
     });
 
@@ -40,16 +36,12 @@ final userOrganizationsProvider =
       List<Query$UserOrganizations$viewer$organizations$nodes>
     >((ref) {
       final client = ref.watch(graphqlClientProvider);
-      return _watchQueryStream(
-        ref,
-        client.watchQuery$UserOrganizations(
-          WatchOptions$Query$UserOrganizations(
-            fetchPolicy: FetchPolicy.cacheAndNetwork,
-            eagerlyFetchResults: true,
-            fetchResults: true,
-          ),
+      return _cacheThenNetworkStream(
+        readCache: () => client.readQuery$UserOrganizations(),
+        fetchNetwork: () => client.query$UserOrganizations(
+          Options$Query$UserOrganizations(fetchPolicy: FetchPolicy.networkOnly),
         ),
-        (data) =>
+        mapper: (data) =>
             data?.viewer.organizations.nodes
                 ?.whereType<Query$UserOrganizations$viewer$organizations$nodes>()
                 .toList() ??
@@ -60,17 +52,17 @@ final userOrganizationsProvider =
 final ownerProjectsProvider = StreamProvider.autoDispose
     .family<Query$OwnerProjects$node?, String>((ref, ownerId) {
       final client = ref.watch(graphqlClientProvider);
-      return _watchQueryStream(
-        ref,
-        client.watchQuery$OwnerProjects(
-          WatchOptions$Query$OwnerProjects(
+      return _cacheThenNetworkStream(
+        readCache: () => client.readQuery$OwnerProjects(
           variables: Variables$Query$OwnerProjects(ownerId: ownerId),
-            fetchPolicy: FetchPolicy.cacheAndNetwork,
-            eagerlyFetchResults: true,
-            fetchResults: true,
+        ),
+        fetchNetwork: () => client.query$OwnerProjects(
+          Options$Query$OwnerProjects(
+            variables: Variables$Query$OwnerProjects(ownerId: ownerId),
+            fetchPolicy: FetchPolicy.networkOnly,
           ),
         ),
-        (data) => data?.node,
+        mapper: (data) => data?.node,
       );
     });
 
@@ -392,5 +384,30 @@ Stream<T> _watchQueryStream<TParsed, T>(
     if (!result.isLoading && result.hasException) {
       throw result.exception!;
     }
+  }
+}
+
+Stream<T> _cacheThenNetworkStream<TParsed, T>({
+  required TParsed? Function() readCache,
+  required Future<QueryResult<TParsed>> Function() fetchNetwork,
+  required T Function(TParsed? data) mapper,
+}) async* {
+  var yieldedCachedValue = false;
+
+  final cached = readCache();
+  if (cached != null) {
+    yieldedCachedValue = true;
+    yield mapper(cached);
+  }
+
+  final result = await fetchNetwork();
+  final parsed = result.parsedData;
+  if (parsed != null) {
+    yield mapper(parsed);
+    return;
+  }
+
+  if (result.hasException && !yieldedCachedValue) {
+    throw result.exception!;
   }
 }

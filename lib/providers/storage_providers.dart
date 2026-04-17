@@ -1,7 +1,7 @@
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:gh_todos/services/session_prefs_service.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,7 +22,7 @@ SessionPrefsService sessionPrefs(Ref ref) {
 
 @Riverpod(keepAlive: true)
 ProjectStorageService projectStorage(Ref ref) {
-  ref.watch(hiveBootstrapProvider).requireValue;
+  ref.watch(hiveBootstrapProvider);
   return ProjectStorageService(Hive.box<String>(ProjectStorageService.boxName));
 }
 

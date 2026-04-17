@@ -8,7 +8,7 @@ import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:gh_todos/services/session_prefs_service.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 Future<ProjectStorageService> createTestProjectStorage() async {
   return ProjectStorageService(_InMemoryStringBox());

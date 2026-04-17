@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:gh_todos/models/project.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 class ProjectStorageService {
   static const boxName = 'mappedProjects';

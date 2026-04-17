@@ -1,15 +1,14 @@
 import 'package:gh_todos/services/project_storage_service.dart';
-import 'package:hive/hive.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'hive_bootstrap_provider.g.dart';
 
-const kGraphqlCacheBoxName = 'graphqlClientStore';
-
 @Riverpod(keepAlive: true)
 Future<void> hiveBootstrap(Ref ref) async {
-  if (!Hive.isBoxOpen(kGraphqlCacheBoxName)) {
-    await Hive.openBox<dynamic>(kGraphqlCacheBoxName);
+  if (!Hive.isBoxOpen(HiveStore.defaultBoxName)) {
+    await Hive.openBox<dynamic>(HiveStore.defaultBoxName);
   }
 
   if (!Hive.isBoxOpen(ProjectStorageService.boxName)) {

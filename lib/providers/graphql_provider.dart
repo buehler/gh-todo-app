@@ -7,7 +7,7 @@ part 'graphql_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 GraphQLClient graphqlClient(Ref ref) {
-  ref.watch(hiveBootstrapProvider).requireValue;
+  ref.watch(hiveBootstrapProvider);
   final session = ref.watch(sessionProvider);
 
   return GraphQLClient(
