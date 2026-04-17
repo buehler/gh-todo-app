@@ -5,6 +5,10 @@
       "dest": "$1"
     },
     {
+      "src": "/(privacy|tos)(\\.html)?",
+      "dest": "$1.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "index.html"
     }

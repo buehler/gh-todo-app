@@ -1,17 +1,17 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/setup/connect_brand_block.dart';
 import 'package:gh_todos/compositions/setup/connect_decorative_panel.dart';
 import 'package:gh_todos/compositions/setup/connect_footer.dart';
 import 'package:gh_todos/compositions/setup/connect_security_notice.dart';
 import 'package:gh_todos/compositions/setup/connect_token_form.dart';
-import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/providers/session_provider.dart';
+import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,6 +22,8 @@ class ConnectPage extends ConsumerStatefulWidget {
   static const safeAreaKey = ValueKey('connect-page-safe-area');
   static const githubDocsUrl =
       'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens';
+  static const tosUrl = 'https://gh-todos.cbue.ch/tos';
+  static const privacyUrl = 'https://gh-todos.cbue.ch/privacy';
 
   const ConnectPage({super.key});
 
@@ -80,9 +82,9 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
     });
   }
 
-  Future<void> _openGithubDocs() async {
-    final uri = Uri.parse(ConnectPage.githubDocsUrl);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> Function() _urlOpener(String url) {
+    final uri = Uri.parse(url);
+    return () => launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -106,7 +108,9 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
               onChanged: _handleTokenChanged,
               onSubmitted: _submit,
               onConnectPressed: _submit,
-              onHelpPressed: _openGithubDocs,
+              onHelpPressed: _urlOpener(ConnectPage.githubDocsUrl),
+              onPrivacyPressed: _urlOpener(ConnectPage.privacyUrl),
+              onTosPressed: _urlOpener(ConnectPage.tosUrl),
             ),
           ),
         ],
@@ -123,6 +127,8 @@ class _ConnectForegroundLayer extends StatelessWidget {
   final Future<void> Function() onSubmitted;
   final VoidCallback onConnectPressed;
   final VoidCallback onHelpPressed;
+  final VoidCallback onPrivacyPressed;
+  final VoidCallback onTosPressed;
 
   const _ConnectForegroundLayer({
     required this.tokenController,
@@ -132,6 +138,8 @@ class _ConnectForegroundLayer extends StatelessWidget {
     required this.onSubmitted,
     required this.onConnectPressed,
     required this.onHelpPressed,
+    required this.onPrivacyPressed,
+    required this.onTosPressed,
   });
 
   @override
@@ -161,10 +169,8 @@ class _ConnectForegroundLayer extends StatelessWidget {
                     ),
                     const ConnectSecurityNotice(),
                     ConnectFooter(
-                      onPrivacyPressed: () =>
-                          context.pushNamed(AppRoutes.privacyName),
-                      onTermsPressed: () =>
-                          context.pushNamed(AppRoutes.termsName),
+                      onPrivacyPressed: onPrivacyPressed,
+                      onTermsPressed: onTosPressed,
                     ),
                   ],
                 ),
@@ -193,24 +199,16 @@ class _ConnectBackgroundLayer extends StatelessWidget {
     return StackBox(
       style: setupPageStackStyle(),
       children: [
-        Positioned.fill(
-          child: Box(style: setupPageBackgroundStyle(context)),
-        ),
+        Positioned.fill(child: Box(style: setupPageBackgroundStyle(context))),
         Positioned(
           top: -120,
           left: -120,
-          child: _AmbientOrb(
-            color: withOpacity(primaryFixed, 0.28),
-            size: 320,
-          ),
+          child: _AmbientOrb(color: withOpacity(primaryFixed, 0.28), size: 320),
         ),
         Positioned(
           right: -80,
           bottom: -80,
-          child: _AmbientOrb(
-            color: withOpacity(tertiaryFixed, 0.2),
-            size: 240,
-          ),
+          child: _AmbientOrb(color: withOpacity(tertiaryFixed, 0.2), size: 240),
         ),
         if (showDecorativePanel)
           const Positioned(

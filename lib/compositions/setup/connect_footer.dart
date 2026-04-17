@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/shared/editorial_text_link.dart';
 import 'package:gh_todos/style/colors.dart';
-import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
 class ConnectFooter extends StatelessWidget {
@@ -40,19 +38,6 @@ class ConnectFooter extends StatelessWidget {
             EditorialTextLink(
               label: 'Terms of Service',
               onPressed: onTermsPressed,
-            ),
-          ],
-        ),
-        RowBox(
-          style: editorialRowStyle(spacing: 8),
-          children: [
-            const StatusBlip(),
-            StyledText(
-              'Operational: All Systems Go',
-              style: editorialTextStyle(
-                TextTokens.body.$small,
-                color: withOpacity(onSurfaceVariant, 0.7),
-              ),
             ),
           ],
         ),

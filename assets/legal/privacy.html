@@ -1,18 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>gh_todos Privacy Policy</title>
-    <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;700;800&display=swap"
       rel="stylesheet"
@@ -52,7 +45,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Inter", sans-serif;
+        font-family: 'Inter', sans-serif;
         color: var(--on-surface);
         background:
           radial-gradient(circle at top left, var(--hero-glow-a), transparent 42%),
@@ -103,7 +96,7 @@
         display: grid;
         place-items: center;
         color: #ffffff;
-        font-family: "Manrope", sans-serif;
+        font-family: 'Manrope', sans-serif;
         font-weight: 800;
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
         box-shadow: var(--shadow);
@@ -115,7 +108,7 @@
       h2,
       h3,
       .stat-value {
-        font-family: "Manrope", sans-serif;
+        font-family: 'Manrope', sans-serif;
       }
 
       .brand-copy strong {
@@ -311,7 +304,7 @@
       }
 
       .card::before {
-        content: "";
+        content: '';
         position: absolute;
         inset: 0 auto 0 0;
         width: 4px;
@@ -397,8 +390,8 @@
             </div>
           </div>
           <nav class="nav" aria-label="Secondary">
-            <a href="privacy.html">Privacy</a>
-            <a href="tos.html">Terms</a>
+            <a href="privacy">Privacy</a>
+            <a href="tos">Terms of Service</a>
           </nav>
         </div>
       </header>
@@ -410,15 +403,11 @@
               <p class="eyebrow">Engineering Editorial / Data Notice</p>
               <h1>Privacy, kept narrow.</h1>
               <p>
-                This Privacy Policy explains how <strong>gh_todos</strong> handles
-                information when you use the app to connect a GitHub Personal
-                Access Token, read GitHub Projects and issues, and write issue or
-                project updates back to GitHub. The app is designed to keep data
-                collection limited to what is needed for those functions.
+                This Privacy Policy explains how <strong>gh_todos</strong> handles information when you use the app to
+                connect a GitHub Personal Access Token, read GitHub Projects and issues, and write issue or project updates
+                back to GitHub. The app is designed to keep data collection limited to what is needed for those functions.
               </p>
-              <p class="meta">
-                Last updated: April 16, 2026
-              </p>
+              <p class="meta">Last updated: April 16, 2026</p>
             </div>
 
             <aside class="hero-side" aria-label="Policy summary">
@@ -438,7 +427,9 @@
                 </div>
                 <div class="stat">
                   <span class="stat-value">1</span>
-                  <span class="stat-label">main external recipient: GitHub, which receives API requests needed to run the app</span>
+                  <span class="stat-label"
+                    >main external recipient: GitHub, which receives API requests needed to run the app</span
+                  >
                 </div>
               </div>
             </aside>
@@ -462,17 +453,15 @@
                 <p class="eyebrow">01 / Controller</p>
                 <h2>Who operates this app</h2>
                 <p>
-                  The operator information for this policy will be completed with
-                  the legal name and contact details used for release.
+                  The operator information for this policy will be completed with the legal name and contact details used for
+                  release.
                 </p>
               </div>
               <p class="contact-list">
-                <strong>Operator / controller:</strong> [Insert legal name of the
-                individual or company that operates gh_todos]<br />
-                <strong>Privacy contact:</strong> [Insert support or privacy email
-                address]<br />
-                <strong>Mailing address:</strong> [Insert business mailing
-                address, if applicable]
+                <strong>Operator / controller:</strong> [Insert legal name of the individual or company that operates
+                gh_todos]<br />
+                <strong>Privacy contact:</strong> [Insert support or privacy email address]<br />
+                <strong>Mailing address:</strong> [Insert business mailing address, if applicable]
               </p>
             </section>
 
@@ -487,7 +476,9 @@
                   <ul>
                     <li>Your GitHub Personal Access Token.</li>
                     <li>Issue titles, issue bodies, and comments you create or edit in the app.</li>
-                    <li>Project-mapping choices you configure, such as priority-field mappings and due-date-field mappings.</li>
+                    <li>
+                      Project-mapping choices you configure, such as priority-field mappings and due-date-field mappings.
+                    </li>
                   </ul>
                 </article>
                 <article class="card tertiary">
@@ -495,7 +486,10 @@
                   <ul>
                     <li>Your GitHub account and organization context needed to list available Projects V2 workspaces.</li>
                     <li>Project metadata such as project IDs, owner login, field IDs, and field options.</li>
-                    <li>Issue and comment data needed to render the feed and detail views, including titles, issue numbers, timestamps, comment counts, due dates, priority mappings, and open/closed state.</li>
+                    <li>
+                      Issue and comment data needed to render the feed and detail views, including titles, issue numbers,
+                      timestamps, comment counts, due dates, priority mappings, and open/closed state.
+                    </li>
                     <li>Linked repository metadata required for quick-add issue creation.</li>
                   </ul>
                 </article>
@@ -511,30 +505,25 @@
                 <article class="card">
                   <h3>Secure token storage</h3>
                   <p>
-                    The app stores your GitHub Personal Access Token locally using
-                    platform-secure storage where supported. In the app code, the
-                    token is stored under the local key
+                    The app stores your GitHub Personal Access Token locally using platform-secure storage where supported.
+                    In the app code, the token is stored under the local key
                     <code>github.personal_access_token</code>.
                   </p>
                 </article>
                 <article class="card">
                   <h3>Preferences and cached configuration</h3>
                   <p>
-                    The app also stores selected project identifiers and mapped
-                    project settings locally so it can restore your workspace
-                    between sessions. This includes the selected project ID and
-                    your saved project mappings.
+                    The app also stores selected project identifiers and mapped project settings locally so it can restore
+                    your workspace between sessions. This includes the selected project ID and your saved project mappings.
                   </p>
                 </article>
                 <article class="card tertiary">
                   <h3>Local performance and offline cache</h3>
                   <p>
-                    The app uses local Hive storage to cache GraphQL responses and
-                    related workspace data so the interface can render more quickly
-                    and, where available, show cached issue data while offline. In
-                    the current codebase, this includes a GraphQL cache box named
-                    <code>graphqlClientStore</code> and a Hive box named
-                    <code>mappedProjects</code>.
+                    The app uses local Hive storage to cache GraphQL responses and related workspace data so the interface
+                    can render more quickly and, where available, show cached issue data while offline. In the current
+                    codebase, this includes a GraphQL cache box named
+                    <code>graphqlClientStore</code> and a Hive box named <code>mappedProjects</code>.
                   </p>
                 </article>
               </div>
@@ -545,64 +534,57 @@
                 <p class="eyebrow">04 / Use</p>
                 <h2>Why the app processes this information</h2>
                 <p>
-                  The app uses data only for the core product workflow described in
-                  the repository: connecting to GitHub, selecting Projects V2,
-                  reading assigned issues, and letting you create or update items.
+                  The app uses data only for the core product workflow described in the repository: connecting to GitHub,
+                  selecting Projects V2, reading assigned issues, and letting you create or update items.
                 </p>
               </div>
               <div class="cards two-up">
                 <article class="card">
                   <h3>To authenticate API requests</h3>
                   <p>
-                    Your token is read locally and attached to requests sent to the
-                    GitHub GraphQL API at
-                    <code>https://api.github.com/graphql</code> in the
-                    <code>Authorization</code> header.
+                    Your token is read locally and attached to requests sent to the GitHub GraphQL API at
+                    <code>https://api.github.com/graphql</code> in the <code>Authorization</code> header.
                   </p>
                 </article>
                 <article class="card">
                   <h3>To render your workspace</h3>
                   <p>
-                    GitHub account, project, issue, and comment data is processed
-                    so the app can show your selected project feed, detail pages,
-                    recently closed issues, priority badges, and due dates.
+                    GitHub account, project, issue, and comment data is processed so the app can show your selected project
+                    feed, detail pages, recently closed issues, priority badges, and due dates.
                   </p>
                 </article>
                 <article class="card">
                   <h3>To support fast local reads and offline fallback</h3>
                   <p>
-                    Cached GraphQL responses and locally stored project mappings
-                    are used to reduce load times, preserve recently viewed
-                    workspace state, and display cached issue information when the
-                    device is offline and cached data is available.
+                    Cached GraphQL responses and locally stored project mappings are used to reduce load times, preserve
+                    recently viewed workspace state, and display cached issue information when the device is offline and
+                    cached data is available.
                   </p>
                 </article>
                 <article class="card">
                   <h3>To apply your changes</h3>
                   <p>
-                    When you post comments, update issue text, close or reopen
-                    issues, set due dates, set project single-select values, or
-                    create issues through quick-add, the app sends the necessary
-                    data to GitHub to complete that action.
+                    When you post comments, update issue text, close or reopen issues, set due dates, set project
+                    single-select values, or create issues through quick-add, the app sends the necessary data to GitHub to
+                    complete that action.
                   </p>
                 </article>
                 <article class="card">
                   <h3>To preserve your local setup</h3>
                   <p>
-                    Selected project IDs and project mapping preferences are stored
-                    locally so the app can reopen the same workspace without
-                    requiring you to configure it again.
+                    Selected project IDs and project mapping preferences are stored locally so the app can reopen the same
+                    workspace without requiring you to configure it again.
                   </p>
                 </article>
               </div>
               <div class="callout">
                 <h3>Legal bases</h3>
-                <p class="lede">
-                  If privacy law requires a legal basis, the likely bases are:
-                </p>
+                <p class="lede">If privacy law requires a legal basis, the likely bases are:</p>
                 <ul>
                   <li>performance of a contract or taking steps at your request to provide the app’s core functionality;</li>
-                  <li>legitimate interests in operating, securing, and improving a narrow GitHub productivity client; and</li>
+                  <li>
+                    legitimate interests in operating, securing, and improving a narrow GitHub productivity client; and
+                  </li>
                   <li>consent where law specifically requires consent for a given processing activity.</li>
                 </ul>
               </div>
@@ -617,27 +599,24 @@
                 <article class="card">
                   <h3>GitHub</h3>
                   <p>
-                    The app sends your token and requested mutation/query data to
-                    GitHub because GitHub hosts the Projects, repositories, issues,
-                    and comments the app works with.
+                    The app sends your token and requested mutation/query data to GitHub because GitHub hosts the Projects,
+                    repositories, issues, and comments the app works with.
                   </p>
                 </article>
                 <article class="card">
                   <h3>Platform and hosting providers</h3>
                   <p>
-                    Apple, Google, browser vendors, or other platform operators may
-                    separately process data through their operating systems,
-                    app-store infrastructure, or browser/runtime environment under
-                    their own terms and privacy notices.
+                    Apple, Google, browser vendors, or other platform operators may separately process data through their
+                    operating systems, app-store infrastructure, or browser/runtime environment under their own terms and
+                    privacy notices.
                   </p>
                 </article>
                 <article class="card tertiary">
                   <h3>No sale, advertising, or analytics sharing stated here</h3>
                   <p>
-                    Based on the repository code reviewed for this policy, the app
-                    does not include advertising SDKs, marketing trackers, or
-                    third-party analytics packages. This policy assumes those are
-                    not added elsewhere before release.
+                    Based on the repository code reviewed for this policy, the app does not include advertising SDKs,
+                    marketing trackers, or third-party analytics packages. This policy assumes those are not added elsewhere
+                    before release.
                   </p>
                 </article>
               </div>
@@ -652,32 +631,25 @@
                 <article class="card">
                   <h3>Token</h3>
                   <p>
-                    Stored locally until you replace it, remove it through the app,
-                    clear app data, or uninstall the app.
+                    Stored locally until you replace it, remove it through the app, clear app data, or uninstall the app.
                   </p>
                 </article>
                 <article class="card">
                   <h3>Local preferences</h3>
-                  <p>
-                    Stored locally until you change or remove them, clear app data,
-                    or uninstall the app.
-                  </p>
+                  <p>Stored locally until you change or remove them, clear app data, or uninstall the app.</p>
                 </article>
                 <article class="card">
                   <h3>Local cache copies</h3>
                   <p>
-                    Cached GraphQL data and other Hive-backed local cache entries
-                    remain on the device until they are overwritten, cleared, the
-                    app data is reset, or the app is uninstalled.
+                    Cached GraphQL data and other Hive-backed local cache entries remain on the device until they are
+                    overwritten, cleared, the app data is reset, or the app is uninstalled.
                   </p>
                 </article>
                 <article class="card">
                   <h3>GitHub-hosted content</h3>
                   <p>
-                    Issue, comment, and project data created or updated through the
-                    app remains subject to GitHub’s own retention practices until
-                    you modify or delete it through GitHub or another authorized
-                    client.
+                    Issue, comment, and project data created or updated through the app remains subject to GitHub’s own
+                    retention practices until you modify or delete it through GitHub or another authorized client.
                   </p>
                 </article>
               </div>
@@ -692,33 +664,27 @@
                 <article class="card">
                   <h3>Local secret handling</h3>
                   <p>
-                    The token is intentionally stored in a dedicated local secure
-                    storage service rather than in ordinary app state, route
-                    parameters, or URLs.
+                    The token is intentionally stored in a dedicated local secure storage service rather than in ordinary app
+                    state, route parameters, or URLs.
                   </p>
                 </article>
                 <article class="card">
                   <h3>Transport</h3>
-                  <p>
-                    GitHub API requests are sent over HTTPS to the GitHub GraphQL
-                    endpoint.
-                  </p>
+                  <p>GitHub API requests are sent over HTTPS to the GitHub GraphQL endpoint.</p>
                 </article>
                 <article class="card">
                   <h3>Data minimization</h3>
                   <p>
-                    The app is structured around a narrow GitHub workflow and does
-                    not, based on the reviewed code, request unrelated categories
-                    such as contacts, photos, health data, location, advertising
-                    identifiers, or payment data.
+                    The app is structured around a narrow GitHub workflow and does not, based on the reviewed code, request
+                    unrelated categories such as contacts, photos, health data, location, advertising identifiers, or payment
+                    data.
                   </p>
                 </article>
                 <article class="card">
                   <h3>Limits</h3>
                   <p>
-                    No storage or transmission method is perfectly secure. You
-                    should grant the minimum GitHub token scopes needed for your own
-                    use and revoke any token you no longer trust.
+                    No storage or transmission method is perfectly secure. You should grant the minimum GitHub token scopes
+                    needed for your own use and revoke any token you no longer trust.
                   </p>
                 </article>
               </div>
@@ -733,8 +699,14 @@
                 <li>You can remove the locally stored token from within the app.</li>
                 <li>You can delete saved projects and mappings by clearing app data or removing them in the app.</li>
                 <li>You can revoke or replace your GitHub token directly in GitHub.</li>
-                <li>You can exercise access, correction, deletion, or related rights for GitHub-hosted content through GitHub where that data is controlled by GitHub or your GitHub account.</li>
-                <li>If applicable law gives you additional rights, contact the operator using the contact details listed in this policy.</li>
+                <li>
+                  You can exercise access, correction, deletion, or related rights for GitHub-hosted content through GitHub
+                  where that data is controlled by GitHub or your GitHub account.
+                </li>
+                <li>
+                  If applicable law gives you additional rights, contact the operator using the contact details listed in
+                  this policy.
+                </li>
               </ul>
             </section>
 
@@ -744,10 +716,9 @@
                 <h2>Cross-border processing</h2>
               </div>
               <p class="lede">
-                Because the app communicates with GitHub and may be distributed
-                globally, information may be processed in countries other than the
-                country where you live. GitHub’s own terms and privacy disclosures
-                govern GitHub’s handling of data after it receives it.
+                Because the app communicates with GitHub and may be distributed globally, information may be processed in
+                countries other than the country where you live. GitHub’s own terms and privacy disclosures govern GitHub’s
+                handling of data after it receives it.
               </p>
             </section>
 
@@ -757,10 +728,8 @@
                 <h2>Children’s privacy</h2>
               </div>
               <p class="lede">
-                gh_todos is not directed to children under 13 and is not designed
-                for child-oriented use. If you believe a child has provided
-                information through the app, contact the operator and revoke any
-                token involved.
+                gh_todos is not directed to children under 13 and is not designed for child-oriented use. If you believe a
+                child has provided information through the app, contact the operator and revoke any token involved.
               </p>
             </section>
 
@@ -770,18 +739,15 @@
                 <h2>Policy updates</h2>
               </div>
               <p class="lede">
-                This policy may be updated if the app’s data practices, distribution
-                channels, or legal obligations change. Update the “Last updated”
-                date whenever the policy changes. For material changes, provide a
-                clear in-app or store-listing notice where required.
+                This policy may be updated if the app’s data practices, distribution channels, or legal obligations change.
+                Update the “Last updated” date whenever the policy changes. For material changes, provide a clear in-app or
+                store-listing notice where required.
               </p>
               <p class="footnote">
-                This policy reflects the app behavior visible in the current
-                repository, including secure token storage, SharedPreferences-based
-                session preferences, and Hive-backed local caching. If future
-                releases add analytics, crash reporting, account systems,
-                newsletters, payments, or other data flows, this policy should be
-                updated accordingly.
+                This policy reflects the app behavior visible in the current repository, including secure token storage,
+                SharedPreferences-based session preferences, and Hive-backed local caching. If future releases add analytics,
+                crash reporting, account systems, newsletters, payments, or other data flows, this policy should be updated
+                accordingly.
               </p>
             </section>
           </div>
