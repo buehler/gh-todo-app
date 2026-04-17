@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
-import 'package:gh_todos/compositions/shared/editorial_text_link.dart';
+import 'package:gh_todos/compositions/shared/legal_links_row.dart';
 import 'package:gh_todos/style/colors.dart';
+import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
 class ConnectFooter extends StatelessWidget {
@@ -16,11 +17,6 @@ class ConnectFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onSurfaceVariant = resolveColor(
-      context,
-      ColorTokens.surface.onVariant,
-    );
-
     return ColumnBox(
       style: editorialColumnStyle(
         spacing: 16,
@@ -28,16 +24,29 @@ class ConnectFooter extends StatelessWidget {
         width: double.infinity,
       ),
       children: [
+        LegalLinksRow(
+          onPrivacyPressed: onPrivacyPressed,
+          onTermsPressed: onTermsPressed,
+        ),
         RowBox(
-          style: editorialRowStyle(spacing: 20),
+          style: editorialRowStyle(spacing: 8),
           children: [
-            EditorialTextLink(
-              label: 'Privacy Policy',
-              onPressed: onPrivacyPressed,
+            Box(
+              style: BoxStyler()
+                  .width(6)
+                  .height(6)
+                  .color(resolveColor(context, ColorTokens.primary.$default))
+                  .borderRounded(999),
             ),
-            EditorialTextLink(
-              label: 'Terms of Service',
-              onPressed: onTermsPressed,
+            StyledText(
+              'Operational: All Systems Go',
+              style: editorialTextStyle(
+                TextTokens.body.$small,
+                color: resolveColor(
+                  context,
+                  ColorTokens.surface.onVariant,
+                ),
+              ),
             ),
           ],
         ),

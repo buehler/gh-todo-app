@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/add_comment.graphql.dart';
 import 'package:gh_todos/graphql/add_project_item.graphql.dart';
@@ -11,6 +13,7 @@ import 'package:gh_todos/graphql/update_issue.graphql.dart';
 import 'package:gh_todos/graphql/update_issue_comment.graphql.dart';
 import 'package:gh_todos/graphql/update_project_item_field.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
@@ -145,7 +148,15 @@ class _RealIssueMutations implements IssueMutations {
 
   void _ensureOnline() {
     final isOffline = _ref.read(offlineStatusProvider).asData?.value ?? false;
-    if (isOffline) throw const OfflineWriteBlockedException();
+    if (isOffline) {
+      unawaited(
+        _ref.read(appLoggerProvider).warn(
+          'Blocked write while offline.',
+          category: 'issues',
+        ),
+      );
+      throw const OfflineWriteBlockedException();
+    }
   }
 
   /// Throws the GraphQL exception wrapped in [result] when present so the
@@ -153,9 +164,25 @@ class _RealIssueMutations implements IssueMutations {
   /// `parsedData == null` case where the server accepted the request but
   /// didn't return anything useful.
   T _unwrap<T>(QueryResult<T> result) {
-    if (result.hasException) throw result.exception!;
+    if (result.hasException) {
+      unawaited(
+        _ref.read(appLoggerProvider).error(
+          'GraphQL mutation failed.',
+          category: 'issues',
+          error: result.exception,
+          stackTrace: result.exception?.originalStackTrace,
+        ),
+      );
+      throw result.exception!;
+    }
     final data = result.parsedData;
     if (data == null) {
+      unawaited(
+        _ref.read(appLoggerProvider).error(
+          'GraphQL mutation returned no data.',
+          category: 'issues',
+        ),
+      );
       throw Exception('Mutation returned no data');
     }
     return data;
@@ -203,6 +230,10 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
+    await _ref.read(appLoggerProvider).info(
+      'Closing issue $issueId.',
+      category: 'issues',
+    );
     _ensureOnline();
     final result = await _client.mutate$CloseIssue(
       Options$Mutation$CloseIssue(
@@ -242,6 +273,10 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
+    await _ref.read(appLoggerProvider).info(
+      'Reopening issue $issueId.',
+      category: 'issues',
+    );
     _ensureOnline();
     final result = await _client.mutate$ReopenIssue(
       Options$Mutation$ReopenIssue(
@@ -368,6 +403,10 @@ class _RealIssueMutations implements IssueMutations {
     required String title,
     String? body,
   }) async {
+    await _ref.read(appLoggerProvider).info(
+      'Creating issue in project $projectId.',
+      category: 'issues',
+    );
     _ensureOnline();
     // Step 1: resolve the target repository. Projects V2 don't have a
     // "default repo" concept, so we pick the first linked repository

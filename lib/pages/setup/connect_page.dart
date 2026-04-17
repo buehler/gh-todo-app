@@ -8,8 +8,11 @@ import 'package:gh_todos/compositions/setup/connect_decorative_panel.dart';
 import 'package:gh_todos/compositions/setup/connect_footer.dart';
 import 'package:gh_todos/compositions/setup/connect_security_notice.dart';
 import 'package:gh_todos/compositions/setup/connect_token_form.dart';
+import 'package:gh_todos/compositions/shared/pat_scope_help_card.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
+import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:go_router/go_router.dart';
@@ -55,17 +58,27 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
     });
 
     try {
-      await ref.read(sessionProvider.notifier).setToken(trimmedToken);
+      await ref.read(appLoggerProvider).info(
+        'Setup flow submitted a PAT for validation.',
+        category: 'setup',
+      );
+      await ref.read(sessionProvider.notifier).connectToken(trimmedToken);
       if (!mounted) {
         return;
       }
       context.goNamed(AppRoutes.rootName);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      await ref.read(appLoggerProvider).warn(
+        'Setup PAT validation failed.',
+        category: 'setup',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) {
         return;
       }
       setState(() {
-        _errorText = 'The token could not be saved securely. Try again.';
+        _errorText = _submitErrorText(error);
       });
     } finally {
       if (mounted) {
@@ -85,6 +98,16 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
   Future<void> Function() _urlOpener(String url) {
     final uri = Uri.parse(url);
     return () => launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  String _submitErrorText(Object error) {
+    if (error is MissingGithubScopesException) {
+      return error.userMessage;
+    }
+    if (error is InvalidGithubTokenException) {
+      return error.message;
+    }
+    return 'The token could not be saved securely. Try again.';
   }
 
   @override
@@ -167,6 +190,7 @@ class _ConnectForegroundLayer extends StatelessWidget {
                       isSubmitting: isSubmitting,
                       errorText: errorText,
                     ),
+                    const PatScopeHelpCard(),
                     const ConnectSecurityNotice(),
                     ConnectFooter(
                       onPrivacyPressed: onPrivacyPressed,

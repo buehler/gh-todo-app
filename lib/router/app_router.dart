@@ -4,11 +4,10 @@ import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/pages/issue_detail_page.dart';
-import 'package:gh_todos/pages/privacy_policy_page.dart';
+import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
-import 'package:gh_todos/pages/terms_of_service_page.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:go_router/go_router.dart';
@@ -37,10 +36,8 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
 
       final hasToken = session.requireValue.hasToken;
       final path = state.uri.path;
-      final isPublicPage =
-          path == AppRoutes.privacyPath || path == AppRoutes.termsPath;
 
-      if (!hasToken && !isPublicPage && path != AppRoutes.setupPath) {
+      if (!hasToken && path != AppRoutes.setupPath) {
         return AppRoutes.setupPath;
       }
 
@@ -71,6 +68,13 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
                 path: AppRoutes.settingsPath,
                 name: AppRoutes.settingsName,
                 builder: (context, state) => const SettingsPage(),
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.settingsLogsPath,
+                    name: AppRoutes.settingsLogsName,
+                    builder: (context, state) => const ApplicationLogsPage(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -80,16 +84,6 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
         path: AppRoutes.setupPath,
         name: AppRoutes.setupName,
         builder: (context, state) => const ConnectPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.privacyPath,
-        name: AppRoutes.privacyName,
-        builder: (context, state) => const PrivacyPolicyPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.termsPath,
-        name: AppRoutes.termsName,
-        builder: (context, state) => const TermsOfServicePage(),
       ),
       GoRoute(
         path: AppRoutes.issueDetailPath,

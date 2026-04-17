@@ -23,6 +23,10 @@ void main() {
     expect(find.text('Personal Access Token'), findsOneWidget);
     expect(find.text('How to create one?'), findsOneWidget);
     expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('Personal Access Token requirements'), findsOneWidget);
+    expect(find.text('Required: project'), findsOneWidget);
+    expect(find.text('Required: repo'), findsOneWidget);
+    expect(find.text('Optional: read:org'), findsOneWidget);
     expect(find.textContaining('local authentication'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
@@ -156,30 +160,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
-  });
-
-  testWidgets('privacy link is tappable from setup page', (tester) async {
-    final result = await createTestApp();
-
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.text('Privacy Policy'));
-    await tester.tap(find.text('Privacy Policy'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Placeholder legal copy'), findsOneWidget);
-  });
-
-  testWidgets('terms link is tappable from setup page', (tester) async {
-    final result = await createTestApp();
-
-    await tester.pumpWidget(result.app);
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.text('Terms of Service'));
-    await tester.tap(find.text('Terms of Service'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Placeholder legal copy'), findsOneWidget);
   });
 
   testWidgets('how to create one link is tappable', (tester) async {

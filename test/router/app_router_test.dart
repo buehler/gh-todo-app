@@ -60,15 +60,11 @@ void main() {
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
   });
 
-  testWidgets('privacy and terms remain publicly reachable', (tester) async {
-    var result = await createTestApp(
-      initialLocation: AppRoutes.privacyPath,
-    );
-    await pumpApp(tester, result.app);
-    expect(find.text('Privacy Policy'), findsOneWidget);
+  testWidgets('unknown unauthenticated route redirects to setup', (tester) async {
+    final result = await createTestApp(initialLocation: '/privacy');
 
-    result = await createTestApp(initialLocation: AppRoutes.termsPath);
     await pumpApp(tester, result.app);
-    expect(find.text('Terms of Service'), findsOneWidget);
+
+    expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
   });
 }

@@ -2,9 +2,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gh_todos/app.dart';
+import 'package:gh_todos/models/authenticated_user_snapshot.dart';
+import 'package:gh_todos/models/pat_auth_metadata.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
+import 'package:gh_todos/services/app_logger_service.dart';
+import 'package:gh_todos/services/auth_metadata_storage_service.dart';
+import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:gh_todos/services/session_prefs_service.dart';
@@ -24,6 +30,7 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
   Map<String, String>? tokenSeed,
   String? initialLocation,
   bool throwOnWrite = false,
+  PatAuthMetadata? authMetadata,
 }) async {
   final fakeStorage = FakeFlutterSecureStorage(
     seed: tokenSeed,
@@ -31,16 +38,25 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
   );
   final sessionPrefs = FakeSessionPrefsService();
   final projectStorage = await createTestProjectStorage();
+  final authMetadataStorage = FakeAuthMetadataStorageService(
+    initialValue: authMetadata,
+  );
+  final logStore = AppLogStore(sinkFactory: () => MemoryAppLogSink());
 
   final app = ProviderScope(
     overrides: [
       hiveBootstrapProvider.overrideWith((_) async {}),
       offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+      appLogStoreProvider.overrideWithValue(logStore),
       tokenStorageProvider.overrideWithValue(
         GithubTokenStorageService(storage: fakeStorage),
       ),
       projectStorageProvider.overrideWithValue(projectStorage),
       sessionPrefsProvider.overrideWithValue(sessionPrefs),
+      authMetadataStorageProvider.overrideWithValue(authMetadataStorage),
+      githubAuthProvider.overrideWithValue(
+        FakeGithubAuthService(metadata: authMetadata ?? _defaultAuthMetadata),
+      ),
     ],
     child: GhTodosApp(initialLocation: initialLocation),
   );
@@ -67,6 +83,46 @@ class FakeSessionPrefsService implements SessionPrefsService {
     _selectedProjectId = id;
   }
 }
+
+class FakeAuthMetadataStorageService implements AuthMetadataStorageService {
+  PatAuthMetadata? _value;
+
+  FakeAuthMetadataStorageService({PatAuthMetadata? initialValue})
+    : _value = initialValue;
+
+  @override
+  Future<void> clear() async {
+    _value = null;
+  }
+
+  @override
+  Future<PatAuthMetadata?> read() async => _value;
+
+  @override
+  Future<void> save(PatAuthMetadata metadata) async {
+    _value = metadata;
+  }
+}
+
+class FakeGithubAuthService extends GithubAuthService {
+  final PatAuthMetadata metadata;
+
+  FakeGithubAuthService({required this.metadata});
+
+  @override
+  Future<PatAuthMetadata> inspectToken(String token) async => metadata;
+}
+
+final _defaultAuthMetadata = PatAuthMetadata(
+  user: const AuthenticatedUserSnapshot(
+    id: '1',
+    login: 'me',
+    name: 'Test User',
+    avatarUrl: 'https://example.com/avatar.png',
+  ),
+  scopes: const ['project', 'repo', 'read:org'],
+  validatedAt: DateTime(2026, 4, 17),
+);
 
 class _FakeOfflineStatus extends OfflineStatus {
   @override

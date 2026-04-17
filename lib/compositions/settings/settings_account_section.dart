@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
+import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -9,25 +10,122 @@ import 'package:mix/mix.dart';
 /// Account settings card with PAT row.
 class SettingsAccountSection extends StatelessWidget {
   final VoidCallback onPatPressed;
+  final VoidCallback onViewLogsPressed;
+  final PatAuthMetadata? metadata;
+  final bool isLoading;
+  final String? errorText;
 
-  const SettingsAccountSection({required this.onPatPressed, super.key});
+  const SettingsAccountSection({
+    required this.onPatPressed,
+    required this.onViewLogsPressed,
+    required this.metadata,
+    required this.isLoading,
+    required this.errorText,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return EditorialCard(
-      variation: CardVariation.elevated,
-      padding: EdgeInsets.zero,
-      child: _AccountRow(
-        icon: LucideIcons.keyRound,
-        iconBgColor: withOpacity(
-          resolveColor(context, ColorTokens.primary.$default),
-          0.1,
+    final onSurface = resolveColor(context, ColorTokens.surface.on);
+    final onSurfaceVariant = resolveColor(
+      context,
+      ColorTokens.surface.onVariant,
+    );
+    final primary = resolveColor(context, ColorTokens.primary.$default);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        EditorialCard(
+          variation: CardVariation.elevated,
+          padding: EdgeInsets.zero,
+          child: _AccountRow(
+            icon: LucideIcons.keyRound,
+            iconBgColor: withOpacity(primary, 0.1),
+            iconColor: primary,
+            title: 'GitHub Personal Access Token',
+            subtitle: '••••••••••••••••',
+            onPress: onPatPressed,
+          ),
         ),
-        iconColor: resolveColor(context, ColorTokens.primary.$default),
-        title: 'GitHub Personal Access Token',
-        subtitle: '••••••••••••••••',
-        onPress: onPatPressed,
-      ),
+        const SizedBox(height: 12),
+        EditorialCard(
+          variation: CardVariation.recessed,
+          padding: const EdgeInsets.all(20),
+          child: ColumnBox(
+            style: editorialColumnStyle(
+              spacing: 10,
+              crossAxis: CrossAxisAlignment.start,
+            ),
+            children: [
+              StyledText(
+                'Current PAT scopes',
+                style: editorialTextStyle(
+                  TextTokens.title.$medium,
+                  color: onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (isLoading)
+                StyledText(
+                  'Loading cached token metadata.',
+                  style: editorialTextStyle(
+                    TextTokens.body.$small,
+                    color: onSurfaceVariant,
+                  ),
+                )
+              else if (errorText != null)
+                StyledText(
+                  errorText!,
+                  style: editorialTextStyle(
+                    TextTokens.body.$small,
+                    color: onSurfaceVariant,
+                  ),
+                )
+              else if (metadata == null)
+                StyledText(
+                  'No cached scope information is available.',
+                  style: editorialTextStyle(
+                    TextTokens.body.$small,
+                    color: onSurfaceVariant,
+                  ),
+                )
+              else ...[
+                StyledText(
+                  metadata!.hasRequiredScopes
+                      ? 'Ready for ${metadata!.user.login}.'
+                      : 'Required scopes are missing.',
+                  style: editorialTextStyle(
+                    TextTokens.body.$small,
+                    color: onSurfaceVariant,
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final scope in metadata!.normalizedScopes)
+                      EditorialChip(label: scope),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        EditorialCard(
+          variation: CardVariation.elevated,
+          padding: EdgeInsets.zero,
+          child: _AccountRow(
+            icon: LucideIcons.scrollText,
+            iconBgColor: withOpacity(primary, 0.1),
+            iconColor: primary,
+            title: 'View Logs',
+            subtitle: 'Open local application logs.',
+            onPress: onViewLogsPressed,
+          ),
+        ),
+      ],
     );
   }
 }
