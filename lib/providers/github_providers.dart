@@ -75,7 +75,7 @@ final ownerProjectsProvider = StreamProvider.autoDispose
 ///
 /// Pull-to-refresh still works via `ref.invalidate(projectIssuesProvider(id))`
 /// — that disposes the notifier and re-runs [build].
-@riverpod
+@Riverpod(keepAlive: true)
 class ProjectIssues extends _$ProjectIssues {
   @override
   Stream<ProjectIssuesFeed> build(String projectId) {
