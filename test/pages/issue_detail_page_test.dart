@@ -117,13 +117,15 @@ Future<({FakeIssueMutations mutations})> _pump(
         ),
         sessionPrefsProvider.overrideWithValue(sessionPrefs),
         projectListProvider.overrideWith(() => _FakeProjectList([project])),
-        userInfoProvider.overrideWith((_) => Stream.value(_viewer)),
+        userInfoProvider.overrideWith((_) => Future.value(_viewer)),
         issueDetailsProvider(_issueId).overrideWith(
-          (ref) => Stream.value(IssueDetails(
-            description: 'Original description.',
-            url: 'https://github.com/acme/repo/issues/42',
-            comments: comments,
-          )),
+          (ref) => Stream.value(
+            IssueDetails(
+              description: 'Original description.',
+              url: 'https://github.com/acme/repo/issues/42',
+              comments: comments,
+            ),
+          ),
         ),
         issueMutationsProvider.overrideWithValue(mutations),
       ],

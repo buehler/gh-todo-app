@@ -10,6 +10,7 @@ import 'package:gh_todos/models/priority.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/session_generation_provider.dart';
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -20,50 +21,64 @@ part 'github_providers.g.dart';
 typedef ProjectIssuesFeed = ({List<IssueData> open, List<IssueData> closed});
 
 final userInfoProvider =
-    StreamProvider.autoDispose<Query$UserInformation$viewer?>((ref) {
+    FutureProvider.autoDispose<Query$UserInformation$viewer?>((ref) async {
+      ref.watch(sessionGenerationProvider);
       final client = ref.watch(graphqlClientProvider);
-      return _cacheThenNetworkStream(
-        readCache: () => client.readQuery$UserInformation(),
-        fetchNetwork: () => client.query$UserInformation(
-          Options$Query$UserInformation(fetchPolicy: FetchPolicy.networkOnly),
-        ),
-        mapper: (data) => data?.viewer,
+      final result = await client.query$UserInformation(
+        Options$Query$UserInformation(fetchPolicy: FetchPolicy.networkOnly),
       );
+      final parsed = result.parsedData;
+      if (parsed != null) {
+        return parsed.viewer;
+      }
+      if (result.hasException) {
+        throw result.exception!;
+      }
+      return null;
     });
 
 final userOrganizationsProvider =
-    StreamProvider.autoDispose<
+    FutureProvider.autoDispose<
       List<Query$UserOrganizations$viewer$organizations$nodes>
-    >((ref) {
+    >((ref) async {
+      ref.watch(sessionGenerationProvider);
       final client = ref.watch(graphqlClientProvider);
-      return _cacheThenNetworkStream(
-        readCache: () => client.readQuery$UserOrganizations(),
-        fetchNetwork: () => client.query$UserOrganizations(
-          Options$Query$UserOrganizations(fetchPolicy: FetchPolicy.networkOnly),
-        ),
-        mapper: (data) =>
-            data?.viewer.organizations.nodes
-                ?.whereType<Query$UserOrganizations$viewer$organizations$nodes>()
-                .toList() ??
-            [],
+      final result = await client.query$UserOrganizations(
+        Options$Query$UserOrganizations(fetchPolicy: FetchPolicy.networkOnly),
       );
+      final parsed = result.parsedData;
+      if (parsed != null) {
+        return parsed.viewer.organizations.nodes
+                ?.whereType<
+                  Query$UserOrganizations$viewer$organizations$nodes
+                >()
+                .toList() ??
+            [];
+      }
+      if (result.hasException) {
+        throw result.exception!;
+      }
+      return const [];
     });
 
-final ownerProjectsProvider = StreamProvider.autoDispose
-    .family<Query$OwnerProjects$node?, String>((ref, ownerId) {
+final ownerProjectsProvider = FutureProvider.autoDispose
+    .family<Query$OwnerProjects$node?, String>((ref, ownerId) async {
+      ref.watch(sessionGenerationProvider);
       final client = ref.watch(graphqlClientProvider);
-      return _cacheThenNetworkStream(
-        readCache: () => client.readQuery$OwnerProjects(
+      final result = await client.query$OwnerProjects(
+        Options$Query$OwnerProjects(
           variables: Variables$Query$OwnerProjects(ownerId: ownerId),
+          fetchPolicy: FetchPolicy.networkOnly,
         ),
-        fetchNetwork: () => client.query$OwnerProjects(
-          Options$Query$OwnerProjects(
-            variables: Variables$Query$OwnerProjects(ownerId: ownerId),
-            fetchPolicy: FetchPolicy.networkOnly,
-          ),
-        ),
-        mapper: (data) => data?.node,
       );
+      final parsed = result.parsedData;
+      if (parsed != null) {
+        return parsed.node;
+      }
+      if (result.hasException) {
+        throw result.exception!;
+      }
+      return null;
     });
 
 /// Owns the open + recently-closed issue lists for a single GitHub Project.
@@ -90,7 +105,9 @@ class ProjectIssues extends _$ProjectIssues {
       ref,
       client.watchQuery$ProjectAssignedIssues(
         WatchOptions$Query$ProjectAssignedIssues(
-          variables: Variables$Query$ProjectAssignedIssues(projectId: projectId),
+          variables: Variables$Query$ProjectAssignedIssues(
+            projectId: projectId,
+          ),
           fetchPolicy: FetchPolicy.cacheAndNetwork,
           eagerlyFetchResults: true,
           fetchResults: true,
@@ -325,7 +342,7 @@ final issueDetailsProvider = StreamProvider.autoDispose
         ref,
         client.watchQuery$IssueDetail(
           WatchOptions$Query$IssueDetail(
-          variables: Variables$Query$IssueDetail(id: issueId),
+            variables: Variables$Query$IssueDetail(id: issueId),
             fetchPolicy: FetchPolicy.cacheAndNetwork,
             eagerlyFetchResults: true,
             fetchResults: true,
@@ -334,7 +351,11 @@ final issueDetailsProvider = StreamProvider.autoDispose
         (parsed) {
           final node = parsed?.node;
           if (node is! Query$IssueDetail$node$$Issue) {
-            return const IssueDetails(description: null, url: null, comments: []);
+            return const IssueDetails(
+              description: null,
+              url: null,
+              comments: [],
+            );
           }
 
           final commentNodes = node.comments.nodes ?? const [];
@@ -384,30 +405,5 @@ Stream<T> _watchQueryStream<TParsed, T>(
     if (!result.isLoading && result.hasException) {
       throw result.exception!;
     }
-  }
-}
-
-Stream<T> _cacheThenNetworkStream<TParsed, T>({
-  required TParsed? Function() readCache,
-  required Future<QueryResult<TParsed>> Function() fetchNetwork,
-  required T Function(TParsed? data) mapper,
-}) async* {
-  var yieldedCachedValue = false;
-
-  final cached = readCache();
-  if (cached != null) {
-    yieldedCachedValue = true;
-    yield mapper(cached);
-  }
-
-  final result = await fetchNetwork();
-  final parsed = result.parsedData;
-  if (parsed != null) {
-    yield mapper(parsed);
-    return;
-  }
-
-  if (result.hasException && !yieldedCachedValue) {
-    throw result.exception!;
   }
 }

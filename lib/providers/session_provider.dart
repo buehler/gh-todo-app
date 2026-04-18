@@ -1,8 +1,8 @@
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
-import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/session_generation_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -22,13 +22,14 @@ class Session extends _$Session {
     final metadata = await manager.connectToken(token);
     await ref.read(authMetadataProvider.notifier).setMetadata(metadata);
     state = const AsyncData((hasToken: true));
+    _bumpSessionGeneration();
   }
 
   Future<void> updateToken(String token) async {
     final manager = ref.read(sessionManagerProvider);
     await manager.updateToken(token);
-    _invalidateSessionScopedState();
     state = const AsyncData((hasToken: true));
+    _invalidateSessionScopedState();
   }
 
   Future<String?> readToken() async {
@@ -39,16 +40,19 @@ class Session extends _$Session {
   Future<void> clearToken() async {
     final manager = ref.read(sessionManagerProvider);
     await manager.clearSessionData();
-    _invalidateSessionScopedState();
     state = const AsyncData((hasToken: false));
+    _invalidateSessionScopedState();
   }
 
   void _invalidateSessionScopedState() {
+    _bumpSessionGeneration();
     ref.invalidate(projectListProvider);
     ref.invalidate(selectedProjectProvider);
     ref.invalidate(authMetadataProvider);
     ref.invalidate(graphqlClientProvider);
-    ref.invalidate(userInfoProvider);
-    ref.invalidate(userOrganizationsProvider);
+  }
+
+  void _bumpSessionGeneration() {
+    ref.read(sessionGenerationProvider.notifier).bump();
   }
 }

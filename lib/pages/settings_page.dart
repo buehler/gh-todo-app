@@ -42,7 +42,8 @@ class SettingsPage extends ConsumerWidget {
     final topPadding =
         AppTopBar.effectiveHeight(context) + MediaQuery.paddingOf(context).top;
     // On wide, the bottom nav is replaced by the side rail — skip its height.
-    final bottomPadding = (isWide(context) ? 0 : AppBottomNav.barHeight) +
+    final bottomPadding =
+        (isWide(context) ? 0 : AppBottomNav.barHeight) +
         MediaQuery.paddingOf(context).bottom +
         24;
 
@@ -133,10 +134,9 @@ class SettingsPage extends ConsumerWidget {
 
     switch (action) {
       case PatAction.remove:
-        await ref.read(appLoggerProvider).warn(
-          'User requested PAT removal.',
-          category: 'settings',
-        );
+        await ref
+            .read(appLoggerProvider)
+            .warn('User requested PAT removal.', category: 'settings');
         await ref.read(sessionProvider.notifier).clearToken();
         break;
       case PatAction.update:
@@ -144,27 +144,24 @@ class SettingsPage extends ConsumerWidget {
         final newToken = await showPatUpdateSheet(context);
         if (newToken == null) return;
         try {
-          await ref.read(appLoggerProvider).info(
-            'User requested PAT update.',
-            category: 'settings',
-          );
+          await ref
+              .read(appLoggerProvider)
+              .info('User requested PAT update.', category: 'settings');
           await ref.read(sessionProvider.notifier).updateToken(newToken);
-          await ref.read(authMetadataProvider.notifier).refresh();
         } catch (error) {
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_patErrorText(error))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(_patErrorText(error))));
         }
         break;
     }
   }
 
   Future<void> _onViewLogsPressed(BuildContext context, WidgetRef ref) async {
-    await ref.read(appLoggerProvider).info(
-      'Navigating to application logs.',
-      category: 'settings',
-    );
+    await ref
+        .read(appLoggerProvider)
+        .info('Navigating to application logs.', category: 'settings');
     if (!context.mounted) return;
     await context.pushNamed<void>(AppRoutes.settingsLogsName);
   }

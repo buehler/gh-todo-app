@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
-import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/providers/auth_metadata_provider.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -44,7 +44,7 @@ class AppNavRail extends ConsumerWidget {
     final topInset = MediaQuery.paddingOf(context).top;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    final userAsync = ref.watch(userInfoProvider);
+    final metadataAsync = ref.watch(authMetadataProvider);
 
     return ClipRect(
       child: BackdropFilter(
@@ -94,17 +94,17 @@ class AppNavRail extends ConsumerWidget {
               ),
               const Spacer(),
               // Identity block: avatar + name at the rail's foot.
-              userAsync.when(
-                data: (viewer) {
-                  if (viewer == null) return const SizedBox.shrink();
-                  final displayName = viewer.name ?? viewer.login;
+              metadataAsync.when(
+                data: (metadata) {
+                  if (metadata == null) return const SizedBox.shrink();
+                  final displayName = metadata.user.name ?? metadata.user.login;
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       CircleAvatar(
                         radius: 16,
                         backgroundColor: surfaceContainerLow,
-                        backgroundImage: NetworkImage(viewer.avatarUrl),
+                        backgroundImage: NetworkImage(metadata.user.avatarUrl),
                       ),
                       const SizedBox(width: 10),
                       Expanded(

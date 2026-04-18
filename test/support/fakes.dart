@@ -6,6 +6,7 @@ import 'package:gh_todos/models/authenticated_user_snapshot.dart';
 import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
+import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/services/app_logger_service.dart';
@@ -14,6 +15,7 @@ import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/services/project_storage_service.dart';
 import 'package:gh_todos/services/session_prefs_service.dart';
+import 'package:graphql/client.dart';
 import 'package:hive_ce/hive.dart';
 
 Future<ProjectStorageService> createTestProjectStorage() async {
@@ -34,6 +36,7 @@ Future<TestHarness> createTestContainer({
   bool throwOnWrite = false,
   PatAuthMetadata? authMetadata,
   GithubAuthService? githubAuth,
+  GraphQLClient? graphqlClient,
 }) async {
   final fakeStorage = FakeFlutterSecureStorage(
     seed: tokenSeed,
@@ -63,6 +66,8 @@ Future<TestHarness> createTestContainer({
               metadata: authMetadata ?? _defaultAuthMetadata,
             ),
       ),
+      if (graphqlClient != null)
+        graphqlClientProvider.overrideWithValue(graphqlClient),
     ],
   );
 
@@ -88,6 +93,7 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
   bool throwOnWrite = false,
   PatAuthMetadata? authMetadata,
   GithubAuthService? githubAuth,
+  GraphQLClient? graphqlClient,
 }) async {
   final fakeStorage = FakeFlutterSecureStorage(
     seed: tokenSeed,
@@ -117,6 +123,8 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
               metadata: authMetadata ?? _defaultAuthMetadata,
             ),
       ),
+      if (graphqlClient != null)
+        graphqlClientProvider.overrideWithValue(graphqlClient),
     ],
     child: GhTodosApp(initialLocation: initialLocation),
   );

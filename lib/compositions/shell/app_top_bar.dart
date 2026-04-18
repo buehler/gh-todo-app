@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
-import 'package:gh_todos/providers/github_providers.dart';
+import 'package:gh_todos/providers/auth_metadata_provider.dart';
 import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
@@ -48,7 +48,7 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
     );
     final safeTop = MediaQuery.paddingOf(context).top;
 
-    final userAsync = ref.watch(userInfoProvider);
+    final metadataAsync = ref.watch(authMetadataProvider);
 
     return ClipRect(
       child: BackdropFilter(
@@ -71,11 +71,11 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
                   letterSpacing: -0.4,
                 ),
               ),
-              userAsync.when(
-                data: (viewer) {
-                  if (viewer == null) return const SizedBox.shrink();
+              metadataAsync.when(
+                data: (metadata) {
+                  if (metadata == null) return const SizedBox.shrink();
 
-                  final displayName = viewer.name ?? viewer.login;
+                  final displayName = metadata.user.name ?? metadata.user.login;
 
                   return RowBox(
                     style: editorialRowStyle(spacing: 12),
@@ -83,7 +83,7 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
                       CircleAvatar(
                         radius: 16,
                         backgroundColor: surfaceContainerLow,
-                        backgroundImage: NetworkImage(viewer.avatarUrl),
+                        backgroundImage: NetworkImage(metadata.user.avatarUrl),
                       ),
                       StyledText(
                         displayName,

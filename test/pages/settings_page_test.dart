@@ -1,8 +1,11 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gh_todos/models/authenticated_user_snapshot.dart';
+import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
+import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 
 import '../support/fakes.dart';
@@ -83,4 +86,86 @@ void main() {
     expect(find.byKey(ApplicationLogsPage.pageKey), findsOneWidget);
     expect(find.text('Application Logs'), findsOneWidget);
   });
+
+  testWidgets('successful PAT update does not show the generic error toast', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final result = await createTestApp(
+      tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'token-a'},
+      initialLocation: AppRoutes.settingsPath,
+      authMetadata: _metadata(id: '100', login: 'alpha'),
+      githubAuth: _MapGithubAuthService({
+        'token-b': _metadata(id: '200', login: 'bravo'),
+      }),
+    );
+
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+
+    await tester.pumpWidget(result.app);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    _drainTestExceptions(tester);
+
+    await tester.tap(find.text('GitHub Personal Access Token'));
+    await tester.pumpAndSettle();
+    _drainTestExceptions(tester);
+
+    await tester.tap(find.text('Update Token'));
+    await tester.pumpAndSettle();
+    _drainTestExceptions(tester);
+
+    await tester.enterText(find.byType(TextField), 'token-b');
+    await tester.pumpAndSettle();
+    _drainTestExceptions(tester);
+
+    await tester.tap(find.text('Save Token'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+    _drainTestExceptions(tester);
+
+    expect(find.text('The token could not be updated.'), findsNothing);
+    expect(find.text('Ready for bravo.'), findsOneWidget);
+    expect(
+      result.storage.values[GithubTokenStorageService.tokenStorageKey],
+      'token-b',
+    );
+  });
+}
+
+PatAuthMetadata _metadata({required String id, required String login}) {
+  return PatAuthMetadata(
+    user: AuthenticatedUserSnapshot(
+      id: id,
+      login: login,
+      name: '$login user',
+      avatarUrl: 'https://example.com/$login.png',
+    ),
+    scopes: PatAuthMetadata.requiredScopes,
+    validatedAt: DateTime(2026, 4, 18),
+  );
+}
+
+class _MapGithubAuthService extends GithubAuthService {
+  final Map<String, PatAuthMetadata> _metadataByToken;
+
+  _MapGithubAuthService(this._metadataByToken);
+
+  @override
+  Future<PatAuthMetadata> inspectToken(String token) async {
+    final metadata = _metadataByToken[token];
+    if (metadata == null) {
+      throw const InvalidGithubTokenException('unexpected token');
+    }
+    return metadata;
+  }
+}
+
+void _drainTestExceptions(WidgetTester tester) {
+  while (tester.takeException() != null) {}
 }
