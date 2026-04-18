@@ -57,9 +57,9 @@ class PatScopeHelpCard extends StatelessWidget {
                 'Needed to read repositories and create or update issues.',
           ),
           _ScopeLine(
-            label: 'Optional: read:org',
+            label: 'Required: read:org',
             description:
-                'Enables organization repositories and projects. Without it, only personal projects are available.',
+                'Needed to load organization membership, repositories, and projects alongside personal ones.',
           ),
           StyledText(
             'Use a classic PAT. It is simpler to configure for this app than the fine-grained variant.',

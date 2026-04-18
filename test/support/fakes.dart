@@ -20,6 +20,62 @@ Future<ProjectStorageService> createTestProjectStorage() async {
   return ProjectStorageService(_InMemoryStringBox());
 }
 
+typedef TestHarness = ({
+  ProviderContainer container,
+  FakeFlutterSecureStorage storage,
+  FakeSessionPrefsService sessionPrefs,
+  ProjectStorageService projectStorage,
+  FakeAuthMetadataStorageService authMetadataStorage,
+  AppLogStore logStore,
+});
+
+Future<TestHarness> createTestContainer({
+  Map<String, String>? tokenSeed,
+  bool throwOnWrite = false,
+  PatAuthMetadata? authMetadata,
+  GithubAuthService? githubAuth,
+}) async {
+  final fakeStorage = FakeFlutterSecureStorage(
+    seed: tokenSeed,
+    throwOnWrite: throwOnWrite,
+  );
+  final sessionPrefs = FakeSessionPrefsService();
+  final projectStorage = await createTestProjectStorage();
+  final authMetadataStorage = FakeAuthMetadataStorageService(
+    initialValue: authMetadata,
+  );
+  final logStore = AppLogStore(sinkFactory: () => MemoryAppLogSink());
+
+  final container = ProviderContainer(
+    overrides: [
+      hiveBootstrapProvider.overrideWith((_) async {}),
+      offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+      appLogStoreProvider.overrideWithValue(logStore),
+      tokenStorageProvider.overrideWithValue(
+        GithubTokenStorageService(storage: fakeStorage),
+      ),
+      projectStorageProvider.overrideWithValue(projectStorage),
+      sessionPrefsProvider.overrideWithValue(sessionPrefs),
+      authMetadataStorageProvider.overrideWithValue(authMetadataStorage),
+      githubAuthProvider.overrideWithValue(
+        githubAuth ??
+            FakeGithubAuthService(
+              metadata: authMetadata ?? _defaultAuthMetadata,
+            ),
+      ),
+    ],
+  );
+
+  return (
+    container: container,
+    storage: fakeStorage,
+    sessionPrefs: sessionPrefs,
+    projectStorage: projectStorage,
+    authMetadataStorage: authMetadataStorage,
+    logStore: logStore,
+  );
+}
+
 /// Creates a test app wrapped in a [ProviderScope] with overridden providers.
 ///
 /// If [tokenSeed] is provided, the token storage is seeded with the given
@@ -31,6 +87,7 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
   String? initialLocation,
   bool throwOnWrite = false,
   PatAuthMetadata? authMetadata,
+  GithubAuthService? githubAuth,
 }) async {
   final fakeStorage = FakeFlutterSecureStorage(
     seed: tokenSeed,
@@ -55,7 +112,10 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
       sessionPrefsProvider.overrideWithValue(sessionPrefs),
       authMetadataStorageProvider.overrideWithValue(authMetadataStorage),
       githubAuthProvider.overrideWithValue(
-        FakeGithubAuthService(metadata: authMetadata ?? _defaultAuthMetadata),
+        githubAuth ??
+            FakeGithubAuthService(
+              metadata: authMetadata ?? _defaultAuthMetadata,
+            ),
       ),
     ],
     child: GhTodosApp(initialLocation: initialLocation),

@@ -1,8 +1,8 @@
 import 'package:gh_todos/models/authenticated_user_snapshot.dart';
 
 class PatAuthMetadata {
-  static const requiredScopes = ['project', 'repo'];
-  static const optionalScopes = ['read:org'];
+  static const requiredScopes = ['project', 'repo', 'read:org'];
+  static const optionalScopes = <String>[];
 
   final AuthenticatedUserSnapshot user;
   final List<String> scopes;

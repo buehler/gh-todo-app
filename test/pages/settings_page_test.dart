@@ -27,9 +27,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
   }
 
-  testWidgets('deep linking to /settings renders in the shell', (
-    tester,
-  ) async {
+  testWidgets('deep linking to /settings renders in the shell', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -63,6 +61,7 @@ void main() {
     expect(find.text('PAT GUIDANCE'), findsOneWidget);
     expect(find.text('PROJECT GUIDANCE'), findsOneWidget);
     expect(find.text('Required: project'), findsOneWidget);
+    expect(find.text('Required: read:org'), findsOneWidget);
     expect(find.text('Project setup requirements'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);

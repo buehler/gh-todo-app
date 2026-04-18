@@ -26,7 +26,7 @@ void main() {
     expect(find.text('Personal Access Token requirements'), findsOneWidget);
     expect(find.text('Required: project'), findsOneWidget);
     expect(find.text('Required: repo'), findsOneWidget);
-    expect(find.text('Optional: read:org'), findsOneWidget);
+    expect(find.text('Required: read:org'), findsOneWidget);
     expect(find.textContaining('local authentication'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
@@ -75,35 +75,36 @@ void main() {
     );
   });
 
-  testWidgets('tapping "How to create one?" reaches the help link via hit test', (
-    tester,
-  ) async {
-    final controller = TextEditingController();
-    addTearDown(controller.dispose);
-    var helpPressed = false;
+  testWidgets(
+    'tapping "How to create one?" reaches the help link via hit test',
+    (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      var helpPressed = false;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: octanePrime(
-            ConnectTokenForm(
-              controller: controller,
-              onChanged: (_) {},
-              onSubmitted: (_) {},
-              onConnectPressed: () {},
-              onHelpPressed: () => helpPressed = true,
-              isSubmitting: false,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: octanePrime(
+              ConnectTokenForm(
+                controller: controller,
+                onChanged: (_) {},
+                onSubmitted: (_) {},
+                onConnectPressed: () {},
+                onHelpPressed: () => helpPressed = true,
+                isSubmitting: false,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.text('How to create one?'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('How to create one?'));
+      await tester.pumpAndSettle();
 
-    expect(helpPressed, isTrue);
-  });
+      expect(helpPressed, isTrue);
+    },
+  );
 
   testWidgets('cta stays disabled while token is empty', (tester) async {
     final result = await createTestApp();
