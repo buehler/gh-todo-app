@@ -37,6 +37,7 @@ Future<TestHarness> createTestContainer({
   PatAuthMetadata? authMetadata,
   GithubAuthService? githubAuth,
   GraphQLClient? graphqlClient,
+  Link? graphqlTransportLink,
 }) async {
   final fakeStorage = FakeFlutterSecureStorage(
     seed: tokenSeed,
@@ -54,6 +55,7 @@ Future<TestHarness> createTestContainer({
       hiveBootstrapProvider.overrideWith((_) async {}),
       offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
       appLogStoreProvider.overrideWithValue(logStore),
+      graphqlStoreProvider.overrideWithValue(InMemoryStore()),
       tokenStorageProvider.overrideWithValue(
         GithubTokenStorageService(storage: fakeStorage),
       ),
@@ -68,6 +70,10 @@ Future<TestHarness> createTestContainer({
       ),
       if (graphqlClient != null)
         graphqlClientProvider.overrideWithValue(graphqlClient),
+      if (graphqlTransportLink != null)
+        githubGraphqlTransportLinkProvider.overrideWithValue(
+          graphqlTransportLink,
+        ),
     ],
   );
 
@@ -94,6 +100,7 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
   PatAuthMetadata? authMetadata,
   GithubAuthService? githubAuth,
   GraphQLClient? graphqlClient,
+  Link? graphqlTransportLink,
 }) async {
   final fakeStorage = FakeFlutterSecureStorage(
     seed: tokenSeed,
@@ -111,6 +118,7 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
       hiveBootstrapProvider.overrideWith((_) async {}),
       offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
       appLogStoreProvider.overrideWithValue(logStore),
+      graphqlStoreProvider.overrideWithValue(InMemoryStore()),
       tokenStorageProvider.overrideWithValue(
         GithubTokenStorageService(storage: fakeStorage),
       ),
@@ -125,6 +133,10 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
       ),
       if (graphqlClient != null)
         graphqlClientProvider.overrideWithValue(graphqlClient),
+      if (graphqlTransportLink != null)
+        githubGraphqlTransportLinkProvider.overrideWithValue(
+          graphqlTransportLink,
+        ),
     ],
     child: GhTodosApp(initialLocation: initialLocation),
   );
