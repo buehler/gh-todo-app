@@ -110,24 +110,19 @@ void main() {
     await tester.pumpWidget(result.app);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
-    _drainTestExceptions(tester);
 
     await tester.tap(find.text('GitHub Personal Access Token'));
     await tester.pumpAndSettle();
-    _drainTestExceptions(tester);
 
     await tester.tap(find.text('Update Token'));
     await tester.pumpAndSettle();
-    _drainTestExceptions(tester);
 
     await tester.enterText(find.byType(TextField), 'token-b');
     await tester.pumpAndSettle();
-    _drainTestExceptions(tester);
 
     await tester.tap(find.text('Save Token'));
     await tester.pump();
     await tester.pumpAndSettle();
-    _drainTestExceptions(tester);
 
     expect(find.text('The token could not be updated.'), findsNothing);
     expect(find.text('Ready for bravo.'), findsOneWidget);
@@ -164,8 +159,4 @@ class _MapGithubAuthService extends GithubAuthService {
     }
     return metadata;
   }
-}
-
-void _drainTestExceptions(WidgetTester tester) {
-  while (tester.takeException() != null) {}
 }

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
 import 'package:gh_todos/style/colors.dart';
@@ -33,10 +34,6 @@ class AppNavRail extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final surfaceBright = resolveColor(context, ColorTokens.surface.bright);
-    final surfaceContainerLow = resolveColor(
-      context,
-      ColorTokens.surface.containerLow,
-    );
     final onSurfaceVariant = resolveColor(
       context,
       ColorTokens.surface.onVariant,
@@ -101,10 +98,10 @@ class AppNavRail extends ConsumerWidget {
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      CircleAvatar(
+                      EditorialAvatar(
                         radius: 16,
-                        backgroundColor: surfaceContainerLow,
-                        backgroundImage: NetworkImage(metadata.user.avatarUrl),
+                        imageUrl: metadata.user.avatarUrl,
+                        fallbackLabel: displayName,
                       ),
                       const SizedBox(width: 10),
                       Expanded(

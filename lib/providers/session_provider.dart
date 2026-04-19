@@ -27,7 +27,8 @@ class Session extends _$Session {
 
   Future<void> updateToken(String token) async {
     final manager = ref.read(sessionManagerProvider);
-    await manager.updateToken(token);
+    final metadata = await manager.updateToken(token);
+    await ref.read(authMetadataProvider.notifier).setMetadata(metadata);
     state = const AsyncData((hasToken: true));
     _invalidateSessionScopedState();
   }

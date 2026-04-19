@@ -1,3 +1,4 @@
+export 'editorial_avatar.dart';
 export 'editorial_button.dart';
 export 'editorial_card.dart';
 export 'editorial_chip.dart';

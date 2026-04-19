@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
 import 'package:gh_todos/style/breakpoints.dart';
@@ -42,10 +43,6 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
       context,
       ColorTokens.surface.onVariant,
     );
-    final surfaceContainerLow = resolveColor(
-      context,
-      ColorTokens.surface.containerLow,
-    );
     final safeTop = MediaQuery.paddingOf(context).top;
 
     final metadataAsync = ref.watch(authMetadataProvider);
@@ -80,10 +77,10 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
                   return RowBox(
                     style: editorialRowStyle(spacing: 12),
                     children: [
-                      CircleAvatar(
+                      EditorialAvatar(
                         radius: 16,
-                        backgroundColor: surfaceContainerLow,
-                        backgroundImage: NetworkImage(metadata.user.avatarUrl),
+                        imageUrl: metadata.user.avatarUrl,
+                        fallbackLabel: displayName,
                       ),
                       StyledText(
                         displayName,

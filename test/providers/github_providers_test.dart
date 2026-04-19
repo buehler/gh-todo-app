@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
 import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/providers/github_providers.dart';
@@ -55,25 +57,14 @@ void main() {
 
     await session.connectToken('token-a');
 
-    final userSub = harness.container.listen(userInfoProvider, (_, _) {});
-    final orgsSub = harness.container.listen(
+    final userA = await _readNextValue(harness.container, userInfoProvider);
+    final orgsA = await _readNextValue(
+      harness.container,
       userOrganizationsProvider,
-      (_, _) {},
     );
-    final ownerSub = harness.container.listen(
+    final projectsA = await _readNextValue(
+      harness.container,
       ownerProjectsProvider('user-a'),
-      (_, _) {},
-    );
-    addTearDown(userSub.close);
-    addTearDown(orgsSub.close);
-    addTearDown(ownerSub.close);
-
-    final userA = await harness.container.read(userInfoProvider.future);
-    final orgsA = await harness.container.read(
-      userOrganizationsProvider.future,
-    );
-    final projectsA = await harness.container.read(
-      ownerProjectsProvider('user-a').future,
     );
 
     expect(userA?.login, 'alpha');
@@ -82,15 +73,18 @@ void main() {
 
     await session.updateToken('token-b');
 
-    final userB = await harness.container.read(userInfoProvider.future);
-    final orgsB = await harness.container.read(
-      userOrganizationsProvider.future,
+    final userB = await _readNextValue(harness.container, userInfoProvider);
+    final orgsB = await _readNextValue(
+      harness.container,
+      userOrganizationsProvider,
     );
-    final oldOwnerProjects = await harness.container.read(
-      ownerProjectsProvider('user-a').future,
+    final oldOwnerProjects = await _readNextValue(
+      harness.container,
+      ownerProjectsProvider('user-a'),
     );
-    final newOwnerProjects = await harness.container.read(
-      ownerProjectsProvider('user-b').future,
+    final newOwnerProjects = await _readNextValue(
+      harness.container,
+      ownerProjectsProvider('user-b'),
     );
 
     expect(userB?.login, 'bravo');
@@ -149,6 +143,28 @@ Map<String, Object?> _userPayload({required String id, required String login}) {
     'name': '$login user',
     'avatar_url': 'https://example.com/$login.png',
   };
+}
+
+Future<T> _readNextValue<T>(ProviderContainer container, dynamic provider) {
+  final completer = Completer<T>();
+  late final dynamic sub;
+  sub = container.listen(provider, (_, next) {
+    if (next case AsyncData(:final value)) {
+      if (!completer.isCompleted) {
+        completer.complete(value);
+      }
+      sub.close();
+      return;
+    }
+
+    if (next case AsyncError(:final error, :final stackTrace)) {
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
+      sub.close();
+    }
+  }, fireImmediately: true);
+  return completer.future;
 }
 
 List<String> _projectTitles(Query$OwnerProjects$node? node) {

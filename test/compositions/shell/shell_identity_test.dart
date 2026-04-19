@@ -60,14 +60,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    _drainTestExceptions(tester);
 
     expect(find.text('alpha user'), findsOneWidget);
     expect(find.text('bravo user'), findsNothing);
 
     await session.updateToken('token-b');
     await tester.pumpAndSettle();
-    _drainTestExceptions(tester);
 
     expect(find.text('bravo user'), findsOneWidget);
     expect(find.text('alpha user'), findsNothing);
@@ -81,8 +79,4 @@ Map<String, Object?> _userPayload({required String id, required String login}) {
     'name': '$login user',
     'avatar_url': 'https://example.com/$login.png',
   };
-}
-
-void _drainTestExceptions(WidgetTester tester) {
-  while (tester.takeException() != null) {}
 }

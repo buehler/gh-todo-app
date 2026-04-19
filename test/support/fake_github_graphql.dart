@@ -69,7 +69,7 @@ class _FakeGithubGraphqlLink extends Link {
 
   @override
   Stream<Response> request(Request request, [NextLink? forward]) async* {
-    final operationName = request.operation.operationName;
+    final operationName = _operationName(request);
     final token = _tokenFromRequest(request);
     final account = token == null ? null : accountsByToken[token];
 
@@ -106,6 +106,23 @@ class _FakeGithubGraphqlLink extends Link {
     final headers = request.context.entry<HttpLinkHeaders>()?.headers;
     final authorization = headers?['Authorization'];
     return authorization?.replaceFirst('Bearer ', '');
+  }
+
+  String _operationName(Request request) {
+    final explicitName = request.operation.operationName;
+    if (explicitName != null && explicitName.isNotEmpty) {
+      return explicitName;
+    }
+
+    for (final definition in request.operation.document.definitions) {
+      final dynamic operationDefinition = definition;
+      final dynamic nameNode = operationDefinition.name;
+      final name = nameNode?.value;
+      if (name is String && name.isNotEmpty) return name;
+      break;
+    }
+
+    return 'anonymous';
   }
 }
 
