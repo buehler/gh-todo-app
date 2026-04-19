@@ -97,6 +97,7 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
   Map<String, String>? tokenSeed,
   String? initialLocation,
   bool throwOnWrite = false,
+  bool keepGraphqlClientAlive = false,
   PatAuthMetadata? authMetadata,
   GithubAuthService? githubAuth,
   GraphQLClient? graphqlClient,
@@ -138,10 +139,24 @@ Future<({Widget app, FakeFlutterSecureStorage storage})> createTestApp({
           graphqlTransportLink,
         ),
     ],
-    child: GhTodosApp(initialLocation: initialLocation),
+    child: keepGraphqlClientAlive
+        ? _GraphqlKeepAlive(child: GhTodosApp(initialLocation: initialLocation))
+        : GhTodosApp(initialLocation: initialLocation),
   );
 
   return (app: app, storage: fakeStorage);
+}
+
+class _GraphqlKeepAlive extends ConsumerWidget {
+  final Widget child;
+
+  const _GraphqlKeepAlive({required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(graphqlClientProvider);
+    return child;
+  }
 }
 
 class FakeSessionPrefsService implements SessionPrefsService {

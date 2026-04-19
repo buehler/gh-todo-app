@@ -30,7 +30,7 @@ class Session extends _$Session {
     final metadata = await manager.updateToken(token);
     await ref.read(authMetadataProvider.notifier).setMetadata(metadata);
     state = const AsyncData((hasToken: true));
-    _invalidateSessionScopedState();
+    _invalidatePatScopedState();
   }
 
   Future<String?> readToken() async {
@@ -41,16 +41,21 @@ class Session extends _$Session {
   Future<void> clearToken() async {
     final manager = ref.read(sessionManagerProvider);
     await manager.clearSessionData();
+    await ref.read(authMetadataProvider.notifier).clear();
     state = const AsyncData((hasToken: false));
-    _invalidateSessionScopedState();
+    _invalidateLoggedOutState();
   }
 
-  void _invalidateSessionScopedState() {
+  void _invalidatePatScopedState() {
     _bumpSessionGeneration();
     ref.invalidate(projectListProvider);
     ref.invalidate(selectedProjectProvider);
-    ref.invalidate(authMetadataProvider);
-    ref.invalidate(graphqlClientProvider);
+  }
+
+  void _invalidateLoggedOutState() {
+    _bumpSessionGeneration();
+    ref.invalidate(projectListProvider);
+    ref.invalidate(selectedProjectProvider);
   }
 
   void _bumpSessionGeneration() {

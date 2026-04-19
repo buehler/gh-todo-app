@@ -96,6 +96,7 @@ void main() {
     final result = await createTestApp(
       tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'token-a'},
       initialLocation: AppRoutes.settingsPath,
+      keepGraphqlClientAlive: true,
       authMetadata: _metadata(id: '100', login: 'alpha'),
       githubAuth: _MapGithubAuthService({
         'token-b': _metadata(id: '200', login: 'bravo'),

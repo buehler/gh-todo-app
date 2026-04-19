@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gh_todos/models/authenticated_user_snapshot.dart';
 import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
+import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
@@ -118,6 +120,97 @@ void main() {
 
         final logLines = await logger.readLines();
         expect(logLines.any((line) => line.contains('seed marker')), isTrue);
+      },
+    );
+
+    test(
+      'updates token without throwing while graphql client is alive',
+      () async {
+        final harness = await createTestContainer(
+          tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'token-a'},
+          authMetadata: PatAuthMetadata(
+            user: const AuthenticatedUserSnapshot(
+              id: '100',
+              login: 'alpha',
+              name: 'alpha user',
+              avatarUrl: 'https://example.com/alpha.png',
+            ),
+            scopes: PatAuthMetadata.requiredScopes,
+            validatedAt: DateTime(2026, 4, 18),
+          ),
+          githubAuth: GithubAuthService(
+            client: _mockClientForProfiles({
+              'token-b': _userPayload(id: '200', login: 'bravo'),
+            }),
+          ),
+        );
+        addTearDown(harness.container.dispose);
+
+        final graphqlSub = harness.container.listen(
+          graphqlClientProvider,
+          (_, _) {},
+          fireImmediately: true,
+        );
+        addTearDown(graphqlSub.close);
+
+        final session = harness.container.read(sessionProvider.notifier);
+
+        await expectLater(session.updateToken('token-b'), completes);
+
+        expect(
+          harness.storage.values[GithubTokenStorageService.tokenStorageKey],
+          'token-b',
+        );
+        final metadata = await harness.container.read(
+          authMetadataProvider.future,
+        );
+        expect(metadata?.user.id, '200');
+        expect(metadata?.user.login, 'bravo');
+      },
+    );
+
+    test(
+      'clears token without throwing while graphql client is alive',
+      () async {
+        final harness = await createTestContainer(
+          tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'token-a'},
+          authMetadata: PatAuthMetadata(
+            user: const AuthenticatedUserSnapshot(
+              id: '100',
+              login: 'alpha',
+              name: 'alpha user',
+              avatarUrl: 'https://example.com/alpha.png',
+            ),
+            scopes: PatAuthMetadata.requiredScopes,
+            validatedAt: DateTime(2026, 4, 18),
+          ),
+        );
+        addTearDown(harness.container.dispose);
+
+        final graphqlSub = harness.container.listen(
+          graphqlClientProvider,
+          (_, _) {},
+          fireImmediately: true,
+        );
+        addTearDown(graphqlSub.close);
+
+        final session = harness.container.read(sessionProvider.notifier);
+
+        await expectLater(session.clearToken(), completes);
+
+        expect(
+          harness.storage.values.containsKey(
+            GithubTokenStorageService.tokenStorageKey,
+          ),
+          isFalse,
+        );
+        final metadata = await harness.container.read(
+          authMetadataProvider.future,
+        );
+        expect(metadata, isNull);
+        expect(await harness.container.read(sessionProvider.future), (
+          hasToken: false,
+        ));
       },
     );
   });
