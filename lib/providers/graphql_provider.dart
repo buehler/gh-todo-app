@@ -47,14 +47,21 @@ class _GraphqlLoggingLink extends Link {
 
   @override
   Stream<Response> request(Request request, [NextLink? forward]) {
+    final operation = request.operation;
     final operationName = _operationName(request.operation);
+    final operationKind = _operationKind(operation);
     unawaited(
-      _logger.debug(
-        '${_operationKind(request.operation)}: $operationName',
-        category: 'graphql',
-      ),
+      _logger.debug('$operationKind: $operationName', category: 'graphql'),
     );
-    return forward?.call(request) ?? const Stream<Response>.empty();
+    final stream = forward?.call(request) ?? const Stream<Response>.empty();
+    return stream.map((response) {
+      _logRateLimit(
+        operationKind: operationKind,
+        operationName: operationName,
+        response: response,
+      );
+      return response;
+    });
   }
 
   String _operationName(Operation operation) {
@@ -82,5 +89,59 @@ class _GraphqlLoggingLink extends Link {
       return '$type'.split('.').last;
     }
     return 'operation';
+  }
+
+  void _logRateLimit({
+    required String operationKind,
+    required String operationName,
+    required Response response,
+  }) {
+    switch (operationKind) {
+      case 'query':
+        final rateLimit = response.data?['rateLimit'];
+        if (rateLimit is! Map<String, dynamic>) return;
+        unawaited(
+          _logger.debug(
+            'query result: $operationName | rateLimit '
+            'cost=${rateLimit['cost'] ?? 'unavailable'} '
+            'limit=${rateLimit['limit'] ?? 'unavailable'} '
+            'remaining=${rateLimit['remaining'] ?? 'unavailable'} '
+            'resetAt=${rateLimit['resetAt'] ?? 'unavailable'}',
+            category: 'graphql',
+          ),
+        );
+      case 'mutation':
+        final headers = response.context
+            .entry<HttpLinkResponseContext>()
+            ?.headers;
+        final normalizedHeaders = <String, String>{
+          for (final entry
+              in headers?.entries ?? const <MapEntry<String, String>>[])
+            entry.key.toLowerCase(): entry.value,
+        };
+        final resetAt = _formatResetAt(normalizedHeaders['x-ratelimit-reset']);
+        unawaited(
+          _logger.debug(
+            'mutation result: $operationName | rateLimit '
+            'cost=unavailable '
+            'limit=${normalizedHeaders['x-ratelimit-limit'] ?? 'unavailable'} '
+            'remaining=${normalizedHeaders['x-ratelimit-remaining'] ?? 'unavailable'} '
+            'resetAt=$resetAt',
+            category: 'graphql',
+          ),
+        );
+      default:
+        return;
+    }
+  }
+
+  String _formatResetAt(String? epochSeconds) {
+    if (epochSeconds == null || epochSeconds.isEmpty) return 'unavailable';
+    final seconds = int.tryParse(epochSeconds);
+    if (seconds == null) return 'unavailable';
+    return DateTime.fromMillisecondsSinceEpoch(
+      seconds * 1000,
+      isUtc: true,
+    ).toIso8601String().replaceFirst('.000Z', 'Z');
   }
 }

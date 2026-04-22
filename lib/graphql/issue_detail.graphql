@@ -16,4 +16,10 @@ query IssueDetail($id: ID!) {
       }
     }
   }
+  rateLimit {
+    cost
+    limit
+    remaining
+    resetAt
+  }
 }

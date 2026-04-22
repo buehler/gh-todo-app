@@ -7,4 +7,10 @@ query UserOrganizations {
       }
     }
   }
+  rateLimit {
+    cost
+    limit
+    remaining
+    resetAt
+  }
 }

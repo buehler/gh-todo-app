@@ -23,4 +23,10 @@ query ProjectFields($projectId: ID!) {
       }
     }
   }
+  rateLimit {
+    cost
+    limit
+    remaining
+    resetAt
+  }
 }

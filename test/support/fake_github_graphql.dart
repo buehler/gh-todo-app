@@ -127,7 +127,7 @@ class _FakeGithubGraphqlLink extends Link {
 }
 
 Map<String, Object?> _userInformationData(FakeGithubGraphqlAccount account) {
-  return {
+  return _withRateLimit({
     'viewer': {
       'id': account.viewer.id,
       'avatarUrl': account.viewer.avatarUrl,
@@ -135,12 +135,11 @@ Map<String, Object?> _userInformationData(FakeGithubGraphqlAccount account) {
       'login': account.viewer.login,
       '__typename': 'User',
     },
-    '__typename': 'Query',
-  };
+  });
 }
 
 Map<String, Object?> _userOrganizationsData(FakeGithubGraphqlAccount account) {
-  return {
+  return _withRateLimit({
     'viewer': {
       'organizations': {
         'nodes': [
@@ -151,8 +150,7 @@ Map<String, Object?> _userOrganizationsData(FakeGithubGraphqlAccount account) {
       },
       '__typename': 'User',
     },
-    '__typename': 'Query',
-  };
+  });
 }
 
 Map<String, Object?> _ownerProjectsData(
@@ -160,11 +158,11 @@ Map<String, Object?> _ownerProjectsData(
   String? ownerId,
 ) {
   if (ownerId == null) {
-    return {'node': null, '__typename': 'Query'};
+    return _withRateLimit({'node': null});
   }
 
   if (ownerId == account.viewer.id) {
-    return {
+    return _withRateLimit({
       'node': {
         'projectsV2': {
           'nodes': [
@@ -182,18 +180,17 @@ Map<String, Object?> _ownerProjectsData(
         },
         '__typename': 'User',
       },
-      '__typename': 'Query',
-    };
+    });
   }
 
   final org = account.organizations
       .where((entry) => entry.id == ownerId)
       .firstOrNull;
   if (org == null) {
-    return {'node': null, '__typename': 'Query'};
+    return _withRateLimit({'node': null});
   }
 
-  return {
+  return _withRateLimit({
     'node': {
       'projectsV2': {
         'nodes': [
@@ -209,6 +206,19 @@ Map<String, Object?> _ownerProjectsData(
         '__typename': 'ProjectV2Connection',
       },
       '__typename': 'Organization',
+    },
+  });
+}
+
+Map<String, Object?> _withRateLimit(Map<String, Object?> data) {
+  return {
+    ...data,
+    'rateLimit': {
+      'cost': 1,
+      'limit': 5000,
+      'remaining': 4999,
+      'resetAt': '2026-04-21T08:00:00Z',
+      '__typename': 'RateLimit',
     },
     '__typename': 'Query',
   };

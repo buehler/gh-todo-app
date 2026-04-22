@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/issue_detail.graphql.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
 import 'package:gh_todos/graphql/project_issues.graphql.dart';
+import 'package:gh_todos/graphql/schema.graphql.dart';
 import 'package:gh_todos/graphql/user_orgs.graphql.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
@@ -17,8 +18,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'github_providers.g.dart';
 
 /// The result of the project feed query: two independently sorted lists.
-/// Matches the GraphQL response shape (`open` + `recentlyClosed`).
+/// The buckets are derived locally from paginated project items.
 typedef ProjectIssuesFeed = ({List<IssueData> open, List<IssueData> closed});
+
+const Duration _recentlyClosedWindow = Duration(days: 3);
 
 final userInfoProvider =
     FutureProvider.autoDispose<Query$UserInformation$viewer?>((ref) async {
@@ -101,49 +104,8 @@ class ProjectIssues extends _$ProjectIssues {
         .firstOrNull;
 
     final client = ref.watch(graphqlClientProvider);
-    return _watchQueryStream(
-      ref,
-      client.watchQuery$ProjectAssignedIssues(
-        WatchOptions$Query$ProjectAssignedIssues(
-          variables: Variables$Query$ProjectAssignedIssues(
-            projectId: projectId,
-          ),
-          fetchPolicy: FetchPolicy.cacheAndNetwork,
-          eagerlyFetchResults: true,
-          fetchResults: true,
-        ),
-      ),
-      (parsed) {
-        final openNodes =
-            (parsed?.open is Query$ProjectAssignedIssues$open$$ProjectV2)
-            ? (parsed!.open as Query$ProjectAssignedIssues$open$$ProjectV2)
-                  .items
-                  .nodes
-            : null;
-        final closedNodes =
-            (parsed?.recentlyClosed
-                is Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
-            ? (parsed!.recentlyClosed
-                      as Query$ProjectAssignedIssues$recentlyClosed$$ProjectV2)
-                  .items
-                  .nodes
-            : null;
-
-        final open = _issuesFromNodes(
-          openNodes,
-          project: project,
-          projectId: projectId,
-          closed: false,
-        )..sort(_compareOpenIssues);
-        final closed = _issuesFromNodes(
-          closedNodes,
-          project: project,
-          projectId: projectId,
-          closed: true,
-        )..sort(_compareClosedIssues);
-
-        return (open: open, closed: closed);
-      },
+    return Stream.fromFuture(
+      _loadProjectIssuesFeed(client, projectId: projectId, project: project),
     );
   }
 
@@ -208,33 +170,79 @@ class ProjectIssues extends _$ProjectIssues {
   }
 }
 
-/// Maps a list of project-item fragment nodes into concrete [IssueData].
-/// Skips non-Issue contents (pull requests, drafts, etc.) and null entries.
-List<IssueData> _issuesFromNodes(
-  Iterable<Fragment$ProjectItemFields?>? nodes, {
-  required Project? project,
+Future<ProjectIssuesFeed> _loadProjectIssuesFeed(
+  GraphQLClient client, {
   required String projectId,
-  required bool closed,
-}) {
-  if (nodes == null) return <IssueData>[];
-  final out = <IssueData>[];
+  required Project? project,
+}) async {
+  final nowUtc = DateTime.now().toUtc();
+  final nodes = await _fetchProjectItemNodes(client, projectId: projectId);
+  final open = <IssueData>[];
+  final closed = <IssueData>[];
+
   for (final item in nodes) {
-    final issue = _issueFromItem(
-      item,
-      project: project,
-      projectId: projectId,
-      closed: closed,
-    );
-    if (issue != null) out.add(issue);
+    final issue = _issueFromItem(item, project: project, projectId: projectId);
+    if (issue == null) continue;
+
+    if (!issue.closed) {
+      open.add(issue);
+      continue;
+    }
+
+    if (_isRecentlyClosed(issue, nowUtc: nowUtc)) {
+      closed.add(issue);
+    }
   }
-  return out;
+
+  open.sort(_compareOpenIssues);
+  closed.sort(_compareClosedIssues);
+  return (open: open, closed: closed);
 }
 
+Future<List<Fragment$ProjectItemFields?>> _fetchProjectItemNodes(
+  GraphQLClient client, {
+  required String projectId,
+}) async {
+  final nodes = <Fragment$ProjectItemFields?>[];
+  String? after;
+
+  while (true) {
+    final result = await client.query$ProjectAssignedItemsPage(
+      Options$Query$ProjectAssignedItemsPage(
+        variables: Variables$Query$ProjectAssignedItemsPage(
+          projectId: projectId,
+          after: after,
+        ),
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+    );
+    final parsed = result.parsedData;
+    if (parsed == null) {
+      if (result.hasException) {
+        throw result.exception!;
+      }
+      break;
+    }
+
+    final node = parsed.node;
+    if (node is! Query$ProjectAssignedItemsPage$node$$ProjectV2) break;
+
+    nodes.addAll(node.items.nodes ?? const []);
+    final pageInfo = node.items.pageInfo;
+    if (!pageInfo.hasNextPage) break;
+    after = pageInfo.endCursor;
+    if (after == null || after.isEmpty) break;
+  }
+
+  return nodes;
+}
+
+/// Maps a list of project-item fragment nodes into concrete [IssueData].
+/// Skips non-Issue contents (pull requests, drafts, etc.) and null entries.
 IssueData? _issueFromItem(
   Fragment$ProjectItemFields? item, {
   required Project? project,
   required String projectId,
-  required bool closed,
 }) {
   final content = item?.content;
   if (content is! Fragment$ProjectItemFields$content$$Issue) return null;
@@ -251,13 +259,20 @@ IssueData? _issueFromItem(
     commentCount: content.comments.totalCount,
     createdAt: content.createdAt,
     updatedAt: content.updatedAt,
-    closed: closed,
+    closed: content.state == Enum$IssueState.CLOSED,
     closedAt: content.closedAt,
     priority: priority,
     dueDate: dueDate,
     projectId: projectId,
     projectItemId: item?.id,
   );
+}
+
+bool _isRecentlyClosed(IssueData issue, {required DateTime nowUtc}) {
+  final closedAt = issue.closedAt ?? issue.updatedAt;
+  final closedInstant = DateTime.tryParse(closedAt)?.toUtc();
+  if (closedInstant == null) return false;
+  return !closedInstant.isBefore(nowUtc.subtract(_recentlyClosedWindow));
 }
 
 /// Walks the GitHub Project item's field values and pulls out the ones that

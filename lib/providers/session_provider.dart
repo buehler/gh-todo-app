@@ -1,6 +1,5 @@
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
-import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/session_generation_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';

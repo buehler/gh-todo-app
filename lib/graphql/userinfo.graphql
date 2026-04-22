@@ -5,4 +5,10 @@ query UserInformation {
     name
     login
   }
+  rateLimit {
+    cost
+    limit
+    remaining
+    resetAt
+  }
 }

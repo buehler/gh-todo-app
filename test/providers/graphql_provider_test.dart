@@ -36,7 +36,7 @@ void main() {
 
       final logLines = await _readLogsUntil(
         harness.logStore,
-        containsText: '[graphql] query: UserInformation',
+        containsText: '[graphql] query result: UserInformation | rateLimit',
       );
       expect(
         logLines.where(
@@ -44,43 +44,64 @@ void main() {
         ),
         hasLength(1),
       );
+      expect(
+        logLines.where(
+          (line) => line.contains(
+            '[graphql] query result: UserInformation | rateLimit cost=1 limit=5000 remaining=4999 resetAt=2026-04-21T08:00:00Z',
+          ),
+        ),
+        hasLength(1),
+      );
       expect(logLines.join('\n'), isNot(contains('ghp_seed')));
     });
 
-    test(
-      'logs named mutations executed through the production client',
-      () async {
-        final harness = await createTestContainer(
-          tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
-          graphqlTransportLink: _OperationLink(
-            handler: (request) => const Response(
-              data: {'__typename': 'Mutation'},
-              response: {'__typename': 'Mutation'},
-            ),
-          ),
-        );
-        addTearDown(harness.container.dispose);
+    test('logs named mutations executed through the production client', () async {
+      final harness = await createTestContainer(
+        tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+        graphqlTransportLink: _OperationLink(
+          handler: (request) =>
+              Response(
+                data: const {'__typename': 'Mutation'},
+                response: const {'__typename': 'Mutation'},
+              ).withContextEntry(
+                const HttpLinkResponseContext(
+                  statusCode: 200,
+                  headers: {
+                    'x-ratelimit-limit': '5000',
+                    'x-ratelimit-remaining': '4994',
+                    'x-ratelimit-reset': '1776758400',
+                  },
+                ),
+              ),
+        ),
+      );
+      addTearDown(harness.container.dispose);
 
-        await harness.container.read(sessionProvider.future);
-        final client = harness.container.read(graphqlClientProvider);
-        await client.mutate(
-          MutationOptions(
-            document: gql('mutation PingMutation { __typename }'),
-          ),
-        );
+      await harness.container.read(sessionProvider.future);
+      final client = harness.container.read(graphqlClientProvider);
+      await client.mutate(
+        MutationOptions(document: gql('mutation PingMutation { __typename }')),
+      );
 
-        final logLines = await _readLogsUntil(
-          harness.logStore,
-          containsText: '[graphql] mutation: PingMutation',
-        );
-        expect(
-          logLines.where(
-            (line) => line.contains('[graphql] mutation: PingMutation'),
+      final logLines = await _readLogsUntil(
+        harness.logStore,
+        containsText: '[graphql] mutation: PingMutation',
+      );
+      expect(
+        logLines.where(
+          (line) => line.contains('[graphql] mutation: PingMutation'),
+        ),
+        hasLength(1),
+      );
+      expect(
+        logLines.where(
+          (line) => line.contains(
+            '[graphql] mutation result: PingMutation | rateLimit cost=unavailable limit=5000 remaining=4994 resetAt=2026-04-21T08:00:00Z',
           ),
-          hasLength(1),
-        );
-      },
-    );
+        ),
+        hasLength(1),
+      );
+    });
 
     test('logs watched project queries once per execution cycle', () async {
       final harness = await createTestContainer(
@@ -115,11 +136,20 @@ void main() {
 
       final logLines = await _readLogsUntil(
         harness.logStore,
-        containsText: '[graphql] query: ProjectAssignedIssues',
+        containsText:
+            '[graphql] query result: ProjectAssignedItemsPage | rateLimit',
       );
       expect(
         logLines.where(
-          (line) => line.contains('[graphql] query: ProjectAssignedIssues'),
+          (line) => line.contains('[graphql] query: ProjectAssignedItemsPage'),
+        ),
+        hasLength(1),
+      );
+      expect(
+        logLines.where(
+          (line) => line.contains(
+            '[graphql] query result: ProjectAssignedItemsPage | rateLimit cost=1 limit=5000 remaining=4999 resetAt=2026-04-21T08:00:00Z',
+          ),
         ),
         hasLength(1),
       );
@@ -148,23 +178,23 @@ Map<String, Object?> _responseFor(String operationName) {
         'login': 'alpha',
         '__typename': 'User',
       },
+      'rateLimit': _rateLimit(),
       '__typename': 'Query',
     },
-    'ProjectAssignedIssues' => {
-      'open': {
+    'ProjectAssignedItemsPage' => {
+      'node': {
         'items': {
           'nodes': [_projectItem()],
+          'pageInfo': {
+            'hasNextPage': false,
+            'endCursor': null,
+            '__typename': 'PageInfo',
+          },
           '__typename': 'ProjectV2ItemConnection',
         },
         '__typename': 'ProjectV2',
       },
-      'recentlyClosed': {
-        'items': {
-          'nodes': const <Object?>[],
-          '__typename': 'ProjectV2ItemConnection',
-        },
-        '__typename': 'ProjectV2',
-      },
+      'rateLimit': _rateLimit(),
       '__typename': 'Query',
     },
     _ => throw StateError('Unexpected operation: $operationName'),
@@ -184,11 +214,22 @@ Map<String, Object?> _projectItem() {
       'title': 'Log GraphQL operations',
       'createdAt': '2026-04-18T09:00:00Z',
       'updatedAt': '2026-04-18T09:00:00Z',
+      'state': 'OPEN',
       'closedAt': null,
       'comments': {'totalCount': 0, '__typename': 'IssueCommentConnection'},
       '__typename': 'Issue',
     },
     '__typename': 'ProjectV2Item',
+  };
+}
+
+Map<String, Object?> _rateLimit() {
+  return {
+    'cost': 1,
+    'limit': 5000,
+    'remaining': 4999,
+    'resetAt': '2026-04-21T08:00:00Z',
+    '__typename': 'RateLimit',
   };
 }
 

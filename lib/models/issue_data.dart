@@ -20,9 +20,8 @@ abstract class IssueData with _$IssueData {
     required String createdAt,
     required String updatedAt,
 
-    /// `true` when the issue was sourced from the "recently closed" arm of
-    /// the feed query (closed within the last few days). Drives muted
-    /// rendering.
+    /// `true` when the issue is currently closed according to GitHub issue
+    /// state. Drives muted rendering and closed-list membership.
     @Default(false) bool closed,
 
     /// ISO-8601 timestamp of when the issue was closed. Non-null when
