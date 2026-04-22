@@ -112,13 +112,15 @@ class _IssuesFeed extends ConsumerStatefulWidget {
 class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
   bool _isRefreshing = false;
 
-  bool get _showManualRefresh {
+  bool get _isNativeDesktopPlatform {
     final platform = Theme.of(context).platform;
-    final isDesktopPlatform =
-        platform == TargetPlatform.macOS ||
+    return platform == TargetPlatform.macOS ||
         platform == TargetPlatform.windows ||
         platform == TargetPlatform.linux;
-    return isDesktopPlatform || isWide(context);
+  }
+
+  bool get _showManualRefresh {
+    return _isNativeDesktopPlatform || isWide(context);
   }
 
   Future<void> _refreshIssues() async {
@@ -196,11 +198,13 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
       ],
     );
 
-    final feed = RefreshIndicator(
-      onRefresh: _refreshIssues,
-      edgeOffset: widget.topPadding + 24,
-      child: scrollView,
-    );
+    final feed = _isNativeDesktopPlatform
+        ? scrollView
+        : RefreshIndicator(
+            onRefresh: _refreshIssues,
+            edgeOffset: widget.topPadding + 24,
+            child: scrollView,
+          );
 
     // On wide layouts the list pane lives inside TodosSplitView's flex-4
     // column — still enforce a reading-column clamp so even an ultra-wide

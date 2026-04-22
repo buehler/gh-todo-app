@@ -1,8 +1,14 @@
 #include "flutter_window.h"
 
+#include <windowsx.h>
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+
+namespace {
+constexpr int kMinWindowWidth = 900;
+constexpr int kMinWindowHeight = 720;
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -62,6 +68,12 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    case WM_GETMINMAXINFO: {
+      auto minmax_info = reinterpret_cast<MINMAXINFO*>(lparam);
+      minmax_info->ptMinTrackSize.x = kMinWindowWidth;
+      minmax_info->ptMinTrackSize.y = kMinWindowHeight;
+      break;
+    }
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;

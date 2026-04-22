@@ -196,26 +196,27 @@ void main() {
     }
   });
 
-  testWidgets('desktop layout shows manual refresh alongside pull-to-refresh', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    try {
-      await _pumpFeed(
-        tester,
-        projects: _testProjects,
-        open: _testIssues,
-        closed: const [],
-        mutations: FakeIssueMutations(),
-        size: const Size(1200, 900),
-      );
+  testWidgets(
+    'desktop layout shows manual refresh instead of pull-to-refresh',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      try {
+        await _pumpFeed(
+          tester,
+          projects: _testProjects,
+          open: _testIssues,
+          closed: const [],
+          mutations: FakeIssueMutations(),
+          size: const Size(1200, 900),
+        );
 
-      expect(find.byType(RefreshIndicator), findsOneWidget);
-      expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
-    } finally {
-      debugDefaultTargetPlatformOverride = null;
-    }
-  });
+        expect(find.byType(RefreshIndicator), findsNothing);
+        expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
 
   testWidgets(
     'switching projects on wide layout clears the selected issue detail',
