@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/editorial_icon_button.dart';
@@ -113,16 +112,13 @@ class _IssuesFeed extends ConsumerStatefulWidget {
 class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
   bool _isRefreshing = false;
 
-  bool get _supportsPullToRefresh {
-    if (kIsWeb) return false;
-
-    return switch (Theme.of(context).platform) {
-      TargetPlatform.iOS || TargetPlatform.android => true,
-      TargetPlatform.macOS ||
-      TargetPlatform.windows ||
-      TargetPlatform.linux ||
-      TargetPlatform.fuchsia => false,
-    };
+  bool get _showManualRefresh {
+    final platform = Theme.of(context).platform;
+    final isDesktopPlatform =
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.linux;
+    return isDesktopPlatform || isWide(context);
   }
 
   Future<void> _refreshIssues() async {
@@ -149,7 +145,7 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
           child: Padding(
             padding: EdgeInsets.only(top: widget.topPadding + 24),
             child: _FeedHeader(
-              showManualRefresh: !_supportsPullToRefresh,
+              showManualRefresh: _showManualRefresh,
               isRefreshing: _isRefreshing,
               onRefresh: _refreshIssues,
             ),
@@ -200,13 +196,11 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
       ],
     );
 
-    final feed = _supportsPullToRefresh
-        ? RefreshIndicator(
-            onRefresh: _refreshIssues,
-            edgeOffset: widget.topPadding + 24,
-            child: scrollView,
-          )
-        : scrollView;
+    final feed = RefreshIndicator(
+      onRefresh: _refreshIssues,
+      edgeOffset: widget.topPadding + 24,
+      child: scrollView,
+    );
 
     // On wide layouts the list pane lives inside TodosSplitView's flex-4
     // column — still enforce a reading-column clamp so even an ultra-wide

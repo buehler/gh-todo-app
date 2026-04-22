@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 
 /// Horizontally-scrollable filter chips for switching between mapped projects.
@@ -31,9 +32,12 @@ class TodosProjectChips extends ConsumerWidget {
             EditorialChip(
               label: projects[i].name,
               selected: projects[i].id == selectedId,
-              onPressed: () => ref
-                  .read(selectedProjectProvider.notifier)
-                  .select(projects[i].id),
+              onPressed: () {
+                final nextId = projects[i].id;
+                if (nextId == selectedId) return;
+                ref.read(selectedIssueProvider.notifier).clear();
+                ref.read(selectedProjectProvider.notifier).select(nextId);
+              },
             ),
             if (i < projects.length - 1) const SizedBox(width: 12),
           ],

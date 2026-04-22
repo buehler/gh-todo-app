@@ -6,9 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
+import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
+import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
@@ -58,6 +61,13 @@ const _closedIssue = IssueData(
   closedAt: '2025-02-10T08:00:00Z',
 );
 
+final _viewer = Query$UserInformation$viewer(
+  id: 'user-me',
+  avatarUrl: 'https://example.com/me.png',
+  name: 'Me',
+  login: 'me',
+);
+
 void main() {
   testWidgets('shows empty state when no projects are mapped', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
@@ -67,17 +77,20 @@ void main() {
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          hiveBootstrapProvider.overrideWith((_) async {}),
-          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
-          tokenStorageProvider.overrideWithValue(
-            GithubTokenStorageService(storage: fakeStorage),
-          ),
-          sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
-          projectListProvider.overrideWith(() => _FakeProjectList(const [])),
-        ],
-        child: const GhTodosApp(),
+      MediaQuery(
+        data: const MediaQueryData(size: Size(390, 844)),
+        child: ProviderScope(
+          overrides: [
+            hiveBootstrapProvider.overrideWith((_) async {}),
+            offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+            tokenStorageProvider.overrideWithValue(
+              GithubTokenStorageService(storage: fakeStorage),
+            ),
+            sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
+            projectListProvider.overrideWith(() => _FakeProjectList(const [])),
+          ],
+          child: const GhTodosApp(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -102,26 +115,29 @@ void main() {
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          hiveBootstrapProvider.overrideWith((_) async {}),
-          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
-          tokenStorageProvider.overrideWithValue(
-            GithubTokenStorageService(storage: fakeStorage),
-          ),
-          sessionPrefsProvider.overrideWithValue(
-            FakeSessionPrefsService(selectedProjectId: 'proj-1'),
-          ),
-          projectListProvider.overrideWith(
-            () => _FakeProjectList(_testProjects),
-          ),
-          projectIssuesProvider('proj-1').overrideWith(
-            () => _FakeProjectIssues(
-              seed: (open: _testIssues, closed: <IssueData>[]),
+      MediaQuery(
+        data: const MediaQueryData(size: Size(1200, 900)),
+        child: ProviderScope(
+          overrides: [
+            hiveBootstrapProvider.overrideWith((_) async {}),
+            offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+            tokenStorageProvider.overrideWithValue(
+              GithubTokenStorageService(storage: fakeStorage),
             ),
-          ),
-        ],
-        child: const GhTodosApp(),
+            sessionPrefsProvider.overrideWithValue(
+              FakeSessionPrefsService(selectedProjectId: 'proj-1'),
+            ),
+            projectListProvider.overrideWith(
+              () => _FakeProjectList(_testProjects),
+            ),
+            projectIssuesProvider('proj-1').overrideWith(
+              () => _FakeProjectIssues(
+                seed: (open: _testIssues, closed: <IssueData>[]),
+              ),
+            ),
+          ],
+          child: const GhTodosApp(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -174,28 +190,113 @@ void main() {
       );
 
       expect(find.byType(RefreshIndicator), findsOneWidget);
-      expect(find.byKey(RootPage.refreshButtonKey), findsNothing);
+      expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('desktop layout shows manual refresh alongside pull-to-refresh', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    try {
+      await _pumpFeed(
+        tester,
+        projects: _testProjects,
+        open: _testIssues,
+        closed: const [],
+        mutations: FakeIssueMutations(),
+        size: const Size(1200, 900),
+      );
+
+      expect(find.byType(RefreshIndicator), findsOneWidget);
+      expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
   });
 
   testWidgets(
-    'desktop layout shows manual refresh instead of pull-to-refresh',
+    'switching projects on wide layout clears the selected issue detail',
     (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-      try {
-        await _pumpFeed(
-          tester,
-          projects: _testProjects,
-          open: _testIssues,
-          closed: const [],
-          mutations: FakeIssueMutations(),
-          size: const Size(1200, 900),
-        );
 
-        expect(find.byType(RefreshIndicator), findsNothing);
-        expect(find.byKey(RootPage.refreshButtonKey), findsOneWidget);
+      final fakeStorage = FakeFlutterSecureStorage(
+        seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+      );
+
+      try {
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(size: Size(1200, 900)),
+            child: ProviderScope(
+              overrides: [
+                hiveBootstrapProvider.overrideWith((_) async {}),
+                offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+                tokenStorageProvider.overrideWithValue(
+                  GithubTokenStorageService(storage: fakeStorage),
+                ),
+                sessionPrefsProvider.overrideWithValue(
+                  FakeSessionPrefsService(selectedProjectId: 'proj-1'),
+                ),
+                projectListProvider.overrideWith(
+                  () => _FakeProjectList(_testProjects),
+                ),
+                projectIssuesProvider('proj-1').overrideWith(
+                  () => _FakeProjectIssues(
+                    seed: (open: _testIssues, closed: <IssueData>[]),
+                  ),
+                ),
+                projectIssuesProvider('proj-2').overrideWith(
+                  () => _FakeProjectIssues(
+                    seed: (
+                      open: const [
+                        IssueData(
+                          id: 'issue-3',
+                          number: 11,
+                          title: 'Plan release notes',
+                          commentCount: 0,
+                          createdAt: '2025-04-03T10:00:00Z',
+                          updatedAt: '2025-04-04T10:00:00Z',
+                        ),
+                      ],
+                      closed: <IssueData>[],
+                    ),
+                  ),
+                ),
+                userInfoProvider.overrideWith((_) => Future.value(_viewer)),
+                issueDetailsProvider('issue-1').overrideWith(
+                  (ref) => Stream.value(
+                    const IssueDetails(
+                      description: 'Fix the login edge cases.',
+                      url: 'https://github.com/acme/repo/issues/42',
+                      comments: [],
+                    ),
+                  ),
+                ),
+                issueMutationsProvider.overrideWithValue(FakeIssueMutations()),
+              ],
+              child: const GhTodosApp(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Fix login flow'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Fix the login edge cases.'), findsOneWidget);
+        expect(find.byKey(TodosSplitView.detailPaneEmptyKey), findsNothing);
+
+        await tester.tap(find.text('Beta'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(TodosSplitView.detailPaneEmptyKey), findsOneWidget);
+        expect(find.text('Fix the login edge cases.'), findsNothing);
+        expect(find.text('Plan release notes'), findsOneWidget);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
@@ -217,32 +318,35 @@ void main() {
 
       try {
         await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              hiveBootstrapProvider.overrideWith((_) async {}),
-              offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
-              tokenStorageProvider.overrideWithValue(
-                GithubTokenStorageService(storage: fakeStorage),
-              ),
-              sessionPrefsProvider.overrideWithValue(
-                FakeSessionPrefsService(selectedProjectId: 'proj-1'),
-              ),
-              projectListProvider.overrideWith(
-                () => _FakeProjectList(_testProjects),
-              ),
-              projectIssuesProvider('proj-1').overrideWith(
-                () => _TrackedProjectIssues(
-                  onBuild: () => buildCount++,
-                  load: () {
-                    final completer = Completer<ProjectIssuesFeed>();
-                    completers.add(completer);
-                    return completer.future;
-                  },
+          MediaQuery(
+            data: const MediaQueryData(size: Size(1200, 900)),
+            child: ProviderScope(
+              overrides: [
+                hiveBootstrapProvider.overrideWith((_) async {}),
+                offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+                tokenStorageProvider.overrideWithValue(
+                  GithubTokenStorageService(storage: fakeStorage),
                 ),
-              ),
-              issueMutationsProvider.overrideWithValue(FakeIssueMutations()),
-            ],
-            child: const GhTodosApp(),
+                sessionPrefsProvider.overrideWithValue(
+                  FakeSessionPrefsService(selectedProjectId: 'proj-1'),
+                ),
+                projectListProvider.overrideWith(
+                  () => _FakeProjectList(_testProjects),
+                ),
+                projectIssuesProvider('proj-1').overrideWith(
+                  () => _TrackedProjectIssues(
+                    onBuild: () => buildCount++,
+                    load: () {
+                      final completer = Completer<ProjectIssuesFeed>();
+                      completers.add(completer);
+                      return completer.future;
+                    },
+                  ),
+                ),
+                issueMutationsProvider.overrideWithValue(FakeIssueMutations()),
+              ],
+              child: const GhTodosApp(),
+            ),
           ),
         );
 
@@ -283,24 +387,27 @@ void main() {
   );
 
   testWidgets('tapping settings tab swaps the branch and back', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 900));
+    await tester.binding.setSurfaceSize(const Size(800, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final fakeStorage = FakeFlutterSecureStorage(
       seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
     );
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          hiveBootstrapProvider.overrideWith((_) async {}),
-          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
-          tokenStorageProvider.overrideWithValue(
-            GithubTokenStorageService(storage: fakeStorage),
-          ),
-          sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
-          projectListProvider.overrideWith(() => _FakeProjectList(const [])),
-        ],
-        child: const GhTodosApp(),
+      MediaQuery(
+        data: const MediaQueryData(size: Size(800, 900)),
+        child: ProviderScope(
+          overrides: [
+            hiveBootstrapProvider.overrideWith((_) async {}),
+            offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+            tokenStorageProvider.overrideWithValue(
+              GithubTokenStorageService(storage: fakeStorage),
+            ),
+            sessionPrefsProvider.overrideWithValue(FakeSessionPrefsService()),
+            projectListProvider.overrideWith(() => _FakeProjectList(const [])),
+          ],
+          child: const GhTodosApp(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -526,23 +633,26 @@ Future<void> _pumpFeed(
     seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
   );
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        hiveBootstrapProvider.overrideWith((_) async {}),
-        offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
-        tokenStorageProvider.overrideWithValue(
-          GithubTokenStorageService(storage: fakeStorage),
-        ),
-        sessionPrefsProvider.overrideWithValue(
-          FakeSessionPrefsService(selectedProjectId: projects.first.id),
-        ),
-        projectListProvider.overrideWith(() => _FakeProjectList(projects)),
-        projectIssuesProvider(projects.first.id).overrideWith(
-          () => _FakeProjectIssues(seed: (open: open, closed: closed)),
-        ),
-        issueMutationsProvider.overrideWithValue(mutations),
-      ],
-      child: const GhTodosApp(),
+    MediaQuery(
+      data: MediaQueryData(size: size),
+      child: ProviderScope(
+        overrides: [
+          hiveBootstrapProvider.overrideWith((_) async {}),
+          offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+          tokenStorageProvider.overrideWithValue(
+            GithubTokenStorageService(storage: fakeStorage),
+          ),
+          sessionPrefsProvider.overrideWithValue(
+            FakeSessionPrefsService(selectedProjectId: projects.first.id),
+          ),
+          projectListProvider.overrideWith(() => _FakeProjectList(projects)),
+          projectIssuesProvider(projects.first.id).overrideWith(
+            () => _FakeProjectIssues(seed: (open: open, closed: closed)),
+          ),
+          issueMutationsProvider.overrideWithValue(mutations),
+        ],
+        child: const GhTodosApp(),
+      ),
     ),
   );
   await tester.pumpAndSettle();
