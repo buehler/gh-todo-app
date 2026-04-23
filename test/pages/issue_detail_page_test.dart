@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -96,17 +98,27 @@ Future<({FakeIssueMutations mutations})> _pump(
   required IssueData issue,
   List<IssueComment> comments = const [],
   Project project = _mappedProject,
+  Stream<IssueDetails>? detailsStream,
+  FakeIssueMutations? mutations,
+  Size surfaceSize = const Size(800, 1400),
 }) async {
-  // The detail page scrolls, so give the test surface enough room that the
-  // composer + state-action button sit on-screen without scrolling.
-  await tester.binding.setSurfaceSize(const Size(800, 1400));
+  await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
   final fakeStorage = FakeFlutterSecureStorage(
     seed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
   );
-  final mutations = FakeIssueMutations();
+  final fakeMutations = mutations ?? FakeIssueMutations();
   final sessionPrefs = FakeSessionPrefsService(selectedProjectId: _projectId);
+  final stream =
+      detailsStream ??
+      Stream.value(
+        IssueDetails(
+          description: 'Original description.',
+          url: 'https://github.com/acme/repo/issues/42',
+          comments: comments,
+        ),
+      );
 
   await tester.pumpWidget(
     ProviderScope(
@@ -119,16 +131,8 @@ Future<({FakeIssueMutations mutations})> _pump(
         sessionPrefsProvider.overrideWithValue(sessionPrefs),
         projectListProvider.overrideWith(() => _FakeProjectList([project])),
         userInfoProvider.overrideWith((_) => Future.value(_viewer)),
-        issueDetailsProvider(_issueId).overrideWith(
-          (ref) => Stream.value(
-            IssueDetails(
-              description: 'Original description.',
-              url: 'https://github.com/acme/repo/issues/42',
-              comments: comments,
-            ),
-          ),
-        ),
-        issueMutationsProvider.overrideWithValue(mutations),
+        issueDetailsProvider(_issueId).overrideWith((ref) => stream),
+        issueMutationsProvider.overrideWithValue(fakeMutations),
       ],
       child: octanePrime(
         MaterialApp(
@@ -139,7 +143,7 @@ Future<({FakeIssueMutations mutations})> _pump(
     ),
   );
   await tester.pumpAndSettle();
-  return (mutations: mutations);
+  return (mutations: fakeMutations);
 }
 
 class _FakeOfflineStatus extends OfflineStatus {
@@ -245,6 +249,101 @@ void main() {
           ?.text,
       'Flaky net',
     );
+  });
+
+  testWidgets('composer remains visible when the detail content scrolls', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      issue: _openIssue,
+      comments: _longCommentThread(),
+      surfaceSize: const Size(390, 640),
+    );
+
+    await tester.drag(
+      find.byKey(IssueDetailPage.scrollKey),
+      const Offset(0, -900),
+    );
+    await tester.pumpAndSettle();
+
+    final composerRect = tester.getRect(find.byKey(AddCommentComposer.pageKey));
+    expect(composerRect.bottom, lessThanOrEqualTo(640));
+    expect(composerRect.top, greaterThanOrEqualTo(0));
+  });
+
+  testWidgets('posting a comment scrolls the transcript to the bottom', (
+    tester,
+  ) async {
+    final controller = StreamController<IssueDetails>();
+    addTearDown(controller.close);
+    final comments = _longCommentThread();
+    const newComment = '''
+Line one
+Line two
+Line three
+Line four
+Line five
+Line six
+Line seven''';
+    final mutations = _RefreshingIssueMutations(
+      onPost: () {
+        controller.add(
+          IssueDetails(
+            description: 'Original description.',
+            url: 'https://github.com/acme/repo/issues/42',
+            comments: [
+              ...comments,
+              IssueComment(
+                id: 'c-new',
+                authorLogin: 'me',
+                body: newComment,
+                createdAt: '2026-04-13T12:30:00Z',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    controller.add(
+      IssueDetails(
+        description: 'Original description.',
+        url: 'https://github.com/acme/repo/issues/42',
+        comments: comments,
+      ),
+    );
+
+    await _pump(
+      tester,
+      issue: _openIssue,
+      detailsStream: controller.stream,
+      mutations: mutations,
+      surfaceSize: const Size(390, 640),
+    );
+
+    final scrollable = tester.widget<SingleChildScrollView>(
+      find.byKey(IssueDetailPage.scrollKey),
+    );
+    final scrollController = scrollable.controller!;
+    expect(scrollController.offset, 0);
+
+    final field = find.byKey(AddCommentComposer.fieldKey);
+    await tester.enterText(
+      find.descendant(of: field, matching: find.byType(TextField)),
+      newComment,
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(AddCommentComposer.submitKey));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+
+    expect(find.text(newComment), findsOneWidget);
+    final postedCommentRect = tester.getRect(find.text(newComment));
+    final composerRect = tester.getRect(find.byKey(AddCommentComposer.pageKey));
+    expect(postedCommentRect.bottom, lessThanOrEqualTo(composerRect.top));
+    expect(scrollController.offset, scrollController.position.maxScrollExtent);
   });
 
   testWidgets('own comment shows pencil icon; others do not', (tester) async {
@@ -355,4 +454,32 @@ class _FakeProjectList extends ProjectList {
 
   @override
   List<Project> build() => _projects;
+}
+
+List<IssueComment> _longCommentThread() {
+  return [
+    for (var i = 0; i < 14; i++)
+      IssueComment(
+        id: 'c-$i',
+        authorLogin: i.isEven ? 'me' : 'someone-else',
+        body:
+            'Comment $i with enough text to build a useful transcript for scrolling.',
+        createdAt: '2026-04-13T10:${i.toString().padLeft(2, '0')}:00Z',
+      ),
+  ];
+}
+
+class _RefreshingIssueMutations extends FakeIssueMutations {
+  final VoidCallback onPost;
+
+  _RefreshingIssueMutations({required this.onPost});
+
+  @override
+  Future<void> postComment({
+    required String issueId,
+    required String body,
+  }) async {
+    await super.postComment(issueId: issueId, body: body);
+    onPost();
+  }
 }

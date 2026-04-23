@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
-import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
 import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
@@ -12,13 +11,10 @@ import 'package:gh_todos/util/dates.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
-/// "Conversation" section — section header with a count pill, the comment
-/// thread rendered oldest-first (no avatars), and an always-visible composer
-/// anchored at the bottom of the transcript.
+/// "Conversation" section — section header with a count pill and the comment
+/// thread rendered oldest-first (no avatars).
 ///
-/// [onPostComment] is invoked with the draft body when the user taps the
-/// composer's submit button. Returns `true` on success so the composer can
-/// clear. [onEditComment] is invoked when the viewer taps one of their own
+/// [onEditComment] is invoked when the viewer taps one of their own
 /// comments (identified by matching login against [viewerLogin]).
 class IssueConversationSection extends ConsumerWidget {
   static const pageKey = ValueKey('issue-conversation-section');
@@ -27,17 +23,13 @@ class IssueConversationSection extends ConsumerWidget {
   final String issueId;
   final int commentCount;
   final String? viewerLogin;
-  final Future<bool> Function(String body)? onPostComment;
   final void Function(IssueComment comment)? onEditComment;
-  final bool writeEnabled;
 
   const IssueConversationSection({
     required this.issueId,
     required this.commentCount,
     this.viewerLogin,
-    this.onPostComment,
     this.onEditComment,
-    this.writeEnabled = true,
     super.key,
   });
 
@@ -58,7 +50,8 @@ class IssueConversationSection extends ConsumerWidget {
     // freshly-posted / deleted comments after the provider invalidates.
     // Falls back to the feed-provided [commentCount] while details are still
     // loading or have errored.
-    final liveCount = detailsAsync.asData?.value.comments.length ?? commentCount;
+    final liveCount =
+        detailsAsync.asData?.value.comments.length ?? commentCount;
 
     return ColumnBox(
       key: pageKey,
@@ -121,11 +114,6 @@ class IssueConversationSection extends ConsumerWidget {
             viewerLogin: viewerLogin,
             onEditComment: onEditComment,
           ),
-        ),
-        const SizedBox(height: 8),
-        AddCommentComposer(
-          onSubmit: onPostComment,
-          enabled: writeEnabled,
         ),
       ],
     );

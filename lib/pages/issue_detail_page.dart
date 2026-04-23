@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/shared/offline_notice.dart';
+import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_comment_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_issue_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_conversation_section.dart';
@@ -64,6 +65,7 @@ class IssueDetailPage extends ConsumerStatefulWidget {
 }
 
 class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
+  final ScrollController _scrollController = ScrollController();
   late IssueData _issue = widget.issue;
 
   /// Set while any mutation is in flight so the state-action button disables
@@ -78,6 +80,13 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     final mutations = ref.read(issueMutationsProvider);
     try {
       await mutations.postComment(issueId: _issueId, body: body);
+      try {
+        await ref.read(issueDetailsProvider(_issueId).future);
+      } catch (_) {
+        // The mutation already succeeded. A refresh failure should not keep
+        // the submitted draft in the composer.
+      }
+      await _scrollToBottomAfterContentRendered();
       return true;
     } on OfflineWriteBlockedException {
       _showError('Offline. Reconnect to post comments.');
@@ -86,6 +95,18 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
       _showError('Failed to post comment.');
       return false;
     }
+  }
+
+  Future<void> _scrollToBottomAfterContentRendered() async {
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || !_scrollController.hasClients) return;
+    await _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   Future<void> _editComment(IssueComment comment) async {
@@ -298,11 +319,14 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
   // ---------------------------------- UI -----------------------------------
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.paddingOf(context).top;
-    // Leave a bit of breathing room below the composer for the safe-area
-    // (home-indicator) and the on-screen keyboard's clearance.
-    final bottomPadding = MediaQuery.paddingOf(context).bottom + 32;
 
     final viewerLogin = ref.watch(userInfoProvider).asData?.value?.login;
     final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
@@ -318,12 +342,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
 
     final content = SingleChildScrollView(
       key: IssueDetailPage.scrollKey,
-      padding: EdgeInsets.only(
-        top: contentTopPadding,
-        left: 24,
-        right: 24,
-        bottom: bottomPadding,
-      ),
+      controller: _scrollController,
+      padding: EdgeInsets.only(top: contentTopPadding, left: 24, right: 24),
       child: Center(
         child: ConstrainedBox(
           // Reading-column clamp keeps issue descriptions and conversation
@@ -341,7 +361,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
               IssueHeaderSection(issue: _issue),
               if (isOffline)
                 const OfflineNotice(
-                  message: 'Offline. Reconnect to edit, comment, or change state.',
+                  message:
+                      'Offline. Reconnect to edit, comment, or change state.',
                 ),
               IssueStateAction(
                 issue: _issue,
@@ -355,14 +376,17 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
                 issueId: _issueId,
                 commentCount: _issue.commentCount,
                 viewerLogin: viewerLogin,
-                writeEnabled: !isOffline,
-                onPostComment: _postComment,
                 onEditComment: (c) => unawaited(_editComment(c)),
               ),
             ],
           ),
         ),
       ),
+    );
+
+    final stickyComposer = _StickyCommentComposer(
+      enabled: !isOffline,
+      onSubmit: _postComment,
     );
 
     if (widget.embedded) {
@@ -378,13 +402,21 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
             onClose: _handleBack,
           ),
           Expanded(child: content),
+          stickyComposer,
         ],
       );
     }
 
     final stack = Stack(
       children: [
-        Positioned.fill(child: content),
+        Positioned.fill(
+          child: Column(
+            children: [
+              Expanded(child: content),
+              stickyComposer,
+            ],
+          ),
+        ),
         Positioned(
           top: 0,
           left: 0,
@@ -446,6 +478,44 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
+class _StickyCommentComposer extends StatelessWidget {
+  final Future<bool> Function(String body) onSubmit;
+  final bool enabled;
+
+  const _StickyCommentComposer({required this.onSubmit, required this.enabled});
+
+  @override
+  Widget build(BuildContext context) {
+    final background = resolveColor(context, ColorTokens.background.$default);
+    final shadowColor = resolveColor(context, ColorTokens.surface.on);
+
+    return SafeArea(
+      top: false,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: withOpacity(background, 0.96),
+          boxShadow: [
+            BoxShadow(
+              color: withOpacity(shadowColor, 0.06),
+              blurRadius: 32,
+              offset: const Offset(0, -12),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: AddCommentComposer(onSubmit: onSubmit, enabled: enabled),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
