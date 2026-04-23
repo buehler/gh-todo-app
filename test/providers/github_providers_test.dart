@@ -251,18 +251,18 @@ Map<String, Object?> _projectItemsPageOne() {
             issueId: 'issue-closed-recently',
             number: 12,
             title: 'Closed recently',
-            updatedAt: '2026-04-20T12:00:00Z',
+            updatedAt: _instantIso(const Duration(days: -1)),
             state: 'CLOSED',
-            closedAt: '2026-04-20T12:00:00Z',
+            closedAt: _instantIso(const Duration(days: -1)),
           ),
           _projectIssue(
             itemId: 'item-closed-stale',
             issueId: 'issue-closed-stale',
             number: 13,
             title: 'Closed stale',
-            updatedAt: '2026-04-10T12:00:00Z',
+            updatedAt: _instantIso(const Duration(days: -10)),
             state: 'CLOSED',
-            closedAt: '2026-04-10T12:00:00Z',
+            closedAt: _instantIso(const Duration(days: -10)),
           ),
           {
             'id': 'item-draft',
@@ -324,6 +324,10 @@ Map<String, Object?> _projectItemsPageTwo() {
     'rateLimit': _rateLimit(),
     '__typename': 'Query',
   };
+}
+
+String _instantIso(Duration offset) {
+  return DateTime.now().toUtc().add(offset).toIso8601String();
 }
 
 Map<String, Object?> _projectIssue({

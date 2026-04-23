@@ -9,6 +9,7 @@ import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
 import 'package:gh_todos/models/issue_data.dart';
+import 'package:gh_todos/models/issue_ordering.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/selected_issue_provider.dart';
@@ -29,6 +30,10 @@ class RootPage extends ConsumerWidget {
   static const pageKey = ValueKey('root-page');
   static const scrollKey = ValueKey('root-page-scroll');
   static const emptyKey = ValueKey('root-page-empty');
+  static const overdueHeaderKey = ValueKey('root-page-overdue-header');
+  static const todayHeaderKey = ValueKey('root-page-today-header');
+  static const tomorrowHeaderKey = ValueKey('root-page-tomorrow-header');
+  static const restHeaderKey = ValueKey('root-page-rest-header');
   static const recentlyClosedHeaderKey = ValueKey('root-page-closed-header');
   static const refreshButtonKey = ValueKey('root-page-refresh-button');
   static const refreshProgressKey = ValueKey('root-page-refresh-progress');
@@ -319,22 +324,38 @@ List<Widget> _dataSlivers(
   final slivers = <Widget>[];
 
   if (open.isNotEmpty) {
-    slivers.add(
-      SliverPadding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          // Leave room below only when closed section follows; otherwise pad to
-          // bottom for the nav bar.
-          bottom: closed.isEmpty ? bottomPadding : 0,
-        ),
-        sliver: _IssueSliverList(
-          issues: open,
-          projectId: projectId,
-          writeEnabled: !isOffline,
-        ),
-      ),
-    );
+    final groups = _groupOpenIssues(open, DateTime.now());
+
+    for (var index = 0; index < groups.length; index++) {
+      final group = groups[index];
+      final isLastOpenGroup = index == groups.length - 1;
+      slivers
+        ..add(
+          SliverToBoxAdapter(
+            key: group.headerKey,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(24, index == 0 ? 8 : 28, 24, 12),
+              child: _IssueGroupHeader(label: group.label),
+            ),
+          ),
+        )
+        ..add(
+          SliverPadding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              // Leave room below only when this is the final open group and
+              // no closed section follows.
+              bottom: isLastOpenGroup && closed.isEmpty ? bottomPadding : 0,
+            ),
+            sliver: _IssueSliverList(
+              issues: group.issues,
+              projectId: projectId,
+              writeEnabled: !isOffline,
+            ),
+          ),
+        );
+    }
   } else {
     // Only closed issues exist — give the closed section a minimal header
     // context with a short note above it.
@@ -385,6 +406,98 @@ List<Widget> _dataSlivers(
   }
 
   return slivers;
+}
+
+class _IssueGroup {
+  final String label;
+  final Key headerKey;
+  final List<IssueData> issues;
+
+  const _IssueGroup({
+    required this.label,
+    required this.headerKey,
+    required this.issues,
+  });
+}
+
+List<_IssueGroup> _groupOpenIssues(List<IssueData> issues, DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  final tomorrow = today.add(const Duration(days: 1));
+  final overdue = <IssueData>[];
+  final todayIssues = <IssueData>[];
+  final tomorrowIssues = <IssueData>[];
+  final rest = <IssueData>[];
+
+  for (final issue in issues) {
+    final due = _parseDueDate(issue.dueDate);
+    if (due == null) {
+      rest.add(issue);
+    } else if (due.isBefore(today)) {
+      overdue.add(issue);
+    } else if (_sameDate(due, today)) {
+      todayIssues.add(issue);
+    } else if (_sameDate(due, tomorrow)) {
+      tomorrowIssues.add(issue);
+    } else {
+      rest.add(issue);
+    }
+  }
+
+  List<IssueData> sorted(List<IssueData> source) =>
+      [...source]..sort(compareOpenIssues);
+
+  return [
+    _IssueGroup(
+      label: 'Overdue',
+      headerKey: RootPage.overdueHeaderKey,
+      issues: sorted(overdue),
+    ),
+    _IssueGroup(
+      label: 'Today',
+      headerKey: RootPage.todayHeaderKey,
+      issues: sorted(todayIssues),
+    ),
+    _IssueGroup(
+      label: 'Tomorrow',
+      headerKey: RootPage.tomorrowHeaderKey,
+      issues: sorted(tomorrowIssues),
+    ),
+    _IssueGroup(
+      label: 'Rest',
+      headerKey: RootPage.restHeaderKey,
+      issues: sorted(rest),
+    ),
+  ].where((group) => group.issues.isNotEmpty).toList(growable: false);
+}
+
+DateTime? _parseDueDate(String? iso) {
+  if (iso == null) return null;
+  final parsed = DateTime.tryParse(iso);
+  if (parsed == null) return null;
+  return DateTime(parsed.year, parsed.month, parsed.day);
+}
+
+bool _sameDate(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+class _IssueGroupHeader extends StatelessWidget {
+  final String label;
+
+  const _IssueGroupHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return StyledText(
+      label,
+      style: editorialTextStyle(
+        TextTokens.label.$small,
+        color: resolveColor(context, ColorTokens.primary.$default),
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.6,
+      ),
+    );
+  }
 }
 
 class _IssueSliverList extends ConsumerWidget {
