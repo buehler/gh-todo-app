@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
@@ -192,6 +193,34 @@ void main() {
           ?.text,
       isEmpty,
     );
+  });
+
+  testWidgets('shift enter posts comment and clears the composer', (
+    tester,
+  ) async {
+    final harness = await _pump(tester, issue: _openIssue);
+
+    final field = find.byKey(AddCommentComposer.fieldKey);
+    final textField = find.descendant(
+      of: field,
+      matching: find.byType(TextField),
+    );
+    expect(field, findsOneWidget);
+
+    await tester.enterText(textField, 'Keyboard comment');
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.pumpAndSettle();
+
+    expect(harness.mutations.calls.length, 1);
+    final call = harness.mutations.calls.single;
+    expect(call, isA<PostCommentCall>());
+    expect((call as PostCommentCall).issueId, _issueId);
+    expect(call.body, 'Keyboard comment');
+    expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
   });
 
   testWidgets('post comment failure surfaces SnackBar and keeps the draft', (
