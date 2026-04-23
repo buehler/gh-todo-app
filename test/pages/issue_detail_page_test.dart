@@ -278,6 +278,14 @@ void main() {
     final controller = StreamController<IssueDetails>();
     addTearDown(controller.close);
     final comments = _longCommentThread();
+    const newComment = '''
+Line one
+Line two
+Line three
+Line four
+Line five
+Line six
+Line seven''';
     final mutations = _RefreshingIssueMutations(
       onPost: () {
         controller.add(
@@ -289,7 +297,7 @@ void main() {
               IssueComment(
                 id: 'c-new',
                 authorLogin: 'me',
-                body: 'New bottom comment.',
+                body: newComment,
                 createdAt: '2026-04-13T12:30:00Z',
               ),
             ],
@@ -322,7 +330,7 @@ void main() {
     final field = find.byKey(AddCommentComposer.fieldKey);
     await tester.enterText(
       find.descendant(of: field, matching: find.byType(TextField)),
-      'New bottom comment.',
+      newComment,
     );
     await tester.pump();
 
@@ -331,7 +339,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    expect(find.text('New bottom comment.'), findsOneWidget);
+    expect(find.text(newComment), findsOneWidget);
+    final postedCommentRect = tester.getRect(find.text(newComment));
+    final composerRect = tester.getRect(find.byKey(AddCommentComposer.pageKey));
+    expect(postedCommentRect.bottom, lessThanOrEqualTo(composerRect.top));
     expect(scrollController.offset, scrollController.position.maxScrollExtent);
   });
 

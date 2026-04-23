@@ -86,7 +86,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
         // The mutation already succeeded. A refresh failure should not keep
         // the submitted draft in the composer.
       }
-      _scrollToBottomAfterFrame();
+      await _scrollToBottomAfterContentRendered();
       return true;
     } on OfflineWriteBlockedException {
       _showError('Offline. Reconnect to post comments.');
@@ -97,18 +97,16 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     }
   }
 
-  void _scrollToBottomAfterFrame() {
+  Future<void> _scrollToBottomAfterContentRendered() async {
     if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      unawaited(
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutCubic,
-        ),
-      );
-    });
+    await WidgetsBinding.instance.endOfFrame;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || !_scrollController.hasClients) return;
+    await _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   Future<void> _editComment(IssueComment comment) async {
@@ -329,10 +327,6 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
   @override
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.paddingOf(context).top;
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
-    // The composer is pinned outside the scroll view, so the transcript needs
-    // enough tail room to keep the last comment from hiding behind it.
-    final bottomPadding = safeBottom + 220;
 
     final viewerLogin = ref.watch(userInfoProvider).asData?.value?.login;
     final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
@@ -349,12 +343,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     final content = SingleChildScrollView(
       key: IssueDetailPage.scrollKey,
       controller: _scrollController,
-      padding: EdgeInsets.only(
-        top: contentTopPadding,
-        left: 24,
-        right: 24,
-        bottom: bottomPadding,
-      ),
+      padding: EdgeInsets.only(top: contentTopPadding, left: 24, right: 24),
       child: Center(
         child: ConstrainedBox(
           // Reading-column clamp keeps issue descriptions and conversation
@@ -412,22 +401,22 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
             onOpenInBrowser: () => unawaited(_openInBrowser()),
             onClose: _handleBack,
           ),
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(child: content),
-                Positioned(left: 0, right: 0, bottom: 0, child: stickyComposer),
-              ],
-            ),
-          ),
+          Expanded(child: content),
+          stickyComposer,
         ],
       );
     }
 
     final stack = Stack(
       children: [
-        Positioned.fill(child: content),
-        Positioned(left: 0, right: 0, bottom: 0, child: stickyComposer),
+        Positioned.fill(
+          child: Column(
+            children: [
+              Expanded(child: content),
+              stickyComposer,
+            ],
+          ),
+        ),
         Positioned(
           top: 0,
           left: 0,
