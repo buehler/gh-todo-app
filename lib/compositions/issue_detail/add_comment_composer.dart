@@ -25,11 +25,7 @@ class AddCommentComposer extends StatefulWidget {
   final Future<bool> Function(String body)? onSubmit;
   final bool enabled;
 
-  const AddCommentComposer({
-    this.onSubmit,
-    this.enabled = true,
-    super.key,
-  });
+  const AddCommentComposer({this.onSubmit, this.enabled = true, super.key});
 
   @override
   State<AddCommentComposer> createState() => _AddCommentComposerState();
@@ -82,9 +78,11 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
           controller: _controller,
           hintText: 'Add a comment…',
           onChanged: _onChanged,
+          onSubmitted: (_) => _submit(),
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
           enabled: widget.enabled && !_submitting,
+          submitOnShiftEnter: true,
           minLines: 3,
           maxLines: 6,
         ),
