@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
@@ -23,6 +24,7 @@ class EditorialTextField extends StatefulWidget {
   final bool obscureText;
   final bool enabled;
   final TextFieldVariation variation;
+  final bool submitOnShiftEnter;
 
   /// Minimum visible rows. Mirrors `TextField.minLines`.
   final int? minLines;
@@ -47,6 +49,7 @@ class EditorialTextField extends StatefulWidget {
     this.obscureText = false,
     this.enabled = true,
     this.variation = TextFieldVariation.editorial,
+    this.submitOnShiftEnter = false,
     this.minLines,
     this.maxLines = 1,
   });
@@ -134,28 +137,38 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
                     ),
                   ),
                 Expanded(
-                  child: TextField(
-                    controller: widget.controller,
-                    focusNode: _focusNode,
-                    enabled: widget.enabled,
-                    obscureText: widget.obscureText,
-                    onChanged: widget.onChanged,
-                    onSubmitted: widget.onSubmitted,
-                    textInputAction: widget.textInputAction,
-                    keyboardType: widget.keyboardType,
-                    autofocus: widget.autofocus,
-                    minLines: widget.minLines,
-                    maxLines: widget.maxLines,
-                    style: fieldTextStyle,
-                    cursorColor: resolveColor(
-                      context,
-                      ColorTokens.primary.$default,
-                    ),
-                    decoration: InputDecoration(
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      hintText: widget.hintText,
-                      hintStyle: hintStyle,
+                  child: CallbackShortcuts(
+                    bindings: widget.submitOnShiftEnter
+                        ? {
+                            SingleActivator(
+                              LogicalKeyboardKey.enter,
+                              shift: true,
+                            ): _submitCurrentText,
+                          }
+                        : const {},
+                    child: TextField(
+                      controller: widget.controller,
+                      focusNode: _focusNode,
+                      enabled: widget.enabled,
+                      obscureText: widget.obscureText,
+                      onChanged: widget.onChanged,
+                      onSubmitted: widget.onSubmitted,
+                      textInputAction: widget.textInputAction,
+                      keyboardType: widget.keyboardType,
+                      autofocus: widget.autofocus,
+                      minLines: widget.minLines,
+                      maxLines: widget.maxLines,
+                      style: fieldTextStyle,
+                      cursorColor: resolveColor(
+                        context,
+                        ColorTokens.primary.$default,
+                      ),
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        hintText: widget.hintText,
+                        hintStyle: hintStyle,
+                      ),
                     ),
                   ),
                 ),
@@ -173,5 +186,12 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
         ],
       ),
     );
+  }
+
+  void _submitCurrentText() {
+    if (!widget.enabled) return;
+    final handler = widget.onSubmitted;
+    if (handler == null) return;
+    handler(widget.controller?.text ?? '');
   }
 }
