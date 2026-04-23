@@ -153,6 +153,84 @@ void main() {
     expect(find.text('3'), findsOneWidget);
   });
 
+  testWidgets('groups open todos by due-date bucket and hides empty headers', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final issues = [
+      _issue(
+        id: 'issue-rest',
+        title: 'Later backlog',
+        dueDate: _dateIso(today.add(const Duration(days: 4))),
+      ),
+      _issue(
+        id: 'issue-tomorrow',
+        title: 'Tomorrow follow-up',
+        dueDate: _dateIso(today.add(const Duration(days: 1))),
+      ),
+      _issue(
+        id: 'issue-overdue',
+        title: 'Expired rollout',
+        dueDate: _dateIso(today.subtract(const Duration(days: 1))),
+      ),
+      _issue(
+        id: 'issue-today',
+        title: 'Daily triage',
+        dueDate: _dateIso(today),
+      ),
+    ];
+
+    await _pumpFeed(
+      tester,
+      projects: _testProjects,
+      open: issues,
+      closed: const [],
+      mutations: FakeIssueMutations(),
+      size: const Size(1200, 1400),
+    );
+
+    expect(find.byKey(RootPage.overdueHeaderKey), findsOneWidget);
+    expect(find.byKey(RootPage.todayHeaderKey), findsOneWidget);
+    expect(find.byKey(RootPage.tomorrowHeaderKey), findsOneWidget);
+    expect(find.byKey(RootPage.restHeaderKey), findsOneWidget);
+
+    _expectVerticalOrder(tester, [
+      find.text('Overdue'),
+      find.text('Expired rollout'),
+      find.text('Today'),
+      find.text('Daily triage'),
+      find.text('Tomorrow'),
+      find.text('Tomorrow follow-up'),
+      find.text('Rest'),
+      find.text('Later backlog'),
+    ]);
+  });
+
+  testWidgets('omits empty todo group headers', (tester) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    await _pumpFeed(
+      tester,
+      projects: _testProjects,
+      open: [
+        _issue(
+          id: 'issue-today',
+          title: 'Only today',
+          dueDate: _dateIso(today),
+        ),
+      ],
+      closed: const [],
+      mutations: FakeIssueMutations(),
+    );
+
+    expect(find.byKey(RootPage.overdueHeaderKey), findsNothing);
+    expect(find.byKey(RootPage.todayHeaderKey), findsOneWidget);
+    expect(find.byKey(RootPage.tomorrowHeaderKey), findsNothing);
+    expect(find.byKey(RootPage.restHeaderKey), findsNothing);
+  });
+
   testWidgets(
     'android compact layout keeps pull-to-refresh and hides manual refresh',
     (tester) async {
@@ -698,4 +776,32 @@ class _TrackedProjectIssues extends ProjectIssues {
 class _FakeOfflineStatus extends OfflineStatus {
   @override
   Future<bool> build() async => false;
+}
+
+IssueData _issue({required String id, required String title, String? dueDate}) {
+  return IssueData(
+    id: id,
+    number: id.hashCode.abs() % 1000,
+    title: title,
+    commentCount: 0,
+    createdAt: '2026-04-20T08:00:00Z',
+    updatedAt: '2026-04-20T10:00:00Z',
+    dueDate: dueDate,
+  );
+}
+
+String _dateIso(DateTime date) {
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+  return '${date.year}-$month-$day';
+}
+
+void _expectVerticalOrder(WidgetTester tester, List<Finder> finders) {
+  var previousY = double.negativeInfinity;
+  for (final finder in finders) {
+    expect(finder, findsOneWidget);
+    final y = tester.getTopLeft(finder).dy;
+    expect(y, greaterThan(previousY));
+    previousY = y;
+  }
 }

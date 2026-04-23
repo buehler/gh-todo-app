@@ -7,6 +7,7 @@ import 'package:gh_todos/graphql/user_orgs.graphql.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/issue_details.dart';
+import 'package:gh_todos/models/issue_ordering.dart';
 import 'package:gh_todos/models/priority.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
@@ -150,7 +151,7 @@ class ProjectIssues extends _$ProjectIssues {
       updatedAt: updatedAt,
     );
     final nextClosed = [...feed.closed]..removeAt(idx);
-    final nextOpen = [...feed.open, moved]..sort(_compareOpenIssues);
+    final nextOpen = [...feed.open, moved]..sort(compareOpenIssues);
     state = AsyncData((open: nextOpen, closed: nextClosed));
   }
 
@@ -165,7 +166,7 @@ class ProjectIssues extends _$ProjectIssues {
         feed.closed.any((i) => i.id == issue.id);
     if (exists) return;
 
-    final nextOpen = [...feed.open, issue]..sort(_compareOpenIssues);
+    final nextOpen = [...feed.open, issue]..sort(compareOpenIssues);
     state = AsyncData((open: nextOpen, closed: feed.closed));
   }
 }
@@ -194,7 +195,7 @@ Future<ProjectIssuesFeed> _loadProjectIssuesFeed(
     }
   }
 
-  open.sort(_compareOpenIssues);
+  open.sort(compareOpenIssues);
   closed.sort(_compareClosedIssues);
   return (open: open, closed: closed);
 }
@@ -319,21 +320,6 @@ bool _isRecentlyClosed(IssueData issue, {required DateTime nowUtc}) {
   }
 
   return (priority, dueDate);
-}
-
-/// Orders open issues by nearest due date first (nulls last), then by most
-/// recently updated. ISO-8601 strings sort lexicographically, so no date
-/// parsing is needed here.
-int _compareOpenIssues(IssueData a, IssueData b) {
-  final aDue = a.dueDate;
-  final bDue = b.dueDate;
-  if (aDue != null || bDue != null) {
-    if (aDue == null) return 1;
-    if (bDue == null) return -1;
-    final cmp = aDue.compareTo(bDue);
-    if (cmp != 0) return cmp;
-  }
-  return b.updatedAt.compareTo(a.updatedAt);
 }
 
 /// Orders closed issues by most recently closed first. Defensively falls back
