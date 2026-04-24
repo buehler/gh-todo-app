@@ -1,9 +1,7 @@
-query IssueDetail($id: ID!) {
+query IssueComments($id: ID!) {
   node(id: $id) {
     ... on Issue {
       id
-      url
-      bodyText
       comments(first: 100) {
         nodes {
           id

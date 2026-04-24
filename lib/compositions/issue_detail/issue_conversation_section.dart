@@ -44,14 +44,13 @@ class IssueConversationSection extends ConsumerWidget {
       context,
       ColorTokens.surface.containerHigh,
     );
-    final detailsAsync = ref.watch(issueDetailsProvider(issueId));
+    final commentsAsync = ref.watch(issueCommentsProvider(issueId));
     final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
     // Prefer the live comment count from the details provider so it reflects
     // freshly-posted / deleted comments after the provider invalidates.
     // Falls back to the feed-provided [commentCount] while details are still
     // loading or have errored.
-    final liveCount =
-        detailsAsync.asData?.value.comments.length ?? commentCount;
+    final liveCount = commentsAsync.asData?.value.length ?? commentCount;
 
     return ColumnBox(
       key: pageKey,
@@ -89,7 +88,7 @@ class IssueConversationSection extends ConsumerWidget {
               ),
           ],
         ),
-        detailsAsync.when(
+        commentsAsync.when(
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(
@@ -109,8 +108,8 @@ class IssueConversationSection extends ConsumerWidget {
               color: onSurfaceVariant,
             ),
           ),
-          data: (details) => _CommentList(
-            comments: details.comments,
+          data: (comments) => _CommentList(
+            comments: comments,
             viewerLogin: viewerLogin,
             onEditComment: onEditComment,
           ),

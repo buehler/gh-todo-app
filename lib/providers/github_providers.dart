@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gh_todos/graphql/issue_detail.graphql.dart';
+import 'package:gh_todos/graphql/issue_comments.graphql.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
 import 'package:gh_todos/graphql/project_issues.graphql.dart';
 import 'package:gh_todos/graphql/schema.graphql.dart';
@@ -257,6 +257,8 @@ IssueData? _issueFromItem(
     id: content.id,
     number: content.number,
     title: content.title,
+    url: content.url,
+    description: _nullableTrimmed(content.bodyText),
     commentCount: content.comments.totalCount,
     createdAt: content.createdAt,
     updatedAt: content.updatedAt,
@@ -331,19 +333,27 @@ int _compareClosedIssues(IssueData a, IssueData b) {
   return bClosed.compareTo(aClosed);
 }
 
-/// Fetches the description + comment thread for a single issue by its node id.
-/// Kept separate from the project feed so the feed query doesn't over-fetch
-/// comment bodies for issues the user never opens. Comments are returned in
-/// chronological order (oldest first) — the conversation reads top-to-bottom
-/// like a transcript, with the newest reply anchored at the bottom.
-final issueDetailsProvider = StreamProvider.autoDispose
-    .family<IssueDetails, String>((ref, issueId) {
+String? _nullableTrimmed(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
+final issueDetailsProvider = Provider.family<IssueDetails, IssueData>(
+  (ref, issue) => IssueDetails(description: issue.description, url: issue.url),
+);
+
+/// Fetches the comment thread for a single issue by its node id.
+///
+/// Comments are returned in chronological order (oldest first), so the
+/// conversation reads top-to-bottom like a transcript.
+final issueCommentsProvider = StreamProvider.autoDispose
+    .family<List<IssueComment>, String>((ref, issueId) {
       final client = ref.watch(graphqlClientProvider);
       return _watchQueryStream(
         ref,
-        client.watchQuery$IssueDetail(
-          WatchOptions$Query$IssueDetail(
-            variables: Variables$Query$IssueDetail(id: issueId),
+        client.watchQuery$IssueComments(
+          WatchOptions$Query$IssueComments(
+            variables: Variables$Query$IssueComments(id: issueId),
             fetchPolicy: FetchPolicy.cacheAndNetwork,
             eagerlyFetchResults: true,
             fetchResults: true,
@@ -351,12 +361,8 @@ final issueDetailsProvider = StreamProvider.autoDispose
         ),
         (parsed) {
           final node = parsed?.node;
-          if (node is! Query$IssueDetail$node$$Issue) {
-            return const IssueDetails(
-              description: null,
-              url: null,
-              comments: [],
-            );
+          if (node is! Query$IssueComments$node$$Issue) {
+            return const <IssueComment>[];
           }
 
           final commentNodes = node.comments.nodes ?? const [];
@@ -379,12 +385,7 @@ final issueDetailsProvider = StreamProvider.autoDispose
             return a.id.compareTo(b.id);
           });
 
-          final description = node.bodyText.trim();
-          return IssueDetails(
-            description: description.isEmpty ? null : description,
-            url: node.url,
-            comments: comments,
-          );
+          return comments;
         },
       );
     });

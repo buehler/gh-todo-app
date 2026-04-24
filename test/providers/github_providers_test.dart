@@ -138,6 +138,30 @@ void main() {
     );
     expect(feed.open.where((issue) => issue.title == 'Closed stale'), isEmpty);
   });
+
+  test('issue comments provider maps comments oldest first', () async {
+    final harness = await createTestContainer(
+      tokenSeed: {GithubTokenStorageService.tokenStorageKey: 'ghp_seed'},
+      graphqlTransportLink: _IssueCommentsLink(),
+    );
+    addTearDown(harness.container.dispose);
+
+    await harness.container.read(sessionProvider.future);
+
+    final sub = harness.container.listen(
+      issueCommentsProvider('issue-1'),
+      (_, _) {},
+    );
+    addTearDown(sub.close);
+    final comments = await harness.container.read(
+      issueCommentsProvider('issue-1').future,
+    );
+
+    expect(comments.map((comment) => comment.id), ['c-1', 'c-2', 'c-3']);
+    expect(comments[0].authorLogin, 'alpha');
+    expect(comments[1].authorLogin, isNull);
+    expect(comments[2].body, 'Same timestamp, later id');
+  });
 }
 
 const _accountA = FakeGithubGraphqlAccount(
@@ -229,6 +253,21 @@ class _PagedProjectItemsLink extends Link {
     };
 
     yield Response(data: payload, response: payload);
+  }
+}
+
+class _IssueCommentsLink extends Link {
+  @override
+  Stream<Response> request(Request request, [NextLink? forward]) async* {
+    final operationName = _operationName(request);
+    if (operationName != 'IssueComments') {
+      throw StateError('Unexpected operation: $operationName');
+    }
+
+    yield Response(
+      data: _issueCommentsPayload(),
+      response: _issueCommentsPayload(),
+    );
   }
 }
 
@@ -371,8 +410,10 @@ Map<String, Object?> _projectIssue({
     },
     'content': {
       'id': issueId,
+      'url': 'https://github.com/acme/repo/issues/$number',
       'number': number,
       'title': title,
+      'bodyText': 'Issue body for $title',
       'createdAt': '2026-04-18T09:00:00Z',
       'updatedAt': updatedAt,
       'state': state,
@@ -381,6 +422,57 @@ Map<String, Object?> _projectIssue({
       '__typename': 'Issue',
     },
     '__typename': 'ProjectV2Item',
+  };
+}
+
+Map<String, Object?> _issueCommentsPayload() {
+  return {
+    'node': {
+      'id': 'issue-1',
+      'comments': {
+        'nodes': [
+          _comment(
+            id: 'c-3',
+            authorLogin: 'bravo',
+            body: 'Same timestamp, later id',
+            createdAt: '2026-04-13T11:00:00Z',
+          ),
+          _comment(
+            id: 'c-1',
+            authorLogin: 'alpha',
+            body: 'First comment',
+            createdAt: '2026-04-13T10:00:00Z',
+          ),
+          _comment(
+            id: 'c-2',
+            authorLogin: null,
+            body: 'Same timestamp, earlier id',
+            createdAt: '2026-04-13T11:00:00Z',
+          ),
+        ],
+        '__typename': 'IssueCommentConnection',
+      },
+      '__typename': 'Issue',
+    },
+    'rateLimit': _rateLimit(),
+    '__typename': 'Query',
+  };
+}
+
+Map<String, Object?> _comment({
+  required String id,
+  required String? authorLogin,
+  required String body,
+  required String createdAt,
+}) {
+  return {
+    'id': id,
+    'createdAt': createdAt,
+    'author': authorLogin == null
+        ? null
+        : {'login': authorLogin, '__typename': 'User'},
+    'bodyText': body,
+    '__typename': 'IssueComment',
   };
 }
 

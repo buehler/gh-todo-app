@@ -14,8 +14,10 @@ mutation CreateIssue(
   ) {
     issue {
       id
+      url
       number
       title
+      bodyText
       createdAt
       updatedAt
     }

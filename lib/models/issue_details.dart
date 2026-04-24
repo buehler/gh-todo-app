@@ -13,9 +13,7 @@ abstract class IssueComment with _$IssueComment {
   }) = _IssueComment;
 }
 
-/// The deferred-loaded portion of an issue: its description, canonical URL,
-/// and comment thread. Fetched by the detail page; kept separate from
-/// [IssueData] so the feed query doesn't have to over-fetch.
+/// The issue detail fields carried by the project issue snapshot.
 @freezed
 abstract class IssueDetails with _$IssueDetails {
   const factory IssueDetails({
@@ -25,6 +23,5 @@ abstract class IssueDetails with _$IssueDetails {
     /// resolves to something other than an Issue (shouldn't happen under
     /// normal flows).
     required String? url,
-    required List<IssueComment> comments,
   }) = _IssueDetails;
 }

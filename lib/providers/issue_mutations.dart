@@ -150,10 +150,9 @@ class _RealIssueMutations implements IssueMutations {
     final isOffline = _ref.read(offlineStatusProvider).asData?.value ?? false;
     if (isOffline) {
       unawaited(
-        _ref.read(appLoggerProvider).warn(
-          'Blocked write while offline.',
-          category: 'issues',
-        ),
+        _ref
+            .read(appLoggerProvider)
+            .warn('Blocked write while offline.', category: 'issues'),
       );
       throw const OfflineWriteBlockedException();
     }
@@ -166,22 +165,23 @@ class _RealIssueMutations implements IssueMutations {
   T _unwrap<T>(QueryResult<T> result) {
     if (result.hasException) {
       unawaited(
-        _ref.read(appLoggerProvider).error(
-          'GraphQL mutation failed.',
-          category: 'issues',
-          error: result.exception,
-          stackTrace: result.exception?.originalStackTrace,
-        ),
+        _ref
+            .read(appLoggerProvider)
+            .error(
+              'GraphQL mutation failed.',
+              category: 'issues',
+              error: result.exception,
+              stackTrace: result.exception?.originalStackTrace,
+            ),
       );
       throw result.exception!;
     }
     final data = result.parsedData;
     if (data == null) {
       unawaited(
-        _ref.read(appLoggerProvider).error(
-          'GraphQL mutation returned no data.',
-          category: 'issues',
-        ),
+        _ref
+            .read(appLoggerProvider)
+            .error('GraphQL mutation returned no data.', category: 'issues'),
       );
       throw Exception('Mutation returned no data');
     }
@@ -203,7 +203,7 @@ class _RealIssueMutations implements IssueMutations {
       ),
     );
     _unwrap(result);
-    _ref.invalidate(issueDetailsProvider(issueId));
+    _ref.invalidate(issueCommentsProvider(issueId));
   }
 
   @override
@@ -222,7 +222,7 @@ class _RealIssueMutations implements IssueMutations {
       ),
     );
     _unwrap(result);
-    _ref.invalidate(issueDetailsProvider(issueId));
+    _ref.invalidate(issueCommentsProvider(issueId));
   }
 
   @override
@@ -230,10 +230,9 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
-    await _ref.read(appLoggerProvider).info(
-      'Closing issue $issueId.',
-      category: 'issues',
-    );
+    await _ref
+        .read(appLoggerProvider)
+        .info('Closing issue $issueId.', category: 'issues');
     _ensureOnline();
     final result = await _client.mutate$CloseIssue(
       Options$Mutation$CloseIssue(
@@ -273,10 +272,9 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
-    await _ref.read(appLoggerProvider).info(
-      'Reopening issue $issueId.',
-      category: 'issues',
-    );
+    await _ref
+        .read(appLoggerProvider)
+        .info('Reopening issue $issueId.', category: 'issues');
     _ensureOnline();
     final result = await _client.mutate$ReopenIssue(
       Options$Mutation$ReopenIssue(
@@ -317,7 +315,6 @@ class _RealIssueMutations implements IssueMutations {
     );
     final data = _unwrap(result);
     final issue = data.updateIssue?.issue;
-    _ref.invalidate(issueDetailsProvider(issueId));
     _ref.invalidate(projectIssuesProvider(projectId));
     if (issue == null) {
       return UpdateIssueCoreResult(
@@ -403,10 +400,9 @@ class _RealIssueMutations implements IssueMutations {
     required String title,
     String? body,
   }) async {
-    await _ref.read(appLoggerProvider).info(
-      'Creating issue in project $projectId.',
-      category: 'issues',
-    );
+    await _ref
+        .read(appLoggerProvider)
+        .info('Creating issue in project $projectId.', category: 'issues');
     _ensureOnline();
     // Step 1: resolve the target repository. Projects V2 don't have a
     // "default repo" concept, so we pick the first linked repository
@@ -419,13 +415,11 @@ class _RealIssueMutations implements IssueMutations {
     );
     final repoData = _unwrap(repoResult);
     final node = repoData.node;
-    final repositoryId =
-        (node is Query$ProjectFirstRepository$node$$ProjectV2)
-            ? node.repositories.nodes?.firstWhere(
-                  (n) => n != null,
-                  orElse: () => null,
-                )?.id
-            : null;
+    final repositoryId = (node is Query$ProjectFirstRepository$node$$ProjectV2)
+        ? node.repositories.nodes
+              ?.firstWhere((n) => n != null, orElse: () => null)
+              ?.id
+        : null;
     if (repositoryId == null) {
       throw NoLinkedRepositoryException(projectId);
     }
@@ -467,6 +461,8 @@ class _RealIssueMutations implements IssueMutations {
       id: issue.id,
       number: issue.number,
       title: issue.title,
+      url: issue.url,
+      description: _nullableTrimmed(issue.bodyText),
       commentCount: 0,
       createdAt: issue.createdAt,
       updatedAt: issue.updatedAt,
@@ -476,10 +472,13 @@ class _RealIssueMutations implements IssueMutations {
     );
 
     // Splice the new issue into the cached feed so it appears instantly.
-    _ref
-        .read(projectIssuesProvider(projectId).notifier)
-        .applyCreate(newIssue);
+    _ref.read(projectIssuesProvider(projectId).notifier).applyCreate(newIssue);
 
     return newIssue;
   }
+}
+
+String? _nullableTrimmed(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
 }

@@ -11,7 +11,6 @@ import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
-import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
@@ -36,6 +35,8 @@ const _testIssues = [
     id: 'issue-1',
     number: 42,
     title: 'Fix login flow',
+    url: 'https://github.com/acme/repo/issues/42',
+    description: 'Fix the login edge cases.',
     commentCount: 3,
     createdAt: '2025-04-01T10:00:00Z',
     updatedAt: '2025-04-02T10:00:00Z',
@@ -347,15 +348,9 @@ void main() {
                   ),
                 ),
                 userInfoProvider.overrideWith((_) => Future.value(_viewer)),
-                issueDetailsProvider('issue-1').overrideWith(
-                  (ref) => Stream.value(
-                    const IssueDetails(
-                      description: 'Fix the login edge cases.',
-                      url: 'https://github.com/acme/repo/issues/42',
-                      comments: [],
-                    ),
-                  ),
-                ),
+                issueCommentsProvider(
+                  'issue-1',
+                ).overrideWith((ref) => Stream.value(const [])),
                 issueMutationsProvider.overrideWithValue(FakeIssueMutations()),
               ],
               child: const GhTodosApp(),

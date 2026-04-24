@@ -38,8 +38,9 @@ import 'package:url_launcher/url_launcher.dart';
 /// Page-local mutable state: the header reads from the route-extra
 /// [IssueData] which we copy into `_issue` and patch after each successful
 /// mutation (close/reopen, title/body edits, priority/due-date changes).
-/// Description + comments continue to flow through `issueDetailsProvider`,
-/// which the mutation layer invalidates on success.
+/// Description comes from the route-extra [IssueData]; comments are fetched
+/// separately by `issueCommentsProvider`, which the mutation layer invalidates
+/// on comment writes.
 class IssueDetailPage extends ConsumerStatefulWidget {
   static const pageKey = ValueKey('issue-detail-page');
   static const scrollKey = ValueKey('issue-detail-scroll');
@@ -81,7 +82,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     try {
       await mutations.postComment(issueId: _issueId, body: body);
       try {
-        await ref.read(issueDetailsProvider(_issueId).future);
+        await ref.read(issueCommentsProvider(_issueId).future);
       } catch (_) {
         // The mutation already succeeded. A refresh failure should not keep
         // the submitted draft in the composer.
@@ -184,8 +185,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     // details haven't resolved yet, fall back to empty and let the sheet
     // still open — saving without touching the body won't dispatch the
     // updateIssue mutation (bodyChanged would be false).
-    final detailsAsync = ref.read(issueDetailsProvider(_issueId));
-    final initialBody = detailsAsync.asData?.value.description ?? '';
+    final initialBody = _issue.description ?? '';
 
     final project = _resolveProject();
 
@@ -221,9 +221,14 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
           // Freezed's copyWith treats omitted args as "unchanged"; we only
           // pass `title` through when it actually changed so we never try to
           // set the non-nullable field to null.
-          _issue = result.titleChanged
-              ? _issue.copyWith(title: updated.title, updatedAt: nextUpdatedAt)
-              : _issue.copyWith(updatedAt: nextUpdatedAt);
+          final nextDescription = result.bodyChanged
+              ? _nullableTrimmed(updated.bodyText)
+              : _issue.description;
+          _issue = _issue.copyWith(
+            title: result.titleChanged ? updated.title : _issue.title,
+            description: nextDescription,
+            updatedAt: nextUpdatedAt,
+          );
         });
       }
 
@@ -330,6 +335,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
 
     final viewerLogin = ref.watch(userInfoProvider).asData?.value?.login;
     final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
+    final details = ref.watch(issueDetailsProvider(_issue));
 
     // In embedded mode the outer AppTopBar already fills the top-edge space
     // (and is rendered *above* the pane in the shell's Stack, so we can't put
@@ -371,7 +377,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
                     ? null
                     : () => unawaited(_toggleIssueState()),
               ),
-              IssueDescriptionSection(issueId: _issueId),
+              IssueDescriptionSection(details: details),
               IssueConversationSection(
                 issueId: _issueId,
                 commentCount: _issue.commentCount,
@@ -461,24 +467,20 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
 
   /// Launches the issue's canonical GitHub URL in the system browser.
   ///
-  /// The URL is fetched lazily via `issueDetailsProvider`; if it hasn't
-  /// resolved yet (menu tapped before the detail payload lands), await the
-  /// future so the action doesn't silently no-op. Failures are swallowed — the
-  /// user can always retry.
+  /// Opens the canonical GitHub URL carried by the issue snapshot.
   Future<void> _openInBrowser() async {
-    final String? url;
-    try {
-      final details = await ref.read(issueDetailsProvider(_issueId).future);
-      url = details.url;
-    } catch (_) {
-      return;
-    }
+    final url = _issue.url;
     if (url == null || url.isEmpty) return;
 
     final uri = Uri.tryParse(url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
+}
+
+String? _nullableTrimmed(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
 }
 
 class _StickyCommentComposer extends StatelessWidget {

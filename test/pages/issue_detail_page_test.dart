@@ -50,6 +50,8 @@ const _openIssue = IssueData(
   id: _issueId,
   number: 42,
   title: 'Refactor auth',
+  url: 'https://github.com/acme/repo/issues/42',
+  description: 'Original description.',
   commentCount: 2,
   createdAt: '2026-04-10T10:00:00Z',
   updatedAt: '2026-04-14T10:00:00Z',
@@ -61,6 +63,8 @@ const _closedIssue = IssueData(
   id: _issueId,
   number: 42,
   title: 'Refactor auth',
+  url: 'https://github.com/acme/repo/issues/42',
+  description: 'Original description.',
   commentCount: 2,
   createdAt: '2026-04-10T10:00:00Z',
   updatedAt: '2026-04-14T10:00:00Z',
@@ -98,7 +102,7 @@ Future<({FakeIssueMutations mutations})> _pump(
   required IssueData issue,
   List<IssueComment> comments = const [],
   Project project = _mappedProject,
-  Stream<IssueDetails>? detailsStream,
+  Stream<List<IssueComment>>? commentsStream,
   FakeIssueMutations? mutations,
   Size surfaceSize = const Size(800, 1400),
 }) async {
@@ -110,15 +114,7 @@ Future<({FakeIssueMutations mutations})> _pump(
   );
   final fakeMutations = mutations ?? FakeIssueMutations();
   final sessionPrefs = FakeSessionPrefsService(selectedProjectId: _projectId);
-  final stream =
-      detailsStream ??
-      Stream.value(
-        IssueDetails(
-          description: 'Original description.',
-          url: 'https://github.com/acme/repo/issues/42',
-          comments: comments,
-        ),
-      );
+  final stream = commentsStream ?? Stream.value(comments);
 
   await tester.pumpWidget(
     ProviderScope(
@@ -131,7 +127,7 @@ Future<({FakeIssueMutations mutations})> _pump(
         sessionPrefsProvider.overrideWithValue(sessionPrefs),
         projectListProvider.overrideWith(() => _FakeProjectList([project])),
         userInfoProvider.overrideWith((_) => Future.value(_viewer)),
-        issueDetailsProvider(_issueId).overrideWith((ref) => stream),
+        issueCommentsProvider(_issueId).overrideWith((ref) => stream),
         issueMutationsProvider.overrideWithValue(fakeMutations),
       ],
       child: octanePrime(
@@ -275,7 +271,7 @@ void main() {
   testWidgets('posting a comment scrolls the transcript to the bottom', (
     tester,
   ) async {
-    final controller = StreamController<IssueDetails>();
+    final controller = StreamController<List<IssueComment>>();
     addTearDown(controller.close);
     final comments = _longCommentThread();
     const newComment = '''
@@ -288,35 +284,23 @@ Line six
 Line seven''';
     final mutations = _RefreshingIssueMutations(
       onPost: () {
-        controller.add(
-          IssueDetails(
-            description: 'Original description.',
-            url: 'https://github.com/acme/repo/issues/42',
-            comments: [
-              ...comments,
-              IssueComment(
-                id: 'c-new',
-                authorLogin: 'me',
-                body: newComment,
-                createdAt: '2026-04-13T12:30:00Z',
-              ),
-            ],
+        controller.add([
+          ...comments,
+          IssueComment(
+            id: 'c-new',
+            authorLogin: 'me',
+            body: newComment,
+            createdAt: '2026-04-13T12:30:00Z',
           ),
-        );
+        ]);
       },
     );
-    controller.add(
-      IssueDetails(
-        description: 'Original description.',
-        url: 'https://github.com/acme/repo/issues/42',
-        comments: comments,
-      ),
-    );
+    controller.add(comments);
 
     await _pump(
       tester,
       issue: _openIssue,
-      detailsStream: controller.stream,
+      commentsStream: controller.stream,
       mutations: mutations,
       surfaceSize: const Size(390, 640),
     );

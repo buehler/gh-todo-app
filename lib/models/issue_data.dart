@@ -16,6 +16,8 @@ abstract class IssueData with _$IssueData {
     required String id,
     required int number,
     required String title,
+    String? url,
+    String? description,
     required int commentCount,
     required String createdAt,
     required String updatedAt,

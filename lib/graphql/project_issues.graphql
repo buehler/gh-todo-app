@@ -50,8 +50,10 @@ fragment ProjectItemFields on ProjectV2Item {
     __typename
     ... on Issue {
       id
+      url
       number
       title
+      bodyText
       createdAt
       updatedAt
       state

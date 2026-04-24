@@ -210,8 +210,10 @@ Map<String, Object?> _projectItem() {
     },
     'content': {
       'id': 'issue-1',
+      'url': 'https://github.com/acme/repo/issues/7',
       'number': 7,
       'title': 'Log GraphQL operations',
+      'bodyText': 'Inspect GraphQL logs.',
       'createdAt': '2026-04-18T09:00:00Z',
       'updatedAt': '2026-04-18T09:00:00Z',
       'state': 'OPEN',
