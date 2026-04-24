@@ -232,13 +232,7 @@ class _CommentCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          SelectableText(
-            comment.body,
-            style: resolveTextStyle(
-              context,
-              TextTokens.body.$medium,
-            ).copyWith(color: onSurfaceVariant, height: 1.5),
-          ),
+          GithubHtmlBody(html: comment.bodyHtml),
         ],
       ),
     );

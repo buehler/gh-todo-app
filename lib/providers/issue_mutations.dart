@@ -125,12 +125,14 @@ class ReopenIssueResult {
 
 class UpdateIssueCoreResult {
   final String title;
-  final String bodyText;
+  final String body;
+  final String bodyHtml;
   final String updatedAt;
 
   const UpdateIssueCoreResult({
     required this.title,
-    required this.bodyText,
+    required this.body,
+    required this.bodyHtml,
     required this.updatedAt,
   });
 }
@@ -319,13 +321,15 @@ class _RealIssueMutations implements IssueMutations {
     if (issue == null) {
       return UpdateIssueCoreResult(
         title: title ?? '',
-        bodyText: body ?? '',
+        body: body ?? '',
+        bodyHtml: '',
         updatedAt: '',
       );
     }
     return UpdateIssueCoreResult(
       title: issue.title,
-      bodyText: issue.bodyText,
+      body: issue.body,
+      bodyHtml: issue.bodyHTML,
       updatedAt: issue.updatedAt,
     );
   }
@@ -462,7 +466,8 @@ class _RealIssueMutations implements IssueMutations {
       number: issue.number,
       title: issue.title,
       url: issue.url,
-      description: _nullableTrimmed(issue.bodyText),
+      body: _nullableTrimmed(issue.body),
+      bodyHtml: _nullableTrimmed(issue.bodyHTML),
       commentCount: 0,
       createdAt: issue.createdAt,
       updatedAt: issue.updatedAt,

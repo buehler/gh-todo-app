@@ -17,7 +17,8 @@ mutation CreateIssue(
       url
       number
       title
-      bodyText
+      body
+      bodyHTML
       createdAt
       updatedAt
     }

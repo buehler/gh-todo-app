@@ -9,6 +9,7 @@ abstract class IssueComment with _$IssueComment {
     required String id,
     required String? authorLogin,
     required String body,
+    required String bodyHtml,
     required String createdAt,
   }) = _IssueComment;
 }
@@ -17,7 +18,8 @@ abstract class IssueComment with _$IssueComment {
 @freezed
 abstract class IssueDetails with _$IssueDetails {
   const factory IssueDetails({
-    required String? description,
+    required String? body,
+    required String? bodyHtml,
 
     /// Canonical HTML URL of the issue on github.com. Null if the node
     /// resolves to something other than an Issue (shouldn't happen under

@@ -29,7 +29,8 @@ class FakeIssueMutations implements IssueMutations {
 
   UpdateIssueCoreResult updateIssueResult = const UpdateIssueCoreResult(
     title: '',
-    bodyText: '',
+    body: '',
+    bodyHtml: '',
     updatedAt: '2026-04-15T12:00:00Z',
   );
 
@@ -98,7 +99,8 @@ class FakeIssueMutations implements IssueMutations {
     _maybeThrow();
     return UpdateIssueCoreResult(
       title: title ?? updateIssueResult.title,
-      bodyText: body ?? updateIssueResult.bodyText,
+      body: body ?? updateIssueResult.body,
+      bodyHtml: body != null ? '<p>$body</p>' : updateIssueResult.bodyHtml,
       updatedAt: updateIssueResult.updatedAt,
     );
   }
@@ -177,11 +179,7 @@ class FakeIssueMutations implements IssueMutations {
     String? body,
   }) async {
     calls.add(
-      CreateIssueInProjectCall(
-        projectId: projectId,
-        title: title,
-        body: body,
-      ),
+      CreateIssueInProjectCall(projectId: projectId, title: title, body: body),
     );
     if (throwNoLinkedRepo) {
       throwNoLinkedRepo = false;

@@ -413,7 +413,8 @@ Map<String, Object?> _projectIssue({
       'url': 'https://github.com/acme/repo/issues/$number',
       'number': number,
       'title': title,
-      'bodyText': 'Issue body for $title',
+      'body': 'Issue body for $title',
+      'bodyHTML': '<p>Issue body for $title</p>',
       'createdAt': '2026-04-18T09:00:00Z',
       'updatedAt': updatedAt,
       'state': state,
@@ -471,7 +472,8 @@ Map<String, Object?> _comment({
     'author': authorLogin == null
         ? null
         : {'login': authorLogin, '__typename': 'User'},
-    'bodyText': body,
+    'body': body,
+    'bodyHTML': '<p>$body</p>',
     '__typename': 'IssueComment',
   };
 }

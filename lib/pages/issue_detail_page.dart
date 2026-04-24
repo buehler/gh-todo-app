@@ -185,7 +185,7 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
     // details haven't resolved yet, fall back to empty and let the sheet
     // still open — saving without touching the body won't dispatch the
     // updateIssue mutation (bodyChanged would be false).
-    final initialBody = _issue.description ?? '';
+    final initialBody = _issue.body ?? '';
 
     final project = _resolveProject();
 
@@ -221,12 +221,16 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
           // Freezed's copyWith treats omitted args as "unchanged"; we only
           // pass `title` through when it actually changed so we never try to
           // set the non-nullable field to null.
-          final nextDescription = result.bodyChanged
-              ? _nullableTrimmed(updated.bodyText)
-              : _issue.description;
+          final nextBody = result.bodyChanged
+              ? _nullableTrimmed(updated.body)
+              : _issue.body;
+          final nextBodyHtml = result.bodyChanged
+              ? _nullableTrimmed(updated.bodyHtml)
+              : _issue.bodyHtml;
           _issue = _issue.copyWith(
             title: result.titleChanged ? updated.title : _issue.title,
-            description: nextDescription,
+            body: nextBody,
+            bodyHtml: nextBodyHtml,
             updatedAt: nextUpdatedAt,
           );
         });

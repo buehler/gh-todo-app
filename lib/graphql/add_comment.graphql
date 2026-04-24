@@ -4,7 +4,8 @@ mutation AddIssueComment($issueId: ID!, $body: String!) {
       node {
         id
         createdAt
-        bodyText
+        body
+        bodyHTML
         author {
           login
         }

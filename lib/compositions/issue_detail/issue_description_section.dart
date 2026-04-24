@@ -7,7 +7,7 @@ import 'package:gh_todos/style/typography.dart';
 import 'package:mix/mix.dart';
 
 /// "Description" section — section heading + a card containing the issue's
-/// `bodyText` as selectable plain text.
+/// GitHub-rendered HTML body.
 ///
 /// Reads the local issue detail snapshot. Comments load separately.
 class IssueDescriptionSection extends StatelessWidget {
@@ -20,10 +20,6 @@ class IssueDescriptionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onSurface = resolveColor(context, ColorTokens.surface.on);
-    final onSurfaceVariant = resolveColor(
-      context,
-      ColorTokens.surface.onVariant,
-    );
 
     return ColumnBox(
       key: pageKey,
@@ -44,27 +40,9 @@ class IssueDescriptionSection extends StatelessWidget {
         EditorialCard(
           variation: CardVariation.recessed,
           padding: const EdgeInsets.all(20),
-          child: Builder(
-            builder: (context) {
-              final body = details.description;
-              if (body == null) {
-                return StyledText(
-                  'No description provided.',
-                  style: editorialTextStyle(
-                    TextTokens.body.$medium,
-                    color: withOpacity(onSurfaceVariant, 0.7),
-                    fontWeight: FontWeight.w500,
-                  ),
-                );
-              }
-              return SelectableText(
-                body,
-                style: resolveTextStyle(
-                  context,
-                  TextTokens.body.$medium,
-                ).copyWith(color: onSurfaceVariant, height: 1.5),
-              );
-            },
+          child: GithubHtmlBody(
+            html: details.bodyHtml,
+            emptyText: 'No description provided.',
           ),
         ),
       ],

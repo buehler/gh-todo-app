@@ -3,7 +3,8 @@ mutation UpdateIssueCore($issueId: ID!, $title: String, $body: String) {
     issue {
       id
       title
-      bodyText
+      body
+      bodyHTML
       updatedAt
     }
   }

@@ -258,7 +258,8 @@ IssueData? _issueFromItem(
     number: content.number,
     title: content.title,
     url: content.url,
-    description: _nullableTrimmed(content.bodyText),
+    body: _nullableTrimmed(content.body),
+    bodyHtml: _nullableTrimmed(content.bodyHTML),
     commentCount: content.comments.totalCount,
     createdAt: content.createdAt,
     updatedAt: content.updatedAt,
@@ -339,7 +340,8 @@ String? _nullableTrimmed(String value) {
 }
 
 final issueDetailsProvider = Provider.family<IssueDetails, IssueData>(
-  (ref, issue) => IssueDetails(description: issue.description, url: issue.url),
+  (ref, issue) =>
+      IssueDetails(body: issue.body, bodyHtml: issue.bodyHtml, url: issue.url),
 );
 
 /// Fetches the comment thread for a single issue by its node id.
@@ -373,7 +375,8 @@ final issueCommentsProvider = StreamProvider.autoDispose
               IssueComment(
                 id: c.id,
                 authorLogin: c.author?.login,
-                body: c.bodyText,
+                body: c.body,
+                bodyHtml: c.bodyHTML,
                 createdAt: c.createdAt,
               ),
             );

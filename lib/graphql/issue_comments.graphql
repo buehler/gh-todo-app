@@ -9,7 +9,8 @@ query IssueComments($id: ID!) {
           author {
             login
           }
-          bodyText
+          body
+          bodyHTML
         }
       }
     }

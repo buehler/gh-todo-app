@@ -51,7 +51,8 @@ const _openIssue = IssueData(
   number: 42,
   title: 'Refactor auth',
   url: 'https://github.com/acme/repo/issues/42',
-  description: 'Original description.',
+  body: '**Original** description.',
+  bodyHtml: '<p><strong>Original</strong> description.</p>',
   commentCount: 2,
   createdAt: '2026-04-10T10:00:00Z',
   updatedAt: '2026-04-14T10:00:00Z',
@@ -64,7 +65,8 @@ const _closedIssue = IssueData(
   number: 42,
   title: 'Refactor auth',
   url: 'https://github.com/acme/repo/issues/42',
-  description: 'Original description.',
+  body: '**Original** description.',
+  bodyHtml: '<p><strong>Original</strong> description.</p>',
   commentCount: 2,
   createdAt: '2026-04-10T10:00:00Z',
   updatedAt: '2026-04-14T10:00:00Z',
@@ -77,7 +79,8 @@ const _closedIssue = IssueData(
 final _ownComment = IssueComment(
   id: 'c-own',
   authorLogin: 'me',
-  body: 'My original comment.',
+  body: '**My** original comment.',
+  bodyHtml: '<p><strong>My</strong> original comment.</p>',
   createdAt: '2026-04-13T10:00:00Z',
 );
 
@@ -85,6 +88,7 @@ final _otherComment = IssueComment(
   id: 'c-other',
   authorLogin: 'someone-else',
   body: "Someone else's comment.",
+  bodyHtml: "<p>Someone else's comment.</p>",
   createdAt: '2026-04-13T11:00:00Z',
 );
 
@@ -290,6 +294,7 @@ Line seven''';
             id: 'c-new',
             authorLogin: 'me',
             body: newComment,
+            bodyHtml: '<p>$newComment</p>',
             createdAt: '2026-04-13T12:30:00Z',
           ),
         ]);
@@ -323,8 +328,9 @@ Line seven''';
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    expect(find.text(newComment), findsOneWidget);
-    final postedCommentRect = tester.getRect(find.text(newComment));
+    final postedComment = find.textContaining('Line one');
+    expect(postedComment, findsOneWidget);
+    final postedCommentRect = tester.getRect(postedComment);
     final composerRect = tester.getRect(find.byKey(AddCommentComposer.pageKey));
     expect(postedCommentRect.bottom, lessThanOrEqualTo(composerRect.top));
     expect(scrollController.offset, scrollController.position.maxScrollExtent);
@@ -346,6 +352,34 @@ Line seven''';
     expect(find.text('someone-else'), findsOneWidget);
   });
 
+  testWidgets('renders issue description and comments from html', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      issue: _openIssue,
+      comments: [_ownComment, _otherComment],
+    );
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Original'), findsOneWidget);
+    expect(find.textContaining('description.'), findsOneWidget);
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('original comment.'), findsOneWidget);
+    expect(find.textContaining("Someone else's comment."), findsOneWidget);
+  });
+
+  testWidgets('renders empty description state', (tester) async {
+    await _pump(tester, issue: _openIssue.copyWith(body: null, bodyHtml: null));
+
+    expect(find.text('No description provided.'), findsOneWidget);
+  });
+
   testWidgets('tapping own comment opens the edit sheet with body prefilled', (
     tester,
   ) async {
@@ -357,7 +391,8 @@ Line seven''';
     // Sheet is open: header visible. Comment body appears both in the
     // source card and in the sheet's editable field, hence >=1.
     expect(find.text('Edit Comment'), findsOneWidget);
-    expect(find.text('My original comment.'), findsAtLeastNWidgets(1));
+    final field = tester.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller?.text, '**My** original comment.');
   });
 
   testWidgets('close issue flips the button to secondary "Re-open"', (
@@ -405,7 +440,7 @@ Line seven''';
     expect(find.text('Close Issue'), findsOneWidget);
   });
 
-  testWidgets('edit issue menu opens the sheet with prefilled title', (
+  testWidgets('edit issue menu opens the sheet with markdown body prefilled', (
     tester,
   ) async {
     await _pump(tester, issue: _openIssue);
@@ -421,6 +456,13 @@ Line seven''';
     expect(find.text('#42'), findsOneWidget);
     // The title field is pre-filled.
     expect(find.text('Refactor auth'), findsOneWidget);
+    final fields = tester.widgetList<TextField>(find.byType(TextField));
+    expect(
+      fields.any(
+        (field) => field.controller?.text == '**Original** description.',
+      ),
+      isTrue,
+    );
   });
 }
 
@@ -448,6 +490,8 @@ List<IssueComment> _longCommentThread() {
         authorLogin: i.isEven ? 'me' : 'someone-else',
         body:
             'Comment $i with enough text to build a useful transcript for scrolling.',
+        bodyHtml:
+            '<p>Comment $i with enough text to build a useful transcript for scrolling.</p>',
         createdAt: '2026-04-13T10:${i.toString().padLeft(2, '0')}:00Z',
       ),
   ];
