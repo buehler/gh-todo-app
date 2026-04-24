@@ -8,13 +8,27 @@ import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
-class ApplicationLogsPage extends ConsumerWidget {
+class ApplicationLogsPage extends ConsumerStatefulWidget {
   static const pageKey = ValueKey('application-logs-page');
 
   const ApplicationLogsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ApplicationLogsPage> createState() =>
+      _ApplicationLogsPageState();
+}
+
+class _ApplicationLogsPageState extends ConsumerState<ApplicationLogsPage> {
+  final ScrollController _verticalController = ScrollController();
+
+  @override
+  void dispose() {
+    _verticalController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final background = resolveColor(context, ColorTokens.background.$default);
     final onSurface = resolveColor(context, ColorTokens.surface.on);
     final onSurfaceVariant = resolveColor(
@@ -86,9 +100,13 @@ class ApplicationLogsPage extends ConsumerWidget {
                       }
 
                       return Scrollbar(
+                        controller: _verticalController,
                         child: SingleChildScrollView(
+                          primary: false,
                           scrollDirection: Axis.horizontal,
                           child: SingleChildScrollView(
+                            controller: _verticalController,
+                            primary: false,
                             child: SelectableText(
                               lines.join('\n'),
                               key: ApplicationLogsPage.pageKey,

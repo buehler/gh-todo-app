@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/models/authenticated_user_snapshot.dart';
 import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
+import 'package:gh_todos/style/themes.dart';
 
 import '../support/fakes.dart';
 
@@ -85,6 +88,41 @@ void main() {
 
     expect(find.byKey(ApplicationLogsPage.pageKey), findsOneWidget);
     expect(find.text('Application Logs'), findsOneWidget);
+  });
+
+  testWidgets('application logs can scroll without scrollbar errors', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(500, 500));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final lines = List.generate(
+      200,
+      (index) => '[runtime] log line ${index.toString().padLeft(3, '0')}',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          applicationLogsProvider.overrideWith((_) => Stream.value(lines)),
+        ],
+        child: octanePrime(
+          MaterialApp(
+            theme: ThemeData(useMaterial3: true),
+            home: const ApplicationLogsPage(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(
+      find.byType(SingleChildScrollView).last,
+      const Offset(0, -300),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('successful PAT update does not show the generic error toast', (
