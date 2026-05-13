@@ -14,8 +14,8 @@ import 'package:mix/mix.dart';
 /// "Conversation" section — section header with a count pill and the comment
 /// thread rendered oldest-first (no avatars).
 ///
-/// [onEditComment] is invoked when the viewer taps one of their own
-/// comments (identified by matching login against [viewerLogin]).
+/// [onEditComment] is invoked when the viewer taps the edit button on one of
+/// their own comments (identified by matching login against [viewerLogin]).
 class IssueConversationSection extends ConsumerWidget {
   static const pageKey = ValueKey('issue-conversation-section');
   static const commentListKey = ValueKey('issue-conversation-list');
@@ -193,14 +193,13 @@ class _CommentCard extends StatelessWidget {
       key: ValueKey('issue-comment-${comment.id}'),
       variation: CardVariation.elevated,
       padding: const EdgeInsets.all(16),
-      onTap: canEdit ? () => handler(comment) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
+              Expanded(
                 child: StyledText(
                   comment.authorLogin ?? 'ghost',
                   style: editorialTextStyle(
@@ -212,15 +211,15 @@ class _CommentCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               if (canEdit)
-                Padding(
+                EditorialIconButton(
                   key: const ValueKey('issue-comment-edit-icon'),
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Icon(
-                    LucideIcons.pencil,
-                    size: 14,
-                    color: withOpacity(onSurfaceVariant, 0.6),
-                  ),
+                  icon: LucideIcons.pencil,
+                  onPressed: () => handler(comment),
+                  tooltip: 'Edit comment',
+                  size: 32,
+                  variation: IconButtonVariation.ghost,
                 ),
+              if (canEdit) const SizedBox(width: 6),
               StyledText(
                 formatRelative(comment.createdAt),
                 style: editorialTextStyle(

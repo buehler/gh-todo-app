@@ -380,7 +380,7 @@ Line seven''';
     expect(find.text('No description provided.'), findsOneWidget);
   });
 
-  testWidgets('tapping own comment opens the edit sheet with body prefilled', (
+  testWidgets('tapping own comment body does not open the edit sheet', (
     tester,
   ) async {
     await _pump(tester, issue: _openIssue, comments: [_ownComment]);
@@ -388,12 +388,22 @@ Line seven''';
     await tester.tap(find.byKey(const ValueKey('issue-comment-c-own')));
     await tester.pumpAndSettle();
 
-    // Sheet is open: header visible. Comment body appears both in the
-    // source card and in the sheet's editable field, hence >=1.
-    expect(find.text('Edit Comment'), findsOneWidget);
-    final field = tester.widget<TextField>(find.byType(TextField).last);
-    expect(field.controller?.text, '**My** original comment.');
+    expect(find.text('Edit Comment'), findsNothing);
   });
+
+  testWidgets(
+    'tapping own comment edit button opens sheet with body prefilled',
+    (tester) async {
+      await _pump(tester, issue: _openIssue, comments: [_ownComment]);
+
+      await tester.tap(find.byKey(const ValueKey('issue-comment-edit-icon')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Comment'), findsOneWidget);
+      final field = tester.widget<TextField>(find.byType(TextField).last);
+      expect(field.controller?.text, '**My** original comment.');
+    },
+  );
 
   testWidgets('close issue flips the button to secondary "Re-open"', (
     tester,

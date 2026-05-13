@@ -5,6 +5,8 @@ import 'package:flutter_html_table/flutter_html_table.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:mix/mix.dart' as mix;
 import 'package:url_launcher/url_launcher.dart';
 
 class GithubHtmlBody extends StatelessWidget {
@@ -60,7 +62,40 @@ class GithubHtmlBody extends StatelessWidget {
 
     return Html(
       data: trimmed,
-      extensions: const [TableHtmlExtension(), SvgHtmlExtension()],
+      extensions: [
+        TableHtmlExtension(),
+        SvgHtmlExtension(),
+        MatcherExtension(
+          matcher: (context) {
+            final attributes = context.attributes;
+            return context.elementName == 'input' &&
+                attributes['type']?.toLowerCase() == 'checkbox';
+          },
+          builder: (context) {
+            final checkedValue = context.attributes['checked'];
+            final checked =
+                checkedValue != null &&
+                (checkedValue.isEmpty ||
+                    checkedValue.toLowerCase() == 'checked');
+            return mix.Box(
+              style: mix.BoxStyler()
+                  .size(16, 16)
+                  .borderAll(color: ColorTokens.primary.$default(), width: 1.2)
+                  .borderRadiusAll(Radius.circular(4))
+                  .marginRight(8)
+                  .alignment(AlignmentGeometry.center),
+              child: checked
+                  ? mix.StyledIcon(
+                      icon: LucideIcons.check,
+                      style: mix.IconStyler()
+                          .size(12)
+                          .color(ColorTokens.primary.$default()),
+                    )
+                  : null,
+            );
+          },
+        ),
+      ],
       onLinkTap: (url, _, _) {
         if (url == null || url.isEmpty) return;
         final uri = Uri.tryParse(url);
@@ -113,6 +148,7 @@ class GithubHtmlBody extends StatelessWidget {
         'ul': Style(margin: Margins.only(left: 18, bottom: 12)),
         'ol': Style(margin: Margins.only(left: 18, bottom: 12)),
         'li': Style(margin: Margins.only(bottom: 6)),
+        'input': Style(margin: Margins.only(right: 4)),
         'blockquote': Style(
           backgroundColor: surfaceLow,
           margin: Margins.only(bottom: 12),

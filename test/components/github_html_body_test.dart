@@ -42,6 +42,26 @@ void main() {
     expect(find.text('No description provided.'), findsOneWidget);
   });
 
+  testWidgets('renders GitHub task list checkboxes as disabled checkboxes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      harness('''
+<ul class="contains-task-list">
+  <li class="task-list-item"><input type="checkbox" disabled>Open task</li>
+  <li class="task-list-item"><input type="checkbox" checked disabled>Done task</li>
+</ul>
+'''),
+    );
+
+    final checkboxes = tester.widgetList<Checkbox>(find.byType(Checkbox));
+    expect(checkboxes, hasLength(2));
+    expect(checkboxes.map((checkbox) => checkbox.value), [false, true]);
+    expect(checkboxes.every((checkbox) => checkbox.onChanged == null), isTrue);
+    expect(find.textContaining('Open task'), findsOneWidget);
+    expect(find.textContaining('Done task'), findsOneWidget);
+  });
+
   testWidgets('does not crash on malformed html', (tester) async {
     await tester.pumpWidget(harness('<p>Open <strong>tags'));
 
