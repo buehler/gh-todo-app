@@ -26,8 +26,7 @@ class TodosIssueComposer extends ConsumerStatefulWidget {
   const TodosIssueComposer({super.key});
 
   @override
-  ConsumerState<TodosIssueComposer> createState() =>
-      _TodosIssueComposerState();
+  ConsumerState<TodosIssueComposer> createState() => _TodosIssueComposerState();
 }
 
 class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
@@ -64,14 +63,11 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
 
     setState(() => _submitting = true);
     try {
-      await ref.read(issueMutationsProvider).createIssueInProject(
-            projectId: projectId,
-            title: title,
-          );
+      await ref
+          .read(issueMutationsProvider)
+          .createIssueInProject(projectId: projectId, title: title);
       if (!mounted) return;
       _controller.clear();
-      // Keep focus so the user can chain entries without re-tapping.
-      _focusNode.requestFocus();
     } on NoLinkedRepositoryException {
       if (!mounted) return;
       _showError(
@@ -83,14 +79,22 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
+        _refocusInput();
       }
     }
   }
 
+  void _refocusInput() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _focusNode.requestFocus();
+    });
+  }
+
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -132,6 +136,7 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
                   child: EditorialTextField(
                     key: TodosIssueComposer.inputKey,
                     controller: _controller,
+                    focusNode: _focusNode,
                     hintText: hintText,
                     enabled: enabled,
                     textInputAction: TextInputAction.done,
@@ -199,32 +204,32 @@ class _GradientPlusButton extends StatelessWidget {
 
     final style = enabled
         ? (BoxStyler()
-            .width(44)
-            .height(44)
-            .linearGradient(
-              colors: [primary, primaryContainer],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )
-            .borderRounded(14)
-            .alignment(Alignment.center)
-            .animate(editorialAnimation)
-            .shadow(
-              editorialShadow(
-                color: withOpacity(primary, 0.15),
-                blurRadius: 16,
-                yOffset: 6,
-              ),
-            )
-            .onHovered(BoxStyler().scale(1.04))
-            .onPressed(BoxStyler().scale(0.95)))
+              .width(44)
+              .height(44)
+              .linearGradient(
+                colors: [primary, primaryContainer],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+              .borderRounded(14)
+              .alignment(Alignment.center)
+              .animate(editorialAnimation)
+              .shadow(
+                editorialShadow(
+                  color: withOpacity(primary, 0.15),
+                  blurRadius: 16,
+                  yOffset: 6,
+                ),
+              )
+              .onHovered(BoxStyler().scale(1.04))
+              .onPressed(BoxStyler().scale(0.95)))
         : (BoxStyler()
-            .width(44)
-            .height(44)
-            .color(surfaceHigh)
-            .borderRounded(14)
-            .alignment(Alignment.center)
-            .animate(editorialAnimation));
+              .width(44)
+              .height(44)
+              .color(surfaceHigh)
+              .borderRounded(14)
+              .alignment(Alignment.center)
+              .animate(editorialAnimation));
 
     return PressableBox(
       enabled: enabled,

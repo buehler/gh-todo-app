@@ -155,6 +155,42 @@ void main() {
     expect(find.text('3'), findsOneWidget);
   });
 
+  testWidgets('quick-add enter creates todo, clears, and refocuses', (
+    tester,
+  ) async {
+    final mutations = FakeIssueMutations();
+    await _pumpFeed(
+      tester,
+      projects: _testProjects,
+      open: const [],
+      closed: const [],
+      mutations: mutations,
+    );
+
+    final field = find.byKey(TodosIssueComposer.inputKey);
+    final textField = find.descendant(
+      of: field,
+      matching: find.byType(TextField),
+    );
+    expect(field, findsOneWidget);
+
+    await tester.enterText(textField, 'Fresh keyboard todo');
+    await tester.pump();
+
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(mutations.calls.length, 1);
+    final call = mutations.calls.single;
+    expect(call, isA<CreateIssueInProjectCall>());
+    expect((call as CreateIssueInProjectCall).projectId, 'proj-1');
+    expect(call.title, 'Fresh keyboard todo');
+
+    final input = tester.widget<TextField>(textField);
+    expect(input.controller?.text, isEmpty);
+    expect(input.focusNode?.hasFocus, isTrue);
+  });
+
   testWidgets('groups open todos by due-date bucket and hides empty headers', (
     tester,
   ) async {

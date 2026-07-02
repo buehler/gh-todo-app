@@ -16,6 +16,7 @@ class EditorialTextField extends StatefulWidget {
   final String? helperText;
   final String? errorText;
   final IconData? prefixIcon;
+  final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final TextInputAction? textInputAction;
@@ -24,7 +25,7 @@ class EditorialTextField extends StatefulWidget {
   final bool obscureText;
   final bool enabled;
   final TextFieldVariation variation;
-  final bool submitOnShiftEnter;
+  final bool submitOnModifierEnter;
 
   /// Minimum visible rows. Mirrors `TextField.minLines`.
   final int? minLines;
@@ -41,6 +42,7 @@ class EditorialTextField extends StatefulWidget {
     this.helperText,
     this.errorText,
     this.prefixIcon,
+    this.focusNode,
     this.onChanged,
     this.onSubmitted,
     this.textInputAction,
@@ -49,7 +51,7 @@ class EditorialTextField extends StatefulWidget {
     this.obscureText = false,
     this.enabled = true,
     this.variation = TextFieldVariation.editorial,
-    this.submitOnShiftEnter = false,
+    this.submitOnModifierEnter = false,
     this.minLines,
     this.maxLines = 1,
   });
@@ -59,20 +61,36 @@ class EditorialTextField extends StatefulWidget {
 }
 
 class _EditorialTextFieldState extends State<EditorialTextField> {
-  late final FocusNode _focusNode;
+  late FocusNode _focusNode;
+  late bool _ownsFocusNode;
 
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode()..addListener(_handleFocusChange);
+    _initFocusNode();
+  }
+
+  @override
+  void didUpdateWidget(EditorialTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode == widget.focusNode) return;
+    _focusNode.removeListener(_handleFocusChange);
+    if (_ownsFocusNode) _focusNode.dispose();
+    _initFocusNode();
   }
 
   @override
   void dispose() {
-    _focusNode
-      ..removeListener(_handleFocusChange)
-      ..dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    if (_ownsFocusNode) _focusNode.dispose();
     super.dispose();
+  }
+
+  void _initFocusNode() {
+    final focusNode = widget.focusNode;
+    _ownsFocusNode = focusNode == null;
+    _focusNode = focusNode ?? FocusNode();
+    _focusNode.addListener(_handleFocusChange);
   }
 
   void _handleFocusChange() {
@@ -138,11 +156,15 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
                   ),
                 Expanded(
                   child: CallbackShortcuts(
-                    bindings: widget.submitOnShiftEnter
+                    bindings: widget.submitOnModifierEnter
                         ? {
                             SingleActivator(
                               LogicalKeyboardKey.enter,
-                              shift: true,
+                              control: true,
+                            ): _submitCurrentText,
+                            SingleActivator(
+                              LogicalKeyboardKey.enter,
+                              meta: true,
                             ): _submitCurrentText,
                           }
                         : const {},

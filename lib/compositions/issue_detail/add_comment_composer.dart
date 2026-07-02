@@ -33,6 +33,7 @@ class AddCommentComposer extends StatefulWidget {
 
 class _AddCommentComposerState extends State<AddCommentComposer> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   bool _submitting = false;
 
   bool get _hasText => _controller.text.trim().isNotEmpty;
@@ -41,6 +42,7 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -63,8 +65,18 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
       if (!mounted) return;
       if (ok) _controller.clear();
     } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        setState(() => _submitting = false);
+        _refocusInput();
+      }
     }
+  }
+
+  void _refocusInput() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.enabled) return;
+      _focusNode.requestFocus();
+    });
   }
 
   @override
@@ -76,13 +88,14 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
         EditorialTextField(
           key: AddCommentComposer.fieldKey,
           controller: _controller,
+          focusNode: _focusNode,
           hintText: 'Add a comment…',
           onChanged: _onChanged,
           onSubmitted: (_) => _submit(),
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
           enabled: widget.enabled && !_submitting,
-          submitOnShiftEnter: true,
+          submitOnModifierEnter: true,
           minLines: 3,
           maxLines: 6,
         ),

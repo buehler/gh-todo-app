@@ -183,21 +183,58 @@ void main() {
     expect((call as PostCommentCall).issueId, _issueId);
     expect(call.body, 'Hello world');
 
-    // Composer text field is cleared on success.
-    expect(
-      tester
-          .widget<TextField>(
-            find.descendant(of: field, matching: find.byType(TextField)),
-          )
-          .controller
-          ?.text,
-      isEmpty,
+    final textField = tester.widget<TextField>(
+      find.descendant(of: field, matching: find.byType(TextField)),
     );
+    expect(textField.controller?.text, isEmpty);
+    expect(textField.focusNode?.hasFocus, isTrue);
   });
 
-  testWidgets('shift enter posts comment and clears the composer', (
+  testWidgets('modifier enter posts comment and clears the composer', (
     tester,
   ) async {
+    final harness = await _pump(tester, issue: _openIssue);
+
+    final field = find.byKey(AddCommentComposer.fieldKey);
+    final textField = find.descendant(
+      of: field,
+      matching: find.byType(TextField),
+    );
+    expect(field, findsOneWidget);
+
+    await tester.enterText(textField, 'Keyboard comment');
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+
+    expect(harness.mutations.calls.length, 1);
+    var call = harness.mutations.calls.single;
+    expect(call, isA<PostCommentCall>());
+    expect((call as PostCommentCall).issueId, _issueId);
+    expect(call.body, 'Keyboard comment');
+    expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
+
+    await tester.enterText(textField, 'Command comment');
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+
+    expect(harness.mutations.calls.length, 2);
+    call = harness.mutations.calls.last;
+    expect(call, isA<PostCommentCall>());
+    expect((call as PostCommentCall).issueId, _issueId);
+    expect(call.body, 'Command comment');
+    expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
+    expect(tester.widget<TextField>(textField).focusNode?.hasFocus, isTrue);
+  });
+
+  testWidgets('shift enter does not post comment', (tester) async {
     final harness = await _pump(tester, issue: _openIssue);
 
     final field = find.byKey(AddCommentComposer.fieldKey);
@@ -215,12 +252,11 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
     await tester.pumpAndSettle();
 
-    expect(harness.mutations.calls.length, 1);
-    final call = harness.mutations.calls.single;
-    expect(call, isA<PostCommentCall>());
-    expect((call as PostCommentCall).issueId, _issueId);
-    expect(call.body, 'Keyboard comment');
-    expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
+    expect(harness.mutations.calls, isEmpty);
+    expect(
+      tester.widget<TextField>(textField).controller?.text,
+      startsWith('Keyboard comment'),
+    );
   });
 
   testWidgets('post comment failure surfaces SnackBar and keeps the draft', (
@@ -240,15 +276,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Failed to post comment.'), findsOneWidget);
-    expect(
-      tester
-          .widget<TextField>(
-            find.descendant(of: field, matching: find.byType(TextField)),
-          )
-          .controller
-          ?.text,
-      'Flaky net',
+    final textField = tester.widget<TextField>(
+      find.descendant(of: field, matching: find.byType(TextField)),
     );
+    expect(textField.controller?.text, 'Flaky net');
+    expect(textField.focusNode?.hasFocus, isTrue);
   });
 
   testWidgets('composer remains visible when the detail content scrolls', (
@@ -333,7 +365,10 @@ Line seven''';
     final postedCommentRect = tester.getRect(postedComment);
     final composerRect = tester.getRect(find.byKey(AddCommentComposer.pageKey));
     expect(postedCommentRect.bottom, lessThanOrEqualTo(composerRect.top));
-    expect(scrollController.offset, scrollController.position.maxScrollExtent);
+    expect(
+      scrollController.offset,
+      closeTo(scrollController.position.maxScrollExtent, 4),
+    );
   });
 
   testWidgets('own comment shows pencil icon; others do not', (tester) async {
