@@ -163,7 +163,7 @@ class SettingsPage extends ConsumerWidget {
         .read(appLoggerProvider)
         .info('Navigating to application logs.', category: 'settings');
     if (!context.mounted) return;
-    await context.pushNamed<void>(AppRoutes.settingsLogsName);
+    await context.pushNamed<void>(AppRoutes.applicationLogsName);
   }
 
   VoidCallback _urlOpener(String url) {

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/router/app_routes.dart';
@@ -60,7 +61,39 @@ void main() {
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);
   });
 
-  testWidgets('unknown unauthenticated route redirects to setup', (tester) async {
+  testWidgets('unauthenticated navigation to logs remains on logs', (
+    tester,
+  ) async {
+    final result = await createTestApp(
+      initialLocation: AppRoutes.applicationLogsPath,
+    );
+
+    await pumpApp(tester, result.app);
+
+    expect(find.byType(ApplicationLogsPage), findsOneWidget);
+    expect(find.text('Application Logs'), findsOneWidget);
+    expect(find.byKey(ConnectPage.pageKey), findsNothing);
+  });
+
+  testWidgets('setup can push application logs while unauthenticated', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final result = await createTestApp(initialLocation: AppRoutes.setupPath);
+
+    await pumpApp(tester, result.app);
+    await tester.tap(find.text('View Logs'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ApplicationLogsPage), findsOneWidget);
+    expect(find.text('Application Logs'), findsOneWidget);
+  });
+
+  testWidgets('unknown unauthenticated route redirects to setup', (
+    tester,
+  ) async {
     final result = await createTestApp(initialLocation: '/privacy');
 
     await pumpApp(tester, result.app);

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/editorial_card.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/setup/connect_brand_block.dart';
 import 'package:gh_todos/compositions/setup/connect_decorative_panel.dart';
@@ -15,7 +16,9 @@ import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
+import 'package:gh_todos/style/typography.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -146,7 +149,7 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
   }
 }
 
-class _ConnectForegroundLayer extends StatelessWidget {
+class _ConnectForegroundLayer extends ConsumerWidget {
   final TextEditingController tokenController;
   final String? errorText;
   final bool isSubmitting;
@@ -170,7 +173,18 @@ class _ConnectForegroundLayer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final onSurface = resolveColor(context, ColorTokens.surface.on);
+    final onSurfaceVariant = resolveColor(
+      context,
+      ColorTokens.surface.onVariant,
+    );
+    final surfaceHighest = resolveColor(
+      context,
+      ColorTokens.surface.containerHighest,
+    );
+    final outline = resolveColor(context, ColorTokens.outline.$default);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -195,6 +209,69 @@ class _ConnectForegroundLayer extends StatelessWidget {
                       errorText: errorText,
                     ),
                     const PatScopeHelpCard(),
+                    EditorialCard(
+                      variation: CardVariation.elevated,
+                      padding: EdgeInsets.zero,
+                      child: PressableBox(
+                        onPress: () async {
+                          await ref
+                              .read(appLoggerProvider)
+                              .info(
+                                'Navigating to application logs.',
+                                category: 'setup',
+                              );
+                          if (!context.mounted) return;
+                          await context.pushNamed<void>(
+                            AppRoutes.applicationLogsName,
+                          );
+                        },
+                        style: BoxStyler()
+                            .color(Colors.transparent)
+                            .paddingOnly(horizontal: 20, vertical: 16)
+                            .animate(editorialAnimation)
+                            .onHovered(BoxStyler().color(surfaceHighest)),
+                        child: RowBox(
+                          style: editorialRowStyle(
+                            spacing: 16,
+                            mainAxisSize: MainAxisSize.max,
+                          ),
+                          children: [
+                            Expanded(
+                              child: ColumnBox(
+                                style: editorialColumnStyle(
+                                  spacing: 2,
+                                  crossAxis: CrossAxisAlignment.start,
+                                ),
+                                children: [
+                                  StyledText(
+                                    'View Logs',
+                                    style: editorialTextStyle(
+                                      TextTokens.body.$medium,
+                                      color: onSurface,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  StyledText(
+                                    'Open local application logs.',
+                                    style: editorialTextStyle(
+                                      TextTokens.body.$small,
+                                      color: onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            StyledIcon(
+                              icon: LucideIcons.chevronRight,
+                              style: editorialIconStyle(
+                                color: outline,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const ConnectSecurityNotice(),
                     ConnectFooter(
                       onPrivacyPressed: onPrivacyPressed,

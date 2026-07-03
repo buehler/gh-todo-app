@@ -157,7 +157,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('The token could not be saved securely. Try again.'),
+      find.text(
+        'The token could not be saved securely. Try again and/or check the logs.',
+      ),
       findsOneWidget,
     );
     expect(find.byKey(ConnectPage.pageKey), findsOneWidget);

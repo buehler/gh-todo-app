@@ -33,7 +33,7 @@ class ConnectSecurityNotice extends StatelessWidget {
           ),
           Expanded(
             child: StyledText(
-              'We use your token only for local authentication. Your secret never leaves your browser\'s encrypted storage.',
+              'We use your token only for local authentication. Your secret never leaves your devices\'s encrypted storage.',
               style: editorialTextStyle(
                 TextTokens.body.$small,
                 color: onSurfaceVariant,

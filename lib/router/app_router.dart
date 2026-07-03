@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/models/issue_data.dart';
-import 'package:gh_todos/pages/issue_detail_page.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
+import 'package:gh_todos/pages/issue_detail_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
@@ -36,8 +36,10 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
 
       final hasToken = session.requireValue.hasToken;
       final path = state.uri.path;
+      final isPublicPath =
+          path == AppRoutes.setupPath || path == AppRoutes.applicationLogsPath;
 
-      if (!hasToken && path != AppRoutes.setupPath) {
+      if (!hasToken && !isPublicPath) {
         return AppRoutes.setupPath;
       }
 
@@ -68,17 +70,15 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
                 path: AppRoutes.settingsPath,
                 name: AppRoutes.settingsName,
                 builder: (context, state) => const SettingsPage(),
-                routes: [
-                  GoRoute(
-                    path: AppRoutes.settingsLogsPath,
-                    name: AppRoutes.settingsLogsName,
-                    builder: (context, state) => const ApplicationLogsPage(),
-                  ),
-                ],
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.applicationLogsPath,
+        name: AppRoutes.applicationLogsName,
+        builder: (context, state) => const ApplicationLogsPage(),
       ),
       GoRoute(
         path: AppRoutes.setupPath,
