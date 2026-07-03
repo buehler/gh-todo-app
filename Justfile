@@ -1,7 +1,5 @@
-.PHONY: build_runner launcher_icons deploy_web
-
 build_runner:
-	dart run build_runner build --delete-conflicting-outputs
+	dart run build_runner build
 
 launcher_icons:
 	dart run flutter_launcher_icons
