@@ -58,22 +58,26 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
     });
 
     try {
-      await ref.read(appLoggerProvider).info(
-        'Setup flow submitted a PAT for validation.',
-        category: 'setup',
-      );
+      await ref
+          .read(appLoggerProvider)
+          .info(
+            'Setup flow submitted a PAT for validation.',
+            category: 'setup',
+          );
       await ref.read(sessionProvider.notifier).connectToken(trimmedToken);
       if (!mounted) {
         return;
       }
       context.goNamed(AppRoutes.rootName);
     } catch (error, stackTrace) {
-      await ref.read(appLoggerProvider).warn(
-        'Setup PAT validation failed.',
-        category: 'setup',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      await ref
+          .read(appLoggerProvider)
+          .warn(
+            'Setup PAT validation failed.',
+            category: 'setup',
+            error: error,
+            stackTrace: stackTrace,
+          );
       if (!mounted) {
         return;
       }
@@ -107,7 +111,7 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
     if (error is InvalidGithubTokenException) {
       return error.message;
     }
-    return 'The token could not be saved securely. Try again.';
+    return 'The token could not be saved securely. Try again and/or check the logs.';
   }
 
   @override
