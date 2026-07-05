@@ -17,12 +17,18 @@ class AppShell extends StatelessWidget {
   static const pageKey = ValueKey('app-shell');
 
   final StatefulNavigationShell navigationShell;
+  final bool hideChromeOnCompact;
 
-  const AppShell({required this.navigationShell, super.key});
+  const AppShell({
+    required this.navigationShell,
+    this.hideChromeOnCompact = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     final wide = isWide(context);
+    final showCompactChrome = !wide && !hideChromeOnCompact;
 
     return Scaffold(
       key: pageKey,
@@ -47,9 +53,9 @@ class AppShell extends StatelessWidget {
           // On wide layouts the rail owns branding + identity, so the
           // top bar collapses entirely rather than leaving an empty
           // frosted strip.
-          if (!wide)
+          if (showCompactChrome)
             const Positioned(top: 0, left: 0, right: 0, child: AppTopBar()),
-          if (!wide)
+          if (showCompactChrome)
             Positioned(
               bottom: 0,
               left: 0,

@@ -65,6 +65,14 @@ final userOrganizationsProvider =
       return const [];
     });
 
+Future<ProjectIssuesFeed> refreshProjectIssuesForRoute(
+  WidgetRef ref,
+  String projectId,
+) {
+  ref.invalidate(projectIssuesProvider(projectId));
+  return ref.read(projectIssuesProvider(projectId).future);
+}
+
 final ownerProjectsProvider = FutureProvider.autoDispose
     .family<Query$OwnerProjects$node?, String>((ref, ownerId) async {
       ref.watch(sessionGenerationProvider);

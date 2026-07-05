@@ -1,16 +1,16 @@
+import 'package:gh_todos/providers/app_logger_provider.dart';
+import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/services/auth_metadata_storage_service.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
-import 'package:gh_todos/services/session_manager.dart';
-import 'package:gh_todos/services/session_reset_service.dart';
 import 'package:gh_todos/services/project_storage_service.dart';
+import 'package:gh_todos/services/session_manager.dart';
 import 'package:gh_todos/services/session_prefs_service.dart';
+import 'package:gh_todos/services/session_reset_service.dart';
+import 'package:gh_todos/services/widget_shared_project_cache.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:gh_todos/providers/app_logger_provider.dart';
-import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 
 part 'storage_providers.g.dart';
 
@@ -34,7 +34,10 @@ AuthMetadataStorageService authMetadataStorage(Ref ref) {
 @Riverpod(keepAlive: true)
 ProjectStorageService projectStorage(Ref ref) {
   ref.watch(hiveBootstrapProvider);
-  return ProjectStorageService(Hive.box<String>(ProjectStorageService.boxName));
+  return ProjectStorageService(
+    Hive.box<String>(ProjectStorageService.boxName),
+    projectFileService: WidgetSharedProjectFileService(),
+  );
 }
 
 @Riverpod(keepAlive: true)

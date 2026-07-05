@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -26,9 +27,29 @@ class SelectedProject extends _$SelectedProject {
     return fallback;
   }
 
-  Future<void> select(String id) async {
+  Future<void> select(String id, {bool optimistic = false}) async {
+    if (optimistic) {
+      state = AsyncData(id);
+    }
     final prefs = ref.read(sessionPrefsProvider);
     await prefs.saveSelectedProjectId(id);
-    state = AsyncData(id);
+    if (!optimistic) {
+      state = AsyncData(id);
+    }
   }
 }
+
+final routeSelectedProjectProvider = FutureProvider.family<String?, String?>((
+  ref,
+  requestedProjectId,
+) async {
+  final requested = requestedProjectId?.trim();
+  final projects = ref.watch(projectListProvider);
+
+  if (requested != null && projects.any((p) => p.id == requested)) {
+    await ref.read(selectedProjectProvider.notifier).select(requested);
+    return requested;
+  }
+
+  return ref.watch(selectedProjectProvider.future);
+});

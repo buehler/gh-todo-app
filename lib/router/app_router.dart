@@ -2,9 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
-import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
-import 'package:gh_todos/pages/issue_detail_page.dart';
+import 'package:gh_todos/pages/issue_route_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
@@ -25,14 +24,19 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
   initialLocation,
 ) {
   final refreshNotifier = _SessionRefreshNotifier(ref);
+  final normalizedInitialLocation =
+      _widgetDeepLinkLocation(initialLocation) ?? initialLocation;
 
   return GoRouter(
-    initialLocation: initialLocation ?? AppRoutes.rootPath,
+    initialLocation: normalizedInitialLocation ?? AppRoutes.rootPath,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final isLoaded = session is AsyncData;
       if (!isLoaded) return null;
+
+      final widgetLocation = _widgetDeepLinkLocation(state.uri.toString());
+      if (widgetLocation != null) return widgetLocation;
 
       final hasToken = session.requireValue.hasToken;
       final path = state.uri.path;
@@ -51,16 +55,48 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
     },
     routes: [
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) => AppShell(
+          navigationShell: navigationShell,
+          hideChromeOnCompact: state.uri.path.contains('/issue/'),
+        ),
         branches: [
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: AppRoutes.rootPath,
                 name: AppRoutes.rootName,
-                builder: (context, state) =>
-                    const TodosSplitView(child: RootPage()),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: state.pageKey,
+                  child: TodosSplitView(child: RootPage()),
+                ),
+              ),
+              GoRoute(
+                path: AppRoutes.projectPath,
+                name: AppRoutes.projectName,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: state.pageKey,
+                  child: TodosSplitView(
+                    child: RootPage(
+                      requestedProjectId:
+                          state.pathParameters[AppRoutes.projectIdParam],
+                      routeRefreshKey:
+                          state.uri.queryParameters[AppRoutes.freshQueryParam],
+                    ),
+                  ),
+                ),
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.issueDetailPath,
+                    name: AppRoutes.issueDetailName,
+                    builder: (context, state) => IssueRoutePage(
+                      requestedProjectId:
+                          state.pathParameters[AppRoutes.projectIdParam]!,
+                      issueId: state.pathParameters[AppRoutes.issueIdParam]!,
+                      routeRefreshKey:
+                          state.uri.queryParameters[AppRoutes.freshQueryParam],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -85,14 +121,21 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
         name: AppRoutes.setupName,
         builder: (context, state) => const ConnectPage(),
       ),
-      GoRoute(
-        path: AppRoutes.issueDetailPath,
-        name: AppRoutes.issueDetailName,
-        builder: (context, state) => IssueDetailPage(
-          issueId: state.pathParameters['id']!,
-          issue: state.extra as IssueData,
-        ),
-      ),
     ],
   );
 });
+
+String? _widgetDeepLinkLocation(String? location) {
+  if (location == null) return null;
+  final uri = Uri.tryParse(location);
+  if (uri == null || uri.scheme != 'ghtodos') return null;
+  final path = uri.path.isEmpty ? AppRoutes.rootPath : uri.path;
+  return Uri(
+    path: path,
+    queryParameters: {
+      ...uri.queryParameters,
+      AppRoutes.freshQueryParam: DateTime.now().microsecondsSinceEpoch
+          .toString(),
+    },
+  ).toString();
+}

@@ -53,11 +53,13 @@ class IssueDetailPage extends ConsumerStatefulWidget {
   /// Used when the page is embedded in [TodosSplitView]'s right pane on
   /// wide layouts.
   final bool embedded;
+  final VoidCallback? onBack;
 
   const IssueDetailPage({
     required this.issueId,
     required this.issue,
     this.embedded = false,
+    this.onBack,
     super.key,
   });
 
@@ -450,6 +452,12 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
   }
 
   void _handleBack() {
+    final onBack = widget.onBack;
+    if (onBack != null) {
+      onBack();
+      return;
+    }
+
     if (widget.embedded) {
       // Detail pane owns the selected-issue state on wide.
       ref.read(selectedIssueProvider.notifier).clear();

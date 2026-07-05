@@ -12,7 +12,6 @@ import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/issue_ordering.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
-import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/style/breakpoints.dart';
@@ -38,7 +37,10 @@ class RootPage extends ConsumerWidget {
   static const refreshButtonKey = ValueKey('root-page-refresh-button');
   static const refreshProgressKey = ValueKey('root-page-refresh-progress');
 
-  const RootPage({super.key});
+  final String? requestedProjectId;
+  final String? routeRefreshKey;
+
+  const RootPage({this.requestedProjectId, this.routeRefreshKey, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,7 +51,9 @@ class RootPage extends ConsumerWidget {
         (isWide(context) ? 0 : AppBottomNav.barHeight) +
         MediaQuery.paddingOf(context).bottom +
         32;
-    final selectedIdAsync = ref.watch(selectedProjectProvider);
+    final selectedIdAsync = ref.watch(
+      routeSelectedProjectProvider(requestedProjectId),
+    );
 
     return selectedIdAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -62,6 +66,7 @@ class RootPage extends ConsumerWidget {
         return _IssuesFeed(
           key: pageKey,
           projectId: selectedId,
+          routeRefreshKey: routeRefreshKey,
           topPadding: topPadding,
           bottomPadding: bottomPadding,
         );
@@ -100,12 +105,14 @@ class _EmptyState extends StatelessWidget {
 
 class _IssuesFeed extends ConsumerStatefulWidget {
   final String projectId;
+  final String? routeRefreshKey;
   final double topPadding;
   final double bottomPadding;
 
   const _IssuesFeed({
     super.key,
     required this.projectId,
+    required this.routeRefreshKey,
     required this.topPadding,
     required this.bottomPadding,
   });
@@ -116,6 +123,8 @@ class _IssuesFeed extends ConsumerStatefulWidget {
 
 class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
   bool _isRefreshing = false;
+  String? _activeRouteRefreshKey;
+  Future<ProjectIssuesFeed>? _routeRefreshFuture;
 
   bool get _isNativeDesktopPlatform {
     final platform = Theme.of(context).platform;
@@ -142,7 +151,43 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.routeRefreshKey != null) {
+      return FutureBuilder<ProjectIssuesFeed>(
+        future: _freshRouteFuture(),
+        builder: (context, snapshot) {
+          final AsyncValue<ProjectIssuesFeed> feedAsync =
+              switch (snapshot.connectionState) {
+                ConnectionState.done when snapshot.hasError => AsyncValue.error(
+                  snapshot.error!,
+                  snapshot.stackTrace ?? StackTrace.current,
+                ),
+                ConnectionState.done => AsyncValue.data(snapshot.requireData),
+                _ => const AsyncValue<ProjectIssuesFeed>.loading(),
+              };
+          return _buildFeed(context, feedAsync);
+        },
+      );
+    }
+
     final feedAsync = ref.watch(projectIssuesProvider(widget.projectId));
+    return _buildFeed(context, feedAsync);
+  }
+
+  Future<ProjectIssuesFeed> _freshRouteFuture() {
+    final routeKey = '${widget.projectId}:${widget.routeRefreshKey}';
+    if (_activeRouteRefreshKey != routeKey) {
+      _activeRouteRefreshKey = routeKey;
+      _routeRefreshFuture = Future<void>.delayed(
+        Duration.zero,
+      ).then((_) => refreshProjectIssuesForRoute(ref, widget.projectId));
+    }
+    return _routeRefreshFuture!;
+  }
+
+  Widget _buildFeed(
+    BuildContext context,
+    AsyncValue<ProjectIssuesFeed> feedAsync,
+  ) {
     final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
 
     final scrollView = CustomScrollView(
@@ -522,25 +567,30 @@ class _IssueSliverList extends ConsumerWidget {
           issue: issue,
           projectId: projectId,
           enabled: writeEnabled,
-          onTap: () => _openIssue(context, ref, issue),
+          onTap: () => _openIssue(context, issue, projectId),
         );
       },
     );
   }
 }
 
-/// Opens an issue. On wide layouts (`≥ 900px`) this stays in-shell by
-/// setting [selectedIssueProvider] — [TodosSplitView] then fills the detail
-/// pane. On compact/medium widths it pushes the full-screen
-/// [IssueDetailPage] route as before.
-void _openIssue(BuildContext context, WidgetRef ref, IssueData issue) {
+/// Opens an issue at a hierarchical, deep-linkable project/issue location.
+void _openIssue(BuildContext context, IssueData issue, String projectId) {
   if (isWide(context)) {
-    ref.read(selectedIssueProvider.notifier).select(issue);
+    context.goNamed(
+      AppRoutes.issueDetailName,
+      pathParameters: {
+        AppRoutes.projectIdParam: projectId,
+        AppRoutes.issueIdParam: issue.id,
+      },
+    );
     return;
   }
   context.pushNamed(
     AppRoutes.issueDetailName,
-    pathParameters: {'id': issue.id},
-    extra: issue,
+    pathParameters: {
+      AppRoutes.projectIdParam: projectId,
+      AppRoutes.issueIdParam: issue.id,
+    },
   );
 }

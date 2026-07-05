@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/providers/selected_project_provider.dart';
+import 'package:gh_todos/router/app_routes.dart';
+import 'package:go_router/go_router.dart';
 
 /// Horizontally-scrollable filter chips for switching between mapped projects.
 ///
@@ -36,7 +40,15 @@ class TodosProjectChips extends ConsumerWidget {
                 final nextId = projects[i].id;
                 if (nextId == selectedId) return;
                 ref.read(selectedIssueProvider.notifier).clear();
-                ref.read(selectedProjectProvider.notifier).select(nextId);
+                unawaited(
+                  ref
+                      .read(selectedProjectProvider.notifier)
+                      .select(nextId, optimistic: true),
+                );
+                context.goNamed(
+                  AppRoutes.projectName,
+                  pathParameters: {AppRoutes.projectIdParam: nextId},
+                );
               },
             ),
             if (i < projects.length - 1) const SizedBox(width: 12),

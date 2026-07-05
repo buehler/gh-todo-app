@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class GithubTokenStorageService {
   static const tokenStorageKey = 'github.personal_access_token';
+  static const iosKeychainAccessGroup = 'E4J6Z7CR9X.ch.cbue.ghTodos';
 
   final FlutterSecureStorage _storage;
 
@@ -10,7 +11,10 @@ class GithubTokenStorageService {
           storage ??
           const FlutterSecureStorage(
             aOptions: AndroidOptions(),
-            iOptions: IOSOptions(accessibility: KeychainAccessibility.unlocked),
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.unlocked,
+              groupId: iosKeychainAccessGroup,
+            ),
             mOptions: MacOsOptions(
               accessibility: KeychainAccessibility.unlocked,
             ),

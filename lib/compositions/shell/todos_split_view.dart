@@ -23,8 +23,9 @@ class TodosSplitView extends ConsumerWidget {
   static const detailPaneEmptyKey = ValueKey('todos-split-detail-empty');
 
   final Widget child;
+  final Widget? detail;
 
-  const TodosSplitView({required this.child, super.key});
+  const TodosSplitView({required this.child, this.detail, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,6 +34,7 @@ class TodosSplitView extends ConsumerWidget {
     }
 
     final selected = ref.watch(selectedIssueProvider);
+    final detail = this.detail;
 
     return Row(
       key: pageKey,
@@ -47,16 +49,18 @@ class TodosSplitView extends ConsumerWidget {
           flex: 6,
           child: ColoredBox(
             color: resolveColor(context, ColorTokens.surface.containerLowest),
-            child: selected == null
-                ? const _EmptyDetailPane()
-                : IssueDetailPage(
-                    // Key on the selected issue id so that switching rows
-                    // tears down the previous detail state cleanly.
-                    key: ValueKey('issue-detail-pane-${selected.id}'),
-                    issueId: selected.id,
-                    issue: selected,
-                    embedded: true,
-                  ),
+            child:
+                detail ??
+                (selected == null
+                    ? const _EmptyDetailPane()
+                    : IssueDetailPage(
+                        // Key on the selected issue id so that switching rows
+                        // tears down the previous detail state cleanly.
+                        key: ValueKey('issue-detail-pane-${selected.id}'),
+                        issueId: selected.id,
+                        issue: selected,
+                        embedded: true,
+                      )),
           ),
         ),
       ],
