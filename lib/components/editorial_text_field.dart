@@ -27,6 +27,9 @@ class EditorialTextField extends StatefulWidget {
   final TextFieldVariation variation;
   final bool submitOnModifierEnter;
 
+  /// Optional transformations applied to user text edits before [onChanged].
+  final List<TextInputFormatter>? inputFormatters;
+
   /// Minimum visible rows. Mirrors `TextField.minLines`.
   final int? minLines;
 
@@ -52,6 +55,7 @@ class EditorialTextField extends StatefulWidget {
     this.enabled = true,
     this.variation = TextFieldVariation.editorial,
     this.submitOnModifierEnter = false,
+    this.inputFormatters,
     this.minLines,
     this.maxLines = 1,
   });
@@ -175,6 +179,7 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
                       obscureText: widget.obscureText,
                       onChanged: widget.onChanged,
                       onSubmitted: widget.onSubmitted,
+                      inputFormatters: widget.inputFormatters,
                       textInputAction: widget.textInputAction,
                       keyboardType: widget.keyboardType,
                       autofocus: widget.autofocus,

@@ -234,6 +234,7 @@ class _EditIssueSheetState extends ConsumerState<_EditIssueSheet> {
           onChanged: (_) => setState(() {}),
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
+          inputFormatters: const [MarkdownListContinuationFormatter()],
           minLines: 4,
           maxLines: 10,
         ),

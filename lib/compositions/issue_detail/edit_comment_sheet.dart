@@ -16,10 +16,8 @@ Future<String?> showEditCommentSheet(
 }) {
   return showAdaptiveSheet<String>(
     context,
-    builder: (_, isDialog) => _EditCommentSheet(
-      comment: comment,
-      isDialog: isDialog,
-    ),
+    builder: (_, isDialog) =>
+        _EditCommentSheet(comment: comment, isDialog: isDialog),
   );
 }
 
@@ -94,6 +92,7 @@ class _EditCommentSheetState extends State<_EditCommentSheet> {
             onChanged: _onChanged,
             keyboardType: TextInputType.multiline,
             textInputAction: TextInputAction.newline,
+            inputFormatters: const [MarkdownListContinuationFormatter()],
             minLines: 4,
             maxLines: 10,
             autofocus: true,

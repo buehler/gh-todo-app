@@ -94,6 +94,7 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
           onSubmitted: (_) => _submit(),
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
+          inputFormatters: const [MarkdownListContinuationFormatter()],
           enabled: widget.enabled && !_submitting,
           submitOnModifierEnter: true,
           minLines: 3,

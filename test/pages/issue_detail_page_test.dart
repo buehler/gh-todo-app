@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
@@ -185,6 +186,10 @@ void main() {
 
     final textField = tester.widget<TextField>(
       find.descendant(of: field, matching: find.byType(TextField)),
+    );
+    expect(
+      textField.inputFormatters,
+      contains(isA<MarkdownListContinuationFormatter>()),
     );
     expect(textField.controller?.text, isEmpty);
     expect(textField.focusNode?.hasFocus, isTrue);
@@ -437,6 +442,10 @@ Line seven''';
       expect(find.text('Edit Comment'), findsOneWidget);
       final field = tester.widget<TextField>(find.byType(TextField).last);
       expect(field.controller?.text, '**My** original comment.');
+      expect(
+        field.inputFormatters,
+        contains(isA<MarkdownListContinuationFormatter>()),
+      );
     },
   );
 
@@ -501,12 +510,14 @@ Line seven''';
     expect(find.text('#42'), findsOneWidget);
     // The title field is pre-filled.
     expect(find.text('Refactor auth'), findsOneWidget);
-    final fields = tester.widgetList<TextField>(find.byType(TextField));
+    final descriptionField = tester
+        .widgetList<TextField>(find.byType(TextField))
+        .singleWhere(
+          (field) => field.controller?.text == '**Original** description.',
+        );
     expect(
-      fields.any(
-        (field) => field.controller?.text == '**Original** description.',
-      ),
-      isTrue,
+      descriptionField.inputFormatters,
+      contains(isA<MarkdownListContinuationFormatter>()),
     );
   });
 }
