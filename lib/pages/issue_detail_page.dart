@@ -25,6 +25,7 @@ import 'package:gh_todos/providers/issue_mutations.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/selected_issue_provider.dart';
 import 'package:gh_todos/style/colors.dart';
+import 'package:gh_todos/util/markdown_tasks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
@@ -74,6 +75,8 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
   /// Set while any mutation is in flight so the state-action button disables
   /// itself (prevents double-taps that would fire the same mutation twice).
   bool _stateActionBusy = false;
+  bool _descriptionTaskToggleBusy = false;
+  final Set<String> _commentTaskToggleBusyIds = <String>{};
 
   String get _issueId => widget.issueId;
 
@@ -126,6 +129,86 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
       _showError('Offline. Reconnect to edit comments.');
     } catch (_) {
       _showError('Failed to update comment.');
+    }
+  }
+
+  Future<void> _toggleDescriptionTask(int taskIndex, bool checked) async {
+    final body = _issue.body;
+    final projectId = _issue.projectId;
+    if (body == null || projectId == null) {
+      _showError('Task could not be updated.');
+      return;
+    }
+
+    final updatedBody = toggleMarkdownTaskAtIndex(
+      body,
+      taskIndex: taskIndex,
+      checked: checked,
+    );
+    if (updatedBody == null) {
+      _showError('Task could not be updated because its Markdown changed.');
+      return;
+    }
+
+    setState(() => _descriptionTaskToggleBusy = true);
+    final mutations = ref.read(issueMutationsProvider);
+    try {
+      final updated = await mutations.updateIssueCore(
+        projectId: projectId,
+        issueId: _issueId,
+        body: updatedBody,
+      );
+      if (!mounted) return;
+      setState(() {
+        _issue = _issue.copyWith(
+          body: _nullableTrimmed(updated.body),
+          bodyHtml: _nullableTrimmed(updated.bodyHtml),
+          updatedAt: updated.updatedAt.isNotEmpty
+              ? updated.updatedAt
+              : _issue.updatedAt,
+        );
+      });
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to update this task.');
+    } catch (_) {
+      _showError('Failed to update task.');
+    } finally {
+      if (mounted) setState(() => _descriptionTaskToggleBusy = false);
+    }
+  }
+
+  Future<void> _toggleCommentTask(
+    IssueComment comment,
+    int taskIndex,
+    bool checked,
+  ) async {
+    final updatedBody = toggleMarkdownTaskAtIndex(
+      comment.body,
+      taskIndex: taskIndex,
+      checked: checked,
+    );
+    if (updatedBody == null) {
+      _showError('Task could not be updated because its Markdown changed.');
+      return;
+    }
+    if (_commentTaskToggleBusyIds.contains(comment.id)) return;
+
+    setState(() => _commentTaskToggleBusyIds.add(comment.id));
+    final mutations = ref.read(issueMutationsProvider);
+    try {
+      await mutations.updateComment(
+        issueId: _issueId,
+        commentId: comment.id,
+        body: updatedBody,
+      );
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to update this task.');
+    } catch (_) {
+      _showError('Failed to update task.');
+    } finally {
+      if (mounted) {
+        setState(() => _commentTaskToggleBusyIds.remove(comment.id));
+      }
     }
   }
 
@@ -383,12 +466,20 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
                     ? null
                     : () => unawaited(_toggleIssueState()),
               ),
-              IssueDescriptionSection(details: details),
+              IssueDescriptionSection(
+                details: details,
+                onTaskToggle: !isOffline && _issue.body != null
+                    ? _toggleDescriptionTask
+                    : null,
+                taskToggleBusy: _descriptionTaskToggleBusy,
+              ),
               IssueConversationSection(
                 issueId: _issueId,
                 commentCount: _issue.commentCount,
                 viewerLogin: viewerLogin,
                 onEditComment: (c) => unawaited(_editComment(c)),
+                onTaskToggle: isOffline ? null : _toggleCommentTask,
+                taskToggleBusyCommentIds: _commentTaskToggleBusyIds,
               ),
             ],
           ),

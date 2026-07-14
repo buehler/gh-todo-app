@@ -13,7 +13,21 @@ class GithubHtmlBody extends StatelessWidget {
   final String? html;
   final String? emptyText;
 
-  const GithubHtmlBody({required this.html, this.emptyText, super.key});
+  /// Called for a GitHub task-list checkbox with its source-order index and
+  /// requested checked state. Omit it to render task lists as read-only.
+  final Future<void> Function(int taskIndex, bool checked)? onTaskToggle;
+
+  /// Disables every task checkbox in this rendered document while its source
+  /// Markdown is being persisted.
+  final bool taskToggleBusy;
+
+  const GithubHtmlBody({
+    required this.html,
+    this.emptyText,
+    this.onTaskToggle,
+    this.taskToggleBusy = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,32 +80,18 @@ class GithubHtmlBody extends StatelessWidget {
         TableHtmlExtension(),
         SvgHtmlExtension(),
         MatcherExtension(
-          matcher: (context) {
-            final attributes = context.attributes;
-            return context.elementName == 'input' &&
-                attributes['type']?.toLowerCase() == 'checkbox';
-          },
+          matcher: _isTaskListCheckbox,
           builder: (context) {
             final checkedValue = context.attributes['checked'];
             final checked =
                 checkedValue != null &&
                 (checkedValue.isEmpty ||
                     checkedValue.toLowerCase() == 'checked');
-            return mix.Box(
-              style: mix.BoxStyler()
-                  .size(16, 16)
-                  .borderAll(color: ColorTokens.primary.$default(), width: 1.2)
-                  .borderRadiusAll(Radius.circular(4))
-                  .marginRight(8)
-                  .alignment(AlignmentGeometry.center),
-              child: checked
-                  ? mix.StyledIcon(
-                      icon: LucideIcons.check,
-                      style: mix.IconStyler()
-                          .size(12)
-                          .color(ColorTokens.primary.$default()),
-                    )
-                  : null,
+            return _GithubTaskCheckbox(
+              taskIndex: _taskCheckboxIndex(context),
+              checked: checked,
+              busy: taskToggleBusy,
+              onTaskToggle: onTaskToggle,
             );
           },
         ),
@@ -198,6 +198,99 @@ class GithubHtmlBody extends StatelessWidget {
         ),
         'img': Style(margin: Margins.only(bottom: 12)),
       },
+    );
+  }
+
+  static bool _isTaskListCheckbox(ExtensionContext context) {
+    final attributes = context.attributes;
+    return context.elementName == 'input' &&
+        attributes['type']?.toLowerCase() == 'checkbox' &&
+        context.element?.parent?.classes.contains('task-list-item') == true;
+  }
+
+  static int _taskCheckboxIndex(ExtensionContext context) {
+    final checkbox = context.element;
+    if (checkbox == null) return -1;
+
+    final checkboxes = context.parser.htmlData
+        .getElementsByTagName('input')
+        .where(
+          (input) =>
+              input.attributes['type']?.toLowerCase() == 'checkbox' &&
+              input.parent?.classes.contains('task-list-item') == true,
+        )
+        .toList(growable: false);
+    return checkboxes.indexOf(checkbox);
+  }
+}
+
+class _GithubTaskCheckbox extends StatefulWidget {
+  final int taskIndex;
+  final bool checked;
+  final bool busy;
+  final Future<void> Function(int taskIndex, bool checked)? onTaskToggle;
+
+  const _GithubTaskCheckbox({
+    required this.taskIndex,
+    required this.checked,
+    required this.busy,
+    required this.onTaskToggle,
+  });
+
+  @override
+  State<_GithubTaskCheckbox> createState() => _GithubTaskCheckboxState();
+}
+
+class _GithubTaskCheckboxState extends State<_GithubTaskCheckbox> {
+  var _submitting = false;
+
+  bool get _enabled =>
+      widget.taskIndex >= 0 &&
+      widget.onTaskToggle != null &&
+      !widget.busy &&
+      !_submitting;
+
+  Future<void> _toggle() async {
+    if (!_enabled) return;
+    setState(() => _submitting = true);
+    try {
+      await widget.onTaskToggle!(widget.taskIndex, !widget.checked);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = _enabled;
+    final checkbox = mix.Box(
+      style: mix.BoxStyler()
+          .size(16, 16)
+          .borderAll(color: ColorTokens.primary.$default(), width: 1.2)
+          .borderRadiusAll(Radius.circular(4))
+          .marginRight(8)
+          .alignment(AlignmentGeometry.center),
+      child: widget.checked
+          ? mix.StyledIcon(
+              icon: LucideIcons.check,
+              style: mix.IconStyler()
+                  .size(12)
+                  .color(ColorTokens.primary.$default()),
+            )
+          : null,
+    );
+
+    return Semantics(
+      key: ValueKey('github-task-checkbox-${widget.taskIndex}'),
+      label: 'Task ${widget.taskIndex + 1}',
+      checked: widget.checked,
+      button: enabled,
+      enabled: enabled,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? _toggle : null,
+        child: ExcludeSemantics(child: checkbox),
+      ),
     );
   }
 }

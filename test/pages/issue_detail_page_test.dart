@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show CheckedState;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
+import 'package:gh_todos/compositions/issue_detail/issue_description_section.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_state_action.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
@@ -93,6 +95,12 @@ final _otherComment = IssueComment(
   createdAt: '2026-04-13T11:00:00Z',
 );
 
+const _uncheckedTaskHtml = '''
+<ul class="contains-task-list">
+  <li class="task-list-item"><input type="checkbox" disabled>Ship task</li>
+</ul>
+''';
+
 final _viewer = Query$UserInformation$viewer(
   id: 'user-me',
   avatarUrl: 'https://example.com/me.png',
@@ -110,6 +118,7 @@ Future<({FakeIssueMutations mutations})> _pump(
   Stream<List<IssueComment>>? commentsStream,
   FakeIssueMutations? mutations,
   Size surfaceSize = const Size(800, 1400),
+  bool offline = false,
 }) async {
   await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -125,7 +134,7 @@ Future<({FakeIssueMutations mutations})> _pump(
     ProviderScope(
       overrides: [
         hiveBootstrapProvider.overrideWith((_) async {}),
-        offlineStatusProvider.overrideWith(_FakeOfflineStatus.new),
+        offlineStatusProvider.overrideWith(() => _FakeOfflineStatus(offline)),
         tokenStorageProvider.overrideWithValue(
           GithubTokenStorageService(storage: fakeStorage),
         ),
@@ -148,8 +157,12 @@ Future<({FakeIssueMutations mutations})> _pump(
 }
 
 class _FakeOfflineStatus extends OfflineStatus {
+  final bool _offline;
+
+  _FakeOfflineStatus(this._offline);
+
   @override
-  Future<bool> build() async => false;
+  Future<bool> build() async => _offline;
 }
 
 void main() {
@@ -418,6 +431,121 @@ Line seven''';
     await _pump(tester, issue: _openIssue.copyWith(body: null, bodyHtml: null));
 
     expect(find.text('No description provided.'), findsOneWidget);
+  });
+
+  testWidgets('toggling a description task updates its source markdown', (
+    tester,
+  ) async {
+    final harness = await _pump(
+      tester,
+      issue: _openIssue.copyWith(
+        body: '- [ ] Ship task',
+        bodyHtml: _uncheckedTaskHtml,
+      ),
+    );
+
+    final task = find.descendant(
+      of: find.byKey(IssueDescriptionSection.pageKey),
+      matching: find.byKey(const ValueKey('github-task-checkbox-0')),
+    );
+    await tester.tap(task);
+    await tester.pumpAndSettle();
+
+    final call = harness.mutations.calls
+        .whereType<UpdateIssueCoreCall>()
+        .single;
+    expect(call.projectId, _projectId);
+    expect(call.issueId, _issueId);
+    expect(call.title, isNull);
+    expect(call.body, '- [x] Ship task');
+  });
+
+  testWidgets('toggling an own comment task updates only that comment', (
+    tester,
+  ) async {
+    final ownTaskComment = _ownComment.copyWith(
+      body: '- [ ] Ship task',
+      bodyHtml: _uncheckedTaskHtml,
+    );
+    final otherTaskComment = _otherComment.copyWith(
+      body: '- [ ] Review task',
+      bodyHtml: _uncheckedTaskHtml,
+    );
+    final harness = await _pump(
+      tester,
+      issue: _openIssue,
+      comments: [ownTaskComment, otherTaskComment],
+    );
+
+    final ownTask = find.descendant(
+      of: find.byKey(const ValueKey('issue-comment-c-own')),
+      matching: find.byKey(const ValueKey('github-task-checkbox-0')),
+    );
+    await tester.tap(ownTask);
+    await tester.pumpAndSettle();
+
+    final call = harness.mutations.calls.whereType<UpdateCommentCall>().single;
+    expect(call.issueId, _issueId);
+    expect(call.commentId, ownTaskComment.id);
+    expect(call.body, '- [x] Ship task');
+
+    final otherTask = find.descendant(
+      of: find.byKey(const ValueKey('issue-comment-c-other')),
+      matching: find.byKey(const ValueKey('github-task-checkbox-0')),
+    );
+    await tester.tap(otherTask);
+    await tester.pumpAndSettle();
+
+    expect(
+      harness.mutations.calls.whereType<UpdateCommentCall>(),
+      hasLength(1),
+    );
+  });
+
+  testWidgets('task update failure leaves the rendered task unchanged', (
+    tester,
+  ) async {
+    final harness = await _pump(
+      tester,
+      issue: _openIssue.copyWith(
+        body: '- [ ] Ship task',
+        bodyHtml: _uncheckedTaskHtml,
+      ),
+    );
+    harness.mutations.throwNext = true;
+
+    final task = find.descendant(
+      of: find.byKey(IssueDescriptionSection.pageKey),
+      matching: find.byKey(const ValueKey('github-task-checkbox-0')),
+    );
+    await tester.tap(task);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Failed to update task.'), findsOneWidget);
+    expect(
+      tester.getSemantics(task).flagsCollection.isChecked,
+      CheckedState.isFalse,
+    );
+  });
+
+  testWidgets('offline task lists remain read-only', (tester) async {
+    final harness = await _pump(
+      tester,
+      issue: _openIssue.copyWith(
+        body: '- [ ] Ship task',
+        bodyHtml: _uncheckedTaskHtml,
+      ),
+      offline: true,
+    );
+
+    final task = find.descendant(
+      of: find.byKey(IssueDescriptionSection.pageKey),
+      matching: find.byKey(const ValueKey('github-task-checkbox-0')),
+    );
+    await tester.tap(task);
+    await tester.pumpAndSettle();
+
+    expect(harness.mutations.calls, isEmpty);
   });
 
   testWidgets('tapping own comment body does not open the edit sheet', (

@@ -14,8 +14,15 @@ class IssueDescriptionSection extends StatelessWidget {
   static const pageKey = ValueKey('issue-description-section');
 
   final IssueDetails details;
+  final Future<void> Function(int taskIndex, bool checked)? onTaskToggle;
+  final bool taskToggleBusy;
 
-  const IssueDescriptionSection({required this.details, super.key});
+  const IssueDescriptionSection({
+    required this.details,
+    this.onTaskToggle,
+    this.taskToggleBusy = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +50,8 @@ class IssueDescriptionSection extends StatelessWidget {
           child: GithubHtmlBody(
             html: details.bodyHtml,
             emptyText: 'No description provided.',
+            onTaskToggle: onTaskToggle,
+            taskToggleBusy: taskToggleBusy,
           ),
         ),
       ],

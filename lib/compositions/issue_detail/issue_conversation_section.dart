@@ -24,12 +24,21 @@ class IssueConversationSection extends ConsumerWidget {
   final int commentCount;
   final String? viewerLogin;
   final void Function(IssueComment comment)? onEditComment;
+  final Future<void> Function(
+    IssueComment comment,
+    int taskIndex,
+    bool checked,
+  )?
+  onTaskToggle;
+  final Set<String> taskToggleBusyCommentIds;
 
   const IssueConversationSection({
     required this.issueId,
     required this.commentCount,
     this.viewerLogin,
     this.onEditComment,
+    this.onTaskToggle,
+    this.taskToggleBusyCommentIds = const {},
     super.key,
   });
 
@@ -112,6 +121,8 @@ class IssueConversationSection extends ConsumerWidget {
             comments: comments,
             viewerLogin: viewerLogin,
             onEditComment: onEditComment,
+            onTaskToggle: onTaskToggle,
+            taskToggleBusyCommentIds: taskToggleBusyCommentIds,
           ),
         ),
       ],
@@ -123,11 +134,20 @@ class _CommentList extends StatelessWidget {
   final List<IssueComment> comments;
   final String? viewerLogin;
   final void Function(IssueComment comment)? onEditComment;
+  final Future<void> Function(
+    IssueComment comment,
+    int taskIndex,
+    bool checked,
+  )?
+  onTaskToggle;
+  final Set<String> taskToggleBusyCommentIds;
 
   const _CommentList({
     required this.comments,
     required this.viewerLogin,
     required this.onEditComment,
+    required this.onTaskToggle,
+    required this.taskToggleBusyCommentIds,
   });
 
   @override
@@ -160,6 +180,8 @@ class _CommentList extends StatelessWidget {
                 c.authorLogin != null &&
                 viewerLogin == c.authorLogin,
             onEdit: onEditComment,
+            onTaskToggle: onTaskToggle,
+            taskToggleBusy: taskToggleBusyCommentIds.contains(c.id),
           ),
           const SizedBox(height: 12),
         ],
@@ -172,11 +194,20 @@ class _CommentCard extends StatelessWidget {
   final IssueComment comment;
   final bool editable;
   final void Function(IssueComment comment)? onEdit;
+  final Future<void> Function(
+    IssueComment comment,
+    int taskIndex,
+    bool checked,
+  )?
+  onTaskToggle;
+  final bool taskToggleBusy;
 
   const _CommentCard({
     required this.comment,
     required this.editable,
     required this.onEdit,
+    required this.onTaskToggle,
+    required this.taskToggleBusy,
   });
 
   @override
@@ -188,6 +219,8 @@ class _CommentCard extends StatelessWidget {
     );
     final handler = onEdit;
     final canEdit = editable && handler != null;
+    final taskToggle = onTaskToggle;
+    final canToggleTasks = editable && taskToggle != null;
 
     return EditorialCard(
       key: ValueKey('issue-comment-${comment.id}'),
@@ -231,7 +264,14 @@ class _CommentCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          GithubHtmlBody(html: comment.bodyHtml),
+          GithubHtmlBody(
+            html: comment.bodyHtml,
+            onTaskToggle: canToggleTasks
+                ? (taskIndex, checked) =>
+                      taskToggle(comment, taskIndex, checked)
+                : null,
+            taskToggleBusy: taskToggleBusy,
+          ),
         ],
       ),
     );
