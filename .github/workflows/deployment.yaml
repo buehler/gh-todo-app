@@ -27,3 +27,35 @@ jobs:
           token: ${{ secrets.RELEASE_PLZ_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  flutter-web:
+    name: Release Flutter Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+          cache: true
+          cache-sdk: true
+      - name: Install vercel
+        run: npm install -g vercel
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Run build runner
+        run: dart run build_runner build
+      - name: Build Flutter Web
+        run: flutter build web --release --build-number=${{ github.run_number }}
+      - name: Copy additional resources
+        run: |
+          cp vercel.json build/web/vercel.json
+          cp assets/legal/* build/web/
+      - name: Deploy to Vercel
+        run: vercel deploy
+        working-directory: build/web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
