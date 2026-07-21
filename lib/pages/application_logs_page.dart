@@ -11,7 +11,9 @@ import 'package:mix/mix.dart';
 class ApplicationLogsPage extends ConsumerStatefulWidget {
   static const pageKey = ValueKey('application-logs-page');
 
-  const ApplicationLogsPage({super.key});
+  final VoidCallback? onBack;
+
+  const ApplicationLogsPage({this.onBack, super.key});
 
   @override
   ConsumerState<ApplicationLogsPage> createState() =>
@@ -46,7 +48,8 @@ class _ApplicationLogsPageState extends ConsumerState<ApplicationLogsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               PressableBox(
-                onPress: () => Navigator.of(context).maybePop(),
+                onPress:
+                    widget.onBack ?? () => Navigator.of(context).maybePop(),
                 child: RowBox(
                   style: editorialRowStyle(spacing: 10),
                   children: [

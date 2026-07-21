@@ -10,7 +10,7 @@ struct WidgetProject: Codable, Identifiable {
 }
 
 enum ProjectCache {
-    static let appGroupId = "group.ch.cbue.ghTodos"
+    static let appGroupId = "group.ch.cbue.GH-Todos"
     static let fileName = "projects.json"
 
     static func read() -> [WidgetProject] {

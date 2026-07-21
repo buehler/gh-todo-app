@@ -11,7 +11,7 @@ import UIKit
     
     private let logger = Logger(subsystem: "ch.cbue.ghTodos", category: "main")
     
-    private let appGroupId = "group.ch.cbue.ghTodos"
+    private let appGroupId = "group.ch.cbue.GH-Todos"
     private let fileName = "projects.json"
     private let channelName = "ch.cbue.ghTodos/widget_project_cache"
     

@@ -1,7 +1,7 @@
 import Foundation
 
 enum PATReader {
-    static let accessGroup: String = "E4J6Z7CR9X.ch.cbue.ghTodos"
+    static let accessGroup: String = "A7JX5S6CZ6.ch.cbue.GH-Todos"
 
     static func readToken() throws -> String? {
         let query: [String: Any] = [

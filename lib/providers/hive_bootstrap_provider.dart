@@ -7,6 +7,8 @@ part 'hive_bootstrap_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 Future<void> hiveBootstrap(Ref ref) async {
+  await initHiveForFlutter();
+
   if (!Hive.isBoxOpen(HiveStore.defaultBoxName)) {
     await Hive.openBox<dynamic>(HiveStore.defaultBoxName);
   }

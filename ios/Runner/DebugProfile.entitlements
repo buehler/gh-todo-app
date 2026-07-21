@@ -8,7 +8,7 @@
 	</array>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)ch.cbue.ghTodos</string>
+		<string>$(AppIdentifierPrefix)ch.cbue.GH-Todos</string>
 	</array>
 </dict>
 </plist>
