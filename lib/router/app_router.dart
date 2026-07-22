@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
@@ -7,6 +9,7 @@ import 'package:gh_todos/pages/issue_route_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +31,7 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
       _widgetDeepLinkLocation(initialLocation) ?? initialLocation;
 
   return GoRouter(
+    debugLogDiagnostics: kDebugMode,
     initialLocation: normalizedInitialLocation ?? AppRoutes.rootPath,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
@@ -36,7 +40,17 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
       if (!isLoaded) return null;
 
       final widgetLocation = _widgetDeepLinkLocation(state.uri.toString());
-      if (widgetLocation != null) return widgetLocation;
+      if (widgetLocation != null) {
+        unawaited(
+          ref
+              .read(appLoggerProvider)
+              .debug(
+                'Received widget deep link: ${state.uri}',
+                category: 'route',
+              ),
+        );
+        return widgetLocation;
+      }
 
       final hasToken = session.requireValue.hasToken;
       final path = state.uri.path;

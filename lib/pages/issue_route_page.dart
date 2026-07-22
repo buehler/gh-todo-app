@@ -68,9 +68,6 @@ class _IssueRouteDetail extends ConsumerStatefulWidget {
 }
 
 class _IssueRouteDetailState extends ConsumerState<_IssueRouteDetail> {
-  String? _activeRouteRefreshKey;
-  Future<ProjectIssuesFeed>? _routeRefreshFuture;
-
   @override
   Widget build(BuildContext context) {
     final projectIdAsync = ref.watch(
@@ -85,42 +82,29 @@ class _IssueRouteDetailState extends ConsumerState<_IssueRouteDetail> {
           return const _RouteRedirect(location: AppRoutes.rootPath);
         }
 
-        if (widget.routeRefreshKey != null) {
-          return FutureBuilder<ProjectIssuesFeed>(
-            future: _freshRouteFuture(projectId),
-            builder: (context, snapshot) {
-              final AsyncValue<ProjectIssuesFeed> feedAsync = switch (snapshot
-                  .connectionState) {
-                ConnectionState.done when snapshot.hasError => AsyncValue.error(
-                  snapshot.error!,
-                  snapshot.stackTrace ?? StackTrace.current,
-                ),
-                ConnectionState.done => AsyncValue.data(snapshot.requireData),
-                _ => const AsyncValue<ProjectIssuesFeed>.loading(),
-              };
-              return _buildIssue(context, projectId, feedAsync);
-            },
-          );
+        if (widget.requestedProjectId.trim() == projectId &&
+            ref.read(selectedProjectProvider).asData?.value != projectId) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            unawaited(
+              ref
+                  .read(selectedProjectProvider.notifier)
+                  .select(projectId, optimistic: true),
+            );
+          });
         }
 
-        return _buildIssue(
-          context,
-          projectId,
-          ref.watch(projectIssuesProvider(projectId)),
-        );
+        final feedAsync = switch (widget.routeRefreshKey) {
+          final refreshKey? => ref.watch(
+            projectRouteRefreshProvider((
+              projectId: projectId,
+              refreshKey: refreshKey,
+            )),
+          ),
+          null => ref.watch(projectIssuesProvider(projectId)),
+        };
+        return _buildIssue(context, projectId, feedAsync);
       },
     );
-  }
-
-  Future<ProjectIssuesFeed> _freshRouteFuture(String projectId) {
-    final routeKey = '$projectId:${widget.routeRefreshKey}';
-    if (_activeRouteRefreshKey != routeKey) {
-      _activeRouteRefreshKey = routeKey;
-      _routeRefreshFuture = Future<void>.delayed(
-        Duration.zero,
-      ).then((_) => refreshProjectIssuesForRoute(ref, projectId));
-    }
-    return _routeRefreshFuture!;
   }
 
   Widget _buildIssue(

@@ -488,8 +488,7 @@ class _FakeProjectIssues extends ProjectIssues {
   _FakeProjectIssues({required this.controller});
 
   @override
-  Stream<ProjectIssuesFeed> build(String projectId) =>
-      Stream.value(controller.next());
+  Future<ProjectIssuesFeed> build(String projectId) async => controller.next();
 }
 
 class _FakeOfflineStatus extends OfflineStatus {

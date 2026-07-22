@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/editorial_icon_button.dart';
@@ -63,6 +65,17 @@ class RootPage extends ConsumerWidget {
           return _EmptyState(key: pageKey, topPadding: topPadding);
         }
 
+        if (requestedProjectId?.trim() == selectedId &&
+            ref.read(selectedProjectProvider).asData?.value != selectedId) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            unawaited(
+              ref
+                  .read(selectedProjectProvider.notifier)
+                  .select(selectedId, optimistic: true),
+            );
+          });
+        }
+
         return _IssuesFeed(
           key: pageKey,
           projectId: selectedId,
@@ -123,8 +136,6 @@ class _IssuesFeed extends ConsumerStatefulWidget {
 
 class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
   bool _isRefreshing = false;
-  String? _activeRouteRefreshKey;
-  Future<ProjectIssuesFeed>? _routeRefreshFuture;
 
   bool get _isNativeDesktopPlatform {
     final platform = Theme.of(context).platform;
@@ -151,37 +162,16 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.routeRefreshKey != null) {
-      return FutureBuilder<ProjectIssuesFeed>(
-        future: _freshRouteFuture(),
-        builder: (context, snapshot) {
-          final AsyncValue<ProjectIssuesFeed> feedAsync =
-              switch (snapshot.connectionState) {
-                ConnectionState.done when snapshot.hasError => AsyncValue.error(
-                  snapshot.error!,
-                  snapshot.stackTrace ?? StackTrace.current,
-                ),
-                ConnectionState.done => AsyncValue.data(snapshot.requireData),
-                _ => const AsyncValue<ProjectIssuesFeed>.loading(),
-              };
-          return _buildFeed(context, feedAsync);
-        },
-      );
-    }
-
-    final feedAsync = ref.watch(projectIssuesProvider(widget.projectId));
+    final feedAsync = switch (widget.routeRefreshKey) {
+      final refreshKey? => ref.watch(
+        projectRouteRefreshProvider((
+          projectId: widget.projectId,
+          refreshKey: refreshKey,
+        )),
+      ),
+      null => ref.watch(projectIssuesProvider(widget.projectId)),
+    };
     return _buildFeed(context, feedAsync);
-  }
-
-  Future<ProjectIssuesFeed> _freshRouteFuture() {
-    final routeKey = '${widget.projectId}:${widget.routeRefreshKey}';
-    if (_activeRouteRefreshKey != routeKey) {
-      _activeRouteRefreshKey = routeKey;
-      _routeRefreshFuture = Future<void>.delayed(
-        Duration.zero,
-      ).then((_) => refreshProjectIssuesForRoute(ref, widget.projectId));
-    }
-    return _routeRefreshFuture!;
   }
 
   Widget _buildFeed(

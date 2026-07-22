@@ -789,7 +789,7 @@ class _FakeProjectIssues extends ProjectIssues {
   final ProjectIssuesFeed seed;
 
   @override
-  Stream<ProjectIssuesFeed> build(String projectId) => Stream.value(seed);
+  Future<ProjectIssuesFeed> build(String projectId) async => seed;
 }
 
 class _TrackedProjectIssues extends ProjectIssues {
@@ -799,9 +799,9 @@ class _TrackedProjectIssues extends ProjectIssues {
   _TrackedProjectIssues({required this.onBuild, required this.load});
 
   @override
-  Stream<ProjectIssuesFeed> build(String projectId) {
+  Future<ProjectIssuesFeed> build(String projectId) {
     onBuild();
-    return Stream.fromFuture(load());
+    return load();
   }
 }
 

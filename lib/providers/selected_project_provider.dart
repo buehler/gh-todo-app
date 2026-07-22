@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -47,7 +50,16 @@ final routeSelectedProjectProvider = FutureProvider.family<String?, String?>((
   final projects = ref.watch(projectListProvider);
 
   if (requested != null && projects.any((p) => p.id == requested)) {
-    await ref.read(selectedProjectProvider.notifier).select(requested);
+    unawaited(
+      ref
+          .read(appLoggerProvider)
+          .debug(
+            'Resolved widget route to project $requested.',
+            category: 'route',
+          ),
+    );
+    // The route is authoritative for the current render. Persistence is
+    // scheduled by the consuming page after the current provider build.
     return requested;
   }
 

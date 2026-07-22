@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/issue_comments.graphql.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
@@ -10,6 +12,7 @@ import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/issue_ordering.dart';
 import 'package:gh_todos/models/priority.dart';
 import 'package:gh_todos/models/project.dart';
+import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/session_generation_provider.dart';
@@ -23,6 +26,9 @@ part 'github_providers.g.dart';
 typedef ProjectIssuesFeed = ({List<IssueData> open, List<IssueData> closed});
 
 const Duration _recentlyClosedWindow = Duration(days: 3);
+const Duration projectRouteRefreshTimeout = Duration(seconds: 30);
+
+typedef ProjectRouteRefreshRequest = ({String projectId, String refreshKey});
 
 final userInfoProvider =
     FutureProvider.autoDispose<Query$UserInformation$viewer?>((ref) async {
@@ -65,13 +71,48 @@ final userOrganizationsProvider =
       return const [];
     });
 
-Future<ProjectIssuesFeed> refreshProjectIssuesForRoute(
-  WidgetRef ref,
-  String projectId,
-) {
-  ref.invalidate(projectIssuesProvider(projectId));
-  return ref.read(projectIssuesProvider(projectId).future);
-}
+final projectRouteRefreshProvider = FutureProvider.autoDispose
+    .family<ProjectIssuesFeed, ProjectRouteRefreshRequest>((
+      ref,
+      request,
+    ) async {
+      final logger = ref.read(appLoggerProvider);
+      unawaited(
+        logger.debug(
+          'Starting widget route refresh for project ${request.projectId}.',
+          category: 'route',
+        ),
+      );
+
+      try {
+        // The route-refresh provider is created while its consumer is building.
+        // Yield once so invalidation targets the mounted feed notifier rather
+        // than reading the value that was active during this build frame.
+        await Future<void>.delayed(Duration.zero);
+        ref.invalidate(projectIssuesProvider(request.projectId));
+        final feed = await ref
+            .read(projectIssuesProvider(request.projectId).future)
+            .timeout(projectRouteRefreshTimeout);
+        unawaited(
+          logger.debug(
+            'Completed widget route refresh for project ${request.projectId}: '
+            '${feed.open.length} open, ${feed.closed.length} closed.',
+            category: 'route',
+          ),
+        );
+        return feed;
+      } catch (error, stackTrace) {
+        unawaited(
+          logger.error(
+            'Widget route refresh failed for project ${request.projectId}.',
+            category: 'route',
+            error: error,
+            stackTrace: stackTrace,
+          ),
+        );
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+    });
 
 final ownerProjectsProvider = FutureProvider.autoDispose
     .family<Query$OwnerProjects$node?, String>((ref, ownerId) async {
@@ -100,12 +141,12 @@ final ownerProjectsProvider = FutureProvider.autoDispose
 /// layer patch the cached lists directly when an issue is closed, reopened,
 /// or created, avoiding a full refetch on every action.
 ///
-/// Pull-to-refresh still works via `ref.invalidate(projectIssuesProvider(id))`
-/// — that disposes the notifier and re-runs [build].
+/// Pull-to-refresh re-runs [build], while the `apply*` methods update its
+/// cached [AsyncValue] directly.
 @Riverpod(keepAlive: true)
 class ProjectIssues extends _$ProjectIssues {
   @override
-  Stream<ProjectIssuesFeed> build(String projectId) {
+  Future<ProjectIssuesFeed> build(String projectId) async {
     final projects = ref.watch(projectListProvider);
     final Project? project = projects
         .where((p) => p.id == projectId)
@@ -113,8 +154,10 @@ class ProjectIssues extends _$ProjectIssues {
         .firstOrNull;
 
     final client = ref.watch(graphqlClientProvider);
-    return Stream.fromFuture(
-      _loadProjectIssuesFeed(client, projectId: projectId, project: project),
+    return _loadProjectIssuesFeed(
+      client,
+      projectId: projectId,
+      project: project,
     );
   }
 
