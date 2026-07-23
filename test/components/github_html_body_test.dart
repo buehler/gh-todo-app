@@ -97,6 +97,38 @@ void main() {
     expect(find.textContaining('Done task'), findsOneWidget);
   });
 
+  testWidgets('keeps task checkbox label spacing consistent', (tester) async {
+    await tester.pumpWidget(
+      harness('''
+<ul class="contains-task-list">
+  <li class="task-list-item"><input type="checkbox">   First task</li>
+  <li class="task-list-item"><input type="checkbox">Second task</li>
+  <li class="task-list-item"><input type="checkbox"> Third task</li>
+</ul>
+<ul><li>Normal item</li></ul>
+'''),
+    );
+
+    final firstCheckbox = find.byKey(const ValueKey('github-task-checkbox-0'));
+    final secondCheckbox = find.byKey(const ValueKey('github-task-checkbox-1'));
+    final thirdCheckbox = find.byKey(const ValueKey('github-task-checkbox-2'));
+
+    final firstGap =
+        tester.getTopLeft(find.textContaining('First task')).dx -
+        tester.getTopRight(firstCheckbox).dx;
+    final secondGap =
+        tester.getTopLeft(find.textContaining('Second task')).dx -
+        tester.getTopRight(secondCheckbox).dx;
+    final thirdGap =
+        tester.getTopLeft(find.textContaining('Third task')).dx -
+        tester.getTopRight(thirdCheckbox).dx;
+
+    expect(firstGap, closeTo(secondGap, 0.01));
+    expect(firstGap, closeTo(thirdGap, 0.01));
+    expect(find.byKey(const ValueKey('github-task-checkbox-3')), findsNothing);
+    expect(find.text('Normal item'), findsOneWidget);
+  });
+
   testWidgets('does not send a duplicate task toggle while one is in flight', (
     tester,
   ) async {

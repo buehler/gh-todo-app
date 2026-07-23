@@ -75,7 +75,7 @@ class GithubHtmlBody extends StatelessWidget {
     ).copyWith(color: onSurface, fontWeight: FontWeight.w700, height: 1.25);
 
     return Html(
-      data: trimmed,
+      data: _normalizeTaskCheckboxWhitespace(trimmed),
       extensions: [
         TableHtmlExtension(),
         SvgHtmlExtension(),
@@ -198,6 +198,21 @@ class GithubHtmlBody extends StatelessWidget {
         ),
         'img': Style(margin: Margins.only(bottom: 12)),
       },
+    );
+  }
+
+  static final RegExp _taskCheckboxLabelWhitespace = RegExp(
+    r'''(<li\b(?=[^>]*\bclass\s*=\s*["'][^"']*\btask-list-item\b[^"']*["'])[^>]*>\s*<input\b(?=[^>]*\btype\s*=\s*["']?checkbox\b)[^>]*>)\s+''',
+    caseSensitive: false,
+  );
+
+  /// The checkbox widget supplies the task-label gap. Remove whitespace from
+  /// the HTML source at this boundary so the first task item cannot receive a
+  /// second, source-dependent gap.
+  static String _normalizeTaskCheckboxWhitespace(String html) {
+    return html.replaceAllMapped(
+      _taskCheckboxLabelWhitespace,
+      (match) => match.group(1)!,
     );
   }
 
