@@ -1,6 +1,6 @@
 [
   {
     "language": "en-US",
-    "text": "• Add the new iOS Home Screen widget to see tasks at a glance, switch projects, refresh, and mark items complete.\n• Tap GitHub task-list checkboxes in issue descriptions and comments to update them directly.\n• Markdown lists now continue automatically while writing issues and comments.\n• Improved reliability across supported platforms."
+    "text": "iOS: initial release for iOS. Initial release of GH Todos, a focused todo app built on GitHub Projects.\n\nConnect with a GitHub token, choose your projects, review priority- and due-date-aware issues, add new tasks, update details, comment, and close or reopen items from one streamlined interface.\n\n• Add the new iOS Home Screen widget to see tasks at a glance, switch projects, refresh, and mark items complete.\n• Tap GitHub task-list checkboxes in issue descriptions and comments to update them directly.\n• Markdown lists now continue automatically while writing issues and comments.\n• Improved reliability across supported platforms."
   }
 ]
