@@ -57,28 +57,27 @@ class MarkdownListContinuationFormatter extends TextInputFormatter {
   ) {
     final oldText = oldValue.text;
     final newText = newValue.text;
-    final sharedLength = oldText.length < newText.length
-        ? oldText.length
-        : newText.length;
+    final selection = newValue.selection;
+    if (!selection.isValid || !selection.isCollapsed) return null;
+    if (newText.length != oldText.length + 1) return null;
 
-    var prefixLength = 0;
-    while (prefixLength < sharedLength &&
-        oldText.codeUnitAt(prefixLength) == newText.codeUnitAt(prefixLength)) {
-      prefixLength++;
+    // The platform places the collapsed caret immediately after a typed
+    // newline. Unlike a text diff, this remains unambiguous when Enter is
+    // pressed adjacent to an existing newline between two list items.
+    final insertionOffset = selection.extentOffset - 1;
+    if (insertionOffset < 0 || insertionOffset >= newText.length) {
+      return null;
+    }
+    if (newText.codeUnitAt(insertionOffset) != '\n'.codeUnitAt(0)) {
+      return null;
     }
 
-    var suffixLength = 0;
-    while (suffixLength < sharedLength - prefixLength &&
-        oldText.codeUnitAt(oldText.length - suffixLength - 1) ==
-            newText.codeUnitAt(newText.length - suffixLength - 1)) {
-      suffixLength++;
-    }
-
-    final insertedText = newText.substring(
-      prefixLength,
-      newText.length - suffixLength,
+    final restoredText = newText.replaceRange(
+      insertionOffset,
+      insertionOffset + 1,
+      '',
     );
-    return insertedText == '\n' ? prefixLength : null;
+    return restoredText == oldText ? insertionOffset : null;
   }
 
   String? _continuationFor(String line) {
