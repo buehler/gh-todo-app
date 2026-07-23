@@ -1,10 +1,11 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/issue_detail_page.dart';
+import 'package:gh_todos/pages/issue_route_page.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
@@ -216,6 +217,52 @@ void main() {
 
     expect(find.byKey(IssueDetailPage.pageKey), findsOneWidget);
     expect(find.text('Alpha issue body.'), findsOneWidget);
+  });
+
+  testWidgets('wide issue route uses no transition page', (tester) async {
+    await pumpApp(
+      tester,
+      MediaQuery(
+        data: const MediaQueryData(size: Size(1200, 900)),
+        child: _deepLinkApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Alpha issue'));
+    await tester.pumpAndSettle();
+
+    final pages = tester
+        .widgetList<Navigator>(find.byType(Navigator))
+        .expand((navigator) => navigator.pages);
+
+    expect(
+      pages.whereType<NoTransitionPage<dynamic>>().any(
+        (page) => page.child is IssueRoutePage,
+      ),
+      isTrue,
+    );
+  });
+
+  testWidgets('compact issue route retains its material transition page', (
+    tester,
+  ) async {
+    await pumpApp(tester, _deepLinkApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Alpha issue'));
+    await tester.pumpAndSettle();
+
+    final pages = tester
+        .widgetList<Navigator>(find.byType(Navigator))
+        .expand((navigator) => navigator.pages);
+
+    expect(
+      pages.whereType<MaterialPage<dynamic>>().any(
+        (page) => page.child is IssueRoutePage,
+      ),
+      isTrue,
+    );
   });
 
   testWidgets('missing issue deep link redirects to project root', (

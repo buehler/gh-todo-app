@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
@@ -12,6 +13,7 @@ import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
+import 'package:gh_todos/style/breakpoints.dart';
 import 'package:go_router/go_router.dart';
 
 /// A [ChangeNotifier] that fires whenever the session provider changes,
@@ -102,13 +104,25 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
                   GoRoute(
                     path: AppRoutes.issueDetailPath,
                     name: AppRoutes.issueDetailName,
-                    builder: (context, state) => IssueRoutePage(
-                      requestedProjectId:
-                          state.pathParameters[AppRoutes.projectIdParam]!,
-                      issueId: state.pathParameters[AppRoutes.issueIdParam]!,
-                      routeRefreshKey:
-                          state.uri.queryParameters[AppRoutes.freshQueryParam],
-                    ),
+                    pageBuilder: (context, state) {
+                      final child = IssueRoutePage(
+                        requestedProjectId:
+                            state.pathParameters[AppRoutes.projectIdParam]!,
+                        issueId: state.pathParameters[AppRoutes.issueIdParam]!,
+                        routeRefreshKey: state
+                            .uri
+                            .queryParameters[AppRoutes.freshQueryParam],
+                      );
+
+                      if (isWide(context)) {
+                        return NoTransitionPage(
+                          key: state.pageKey,
+                          child: child,
+                        );
+                      }
+
+                      return MaterialPage(key: state.pageKey, child: child);
+                    },
                   ),
                 ],
               ),
