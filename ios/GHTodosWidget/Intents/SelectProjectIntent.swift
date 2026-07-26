@@ -16,7 +16,13 @@ struct SelectProjectIntent: WidgetConfigurationIntent {
 
 struct ProjectIDOptionsProvider: DynamicOptionsProvider {
     func results() async throws -> IntentItemCollection<String> {
-        let items = ProjectCache.read().map { project in
+        let cacheResult = ProjectCache.read()
+        let projects = cacheResult.projects ?? []
+        WidgetDiagnostics.event("configuration_options_loaded", details: [
+            "cache_result": cacheResult.diagnosticCode,
+            "project_count": projects.count,
+        ])
+        let items = projects.map { project in
             let title = "\(project.ownerLogin) / \(project.name)"
 
             return IntentItem(

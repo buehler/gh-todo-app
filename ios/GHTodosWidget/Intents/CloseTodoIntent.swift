@@ -15,9 +15,16 @@ struct CloseTodoIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        logger.info("close issue \(issueId)")
-        try await GraphQLClient.closeIssue(issueId: issueId)
-        WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
-        return .result()
+        let diagnosticID = WidgetDiagnostics.identifier()
+        WidgetDiagnostics.event("close_todo_started", diagnosticID: diagnosticID)
+        do {
+            try await GraphQLClient.closeIssue(issueId: issueId)
+            WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
+            WidgetDiagnostics.event("close_todo_succeeded", diagnosticID: diagnosticID)
+            return .result()
+        } catch {
+            WidgetDiagnostics.failure(error, diagnosticID: diagnosticID, stage: "close_todo")
+            throw error
+        }
     }
 }

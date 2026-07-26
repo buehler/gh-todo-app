@@ -7,7 +7,7 @@ struct RefreshIssueIntent: AppIntent {
     static var title: LocalizedStringResource = "Refresh Todos"
 
     func perform() async throws -> some IntentResult {
-        logger.info("refresh todos")
+        WidgetDiagnostics.event("refresh_requested")
         WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
         return .result()
     }

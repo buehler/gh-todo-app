@@ -16,9 +16,16 @@ struct ReopenTodoIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        logger.info("reopen issue \(issueId)")
-        try await GraphQLClient.reopenIssue(issueId: issueId)
-        WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
-        return .result()
+        let diagnosticID = WidgetDiagnostics.identifier()
+        WidgetDiagnostics.event("reopen_todo_started", diagnosticID: diagnosticID)
+        do {
+            try await GraphQLClient.reopenIssue(issueId: issueId)
+            WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
+            WidgetDiagnostics.event("reopen_todo_succeeded", diagnosticID: diagnosticID)
+            return .result()
+        } catch {
+            WidgetDiagnostics.failure(error, diagnosticID: diagnosticID, stage: "reopen_todo")
+            throw error
+        }
     }
 }

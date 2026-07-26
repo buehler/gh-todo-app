@@ -1,6 +1,7 @@
 import Flutter
 import os
 import UIKit
+import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -20,12 +21,12 @@ import UIKit
             name: channelName,
             binaryMessenger: bridge.applicationRegistrar.messenger()
         )
-        logger.debug("Created channel: \(self.channelName)")
+        logger.debug("event=widget_cache_channel_created")
         
         channel.setMethodCallHandler { [weak self] call, result in
             guard let self else { return }
             
-            logger.debug("Received handler method call: \(call.method)")
+            logger.debug("event=widget_cache_method_received method=\(call.method, privacy: .public)")
             switch call.method {
             case "writeProjectsJson":
                 guard
@@ -42,8 +43,11 @@ import UIKit
                 
                 do {
                     try self.writeProjectsJson(json)
+                    WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
+                    self.logger.info("event=widget_cache_write_succeeded bytes=\(json.utf8.count, privacy: .public)")
                     result(nil)
                 } catch {
+                    self.logger.error("event=widget_cache_write_failed")
                     result(FlutterError(
                         code: "write_failed",
                         message: error.localizedDescription,
@@ -54,8 +58,11 @@ import UIKit
             case "clearProjectsJson":
                 do {
                     try self.clearProjectsJson()
+                    WidgetCenter.shared.reloadTimelines(ofKind: "GHTodosWidget")
+                    self.logger.info("event=widget_cache_clear_succeeded")
                     result(nil)
                 } catch {
+                    self.logger.error("event=widget_cache_clear_failed")
                     result(FlutterError(
                         code: "clear_failed",
                         message: error.localizedDescription,

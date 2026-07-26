@@ -75,7 +75,12 @@ extension GraphQLClient {
         do {
             response = try JSONDecoder().decode(Response.self, from: result)
         } catch {
-            throw Errors.noResult
+            WidgetDiagnostics.decodingFailure(error)
+            throw Errors.malformedResponse
+        }
+
+        guard response.data?.node != nil else {
+            throw Errors.missingProjectData
         }
 
         let dateFormatter = DateFormatter()

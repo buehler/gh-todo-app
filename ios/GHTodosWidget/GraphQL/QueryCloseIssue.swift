@@ -20,10 +20,15 @@ extension GraphQLClient {
         )
         let result = try await fetch(query)
 
+        let response: Response
         do {
-            _ = try JSONDecoder().decode(Response.self, from: result)
+            response = try JSONDecoder().decode(Response.self, from: result)
         } catch {
-            throw Errors.noResult
+            WidgetDiagnostics.decodingFailure(error)
+            throw Errors.malformedResponse
+        }
+        guard response.data?.closeIssue != nil else {
+            throw Errors.malformedResponse
         }
     }
 }

@@ -26,20 +26,28 @@ struct TodosWidgetView: View {
     let entry: TodosEntry
 
     private var uri: URL {
-        var uri = URL(string: "ghtodos://local/")
-        if let project = entry.project {
-            uri = URL(string: "ghtodos://local/project/\(project.id)")
+        if case let .content(project, _) = entry.state {
+            return URL(string: "ghtodos://local/project/\(project.id)")!
         }
-        return uri!
+        return URL(string: "ghtodos://local/")!
     }
 
     var body: some View {
         VStack(alignment: .leading) {
-            if let project = entry.project {
+            switch entry.state {
+            case let .content(project, todos):
                 WidgetHeader(project: project)
-                TodosList(project: project, todos: entry.todos)
-            } else {
+                TodosList(project: project, todos: todos)
+            case .unconfigured:
                 NoProjectView()
+            case .projectUnavailable:
+                ProjectUnavailableView()
+            case let .error(failure, diagnosticID, occurredAt):
+                WidgetErrorView(
+                    failure: failure,
+                    diagnosticID: diagnosticID,
+                    occurredAt: occurredAt
+                )
             }
         }
         .frame(
@@ -61,6 +69,41 @@ private struct NoProjectView: View {
             )
             .font(.system(size: 14))
             .fontWeight(.light)
+        }
+    }
+}
+
+private struct ProjectUnavailableView: View {
+    var body: some View {
+        VStack(alignment: .center, spacing: 8) {
+            Text("GH Todos")
+                .font(.headline)
+            Text("The selected project is unavailable. Reconfigure this widget to select a project.")
+                .font(.system(size: 14))
+                .fontWeight(.light)
+                .multilineTextAlignment(.center)
+        }
+    }
+}
+
+private struct WidgetErrorView: View {
+    let failure: WidgetRenderFailure
+    let diagnosticID: String
+    let occurredAt: Date
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("GH Todos could not refresh", systemImage: "exclamationmark.triangle")
+                .font(.headline)
+            Text("Try refreshing the widget. If this continues, open the app and check the project configuration.")
+                .font(.system(size: 13))
+                .fontWeight(.light)
+            Spacer(minLength: 0)
+            Text("\(failure.code) · \(failure.stage)")
+                .font(.caption.monospaced())
+            Text("\(diagnosticID) · \(occurredAt.formatted(date: .omitted, time: .shortened))")
+                .font(.caption2.monospaced())
+                .foregroundStyle(.secondary)
         }
     }
 }
@@ -451,7 +494,7 @@ extension Color {
     }
 }
 
-private let previewProject = WidgetProject(
+let previewProject = WidgetProject(
     id: "id",
     name: "MyProject",
     ownerLogin: "cbue",
@@ -460,7 +503,7 @@ private let previewProject = WidgetProject(
     priorityOptionMap: [:]
 )
 
-private let previewTodos: [Todo] = [
+let previewTodos: [Todo] = [
     Todo(
         id: "1",
         title: "Ship widget priority styling",
@@ -506,47 +549,43 @@ private let previewTodos: [Todo] = [
 #Preview("Unconfigured Widget", as: .systemSmall) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: nil, todos: previewTodos)
+    TodosEntry(date: Date(), state: .unconfigured)
 }
 
 #Preview("Large Widget", as: .systemLarge) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: previewProject, todos: previewTodos)
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: previewTodos))
 }
 
 #Preview("Large Widget With Less Todos", as: .systemLarge) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(
-        date: Date(),
-        project: previewProject,
-        todos: Array(previewTodos.dropFirst(3))
-    )
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: Array(previewTodos.dropFirst(3))))
 }
 
 #Preview("Large Empty Widget", as: .systemLarge) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: previewProject, todos: [])
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: []))
 }
 
 #Preview("Medium Widget", as: .systemMedium) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: previewProject, todos: previewTodos)
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: previewTodos))
 }
 
 #Preview("Medium Empty Widget", as: .systemMedium) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: previewProject, todos: [])
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: []))
 }
 
 #Preview("Small Widget", as: .systemSmall) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: previewProject, todos: previewTodos)
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: previewTodos))
 }
 
 #Preview("Small Widget Closed Todo", as: .systemSmall) {
@@ -554,8 +593,7 @@ private let previewTodos: [Todo] = [
 } timeline: {
     TodosEntry(
         date: Date(),
-        project: previewProject,
-        todos: [
+        state: .content(project: previewProject, todos: [
             Todo(
                 id: "1",
                 title: "Ship widget priority styling",
@@ -564,7 +602,7 @@ private let previewTodos: [Todo] = [
                 priority: .urgent,
                 dueDate: Date().addingTimeInterval(86_400)
             )
-        ]
+        ])
     )
 }
 
@@ -573,20 +611,38 @@ private let previewTodos: [Todo] = [
 } timeline: {
     TodosEntry(
         date: Date(),
-        project: previewProject,
-        todos: [
+        state: .content(project: previewProject, todos: [
             Todo(
                 id: "1",
                 title: "Ship widget priority styling",
                 number: 13,
                 dueDate: Date().addingTimeInterval(86_400)
             )
-        ]
+        ])
     )
 }
 
 #Preview("Small Empty Widget", as: .systemSmall) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), project: previewProject, todos: [])
+    TodosEntry(date: Date(), state: .content(project: previewProject, todos: []))
+}
+
+#Preview("Project Unavailable", as: .systemSmall) {
+    GHTodosWidget()
+} timeline: {
+    TodosEntry(date: Date(), state: .projectUnavailable)
+}
+
+#Preview("Widget Error", as: .systemMedium) {
+    GHTodosWidget()
+} timeline: {
+    TodosEntry(
+        date: Date(),
+        state: .error(
+            WidgetRenderFailure(error: GraphQLClient.Errors.missingToken, stage: "timeline"),
+            diagnosticID: "DEMO1234",
+            occurredAt: Date()
+        )
+    )
 }
