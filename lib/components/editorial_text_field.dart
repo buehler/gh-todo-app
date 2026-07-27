@@ -21,8 +21,11 @@ class EditorialTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final TextInputAction? textInputAction;
   final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
   final bool autofocus;
   final bool obscureText;
+  final bool autocorrect;
+  final bool enableSuggestions;
   final bool enabled;
   final TextFieldVariation variation;
   final bool submitOnModifierEnter;
@@ -50,8 +53,11 @@ class EditorialTextField extends StatefulWidget {
     this.onSubmitted,
     this.textInputAction,
     this.keyboardType,
+    this.autofillHints,
     this.autofocus = false,
     this.obscureText = false,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     this.enabled = true,
     this.variation = TextFieldVariation.editorial,
     this.submitOnModifierEnter = false,
@@ -182,7 +188,10 @@ class _EditorialTextFieldState extends State<EditorialTextField> {
                       inputFormatters: widget.inputFormatters,
                       textInputAction: widget.textInputAction,
                       keyboardType: widget.keyboardType,
+                      autofillHints: widget.autofillHints,
                       autofocus: widget.autofocus,
+                      autocorrect: widget.autocorrect,
+                      enableSuggestions: widget.enableSuggestions,
                       minLines: widget.minLines,
                       maxLines: widget.maxLines,
                       style: fieldTextStyle,

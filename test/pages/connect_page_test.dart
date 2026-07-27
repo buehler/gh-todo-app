@@ -75,6 +75,22 @@ void main() {
     );
   });
 
+  testWidgets('PAT field is configured as a password autofill field', (
+    tester,
+  ) async {
+    final result = await createTestApp();
+
+    await tester.pumpWidget(result.app);
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.obscureText, isTrue);
+    expect(field.autofillHints, const [AutofillHints.password]);
+    expect(field.keyboardType, TextInputType.visiblePassword);
+    expect(field.autocorrect, isFalse);
+    expect(field.enableSuggestions, isFalse);
+  });
+
   testWidgets(
     'tapping "How to create one?" reaches the help link via hit test',
     (tester) async {

@@ -64,7 +64,12 @@ class ConnectTokenForm extends StatelessWidget {
             onChanged: onChanged,
             onSubmitted: onSubmitted,
             textInputAction: TextInputAction.done,
+            keyboardType: TextInputType.visiblePassword,
+            autofillHints: const [AutofillHints.password],
             autofocus: false,
+            obscureText: true,
+            autocorrect: false,
+            enableSuggestions: false,
             errorText: errorText,
           ),
           Padding(

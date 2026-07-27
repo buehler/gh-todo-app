@@ -173,6 +173,13 @@ void main() {
     await tester.tap(find.text('Update Token'));
     await tester.pumpAndSettle();
 
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.obscureText, isTrue);
+    expect(field.autofillHints, const [AutofillHints.password]);
+    expect(field.keyboardType, TextInputType.visiblePassword);
+    expect(field.autocorrect, isFalse);
+    expect(field.enableSuggestions, isFalse);
+
     await tester.enterText(find.byType(TextField), 'token-b');
     await tester.pumpAndSettle();
 

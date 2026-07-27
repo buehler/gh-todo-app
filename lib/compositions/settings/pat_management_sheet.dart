@@ -236,7 +236,12 @@ class _PatUpdateSheetState extends State<_PatUpdateSheet> {
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => _submit(),
             textInputAction: TextInputAction.done,
+            keyboardType: TextInputType.visiblePassword,
+            autofillHints: const [AutofillHints.password],
             autofocus: true,
+            obscureText: true,
+            autocorrect: false,
+            enableSuggestions: false,
           ),
         ),
         Padding(
