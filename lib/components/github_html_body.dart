@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 class GithubHtmlBody extends StatelessWidget {
   final String? html;
   final String? emptyText;
+  final bool linksEnabled;
 
   /// Called for a GitHub task-list checkbox with its source-order index and
   /// requested checked state. Omit it to render task lists as read-only.
@@ -26,6 +27,7 @@ class GithubHtmlBody extends StatelessWidget {
     this.emptyText,
     this.onTaskToggle,
     this.taskToggleBusy = false,
+    this.linksEnabled = true,
     super.key,
   });
 
@@ -97,6 +99,7 @@ class GithubHtmlBody extends StatelessWidget {
         ),
       ],
       onLinkTap: (url, _, _) {
+        if (!linksEnabled) return;
         if (url == null || url.isEmpty) return;
         final uri = Uri.tryParse(url);
         if (uri == null) return;

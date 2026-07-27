@@ -117,7 +117,10 @@ class _ChangelogPageState extends State<ChangelogPage> {
                         controller: _scrollController,
                         child: SingleChildScrollView(
                           controller: _scrollController,
-                          child: GithubHtmlBody(html: snapshot.data),
+                          child: GithubHtmlBody(
+                            html: snapshot.data,
+                            linksEnabled: false,
+                          ),
                         ),
                       );
                     },
