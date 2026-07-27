@@ -13,7 +13,7 @@ class GithubTokenStorageService {
             aOptions: AndroidOptions(),
             iOptions: IOSOptions(
               accessibility: KeychainAccessibility.first_unlock,
-              synchronizable: true,
+              synchronizable: false,
               groupId: iosKeychainAccessGroup,
             ),
           );
