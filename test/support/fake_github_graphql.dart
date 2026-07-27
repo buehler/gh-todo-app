@@ -3,11 +3,13 @@ import 'package:graphql/client.dart';
 class FakeGithubGraphqlAccount {
   final FakeGithubGraphqlViewer viewer;
   final List<FakeGithubGraphqlOrg> organizations;
+  final List<FakeGithubGraphqlUser> otherUsers;
   final Map<String, List<FakeGithubGraphqlProject>> projectsByOwnerId;
 
   const FakeGithubGraphqlAccount({
     required this.viewer,
     this.organizations = const [],
+    this.otherUsers = const [],
     this.projectsByOwnerId = const {},
   });
 }
@@ -33,6 +35,13 @@ class FakeGithubGraphqlOrg {
   const FakeGithubGraphqlOrg({required this.id, required this.login});
 }
 
+class FakeGithubGraphqlUser {
+  final String login;
+  final List<FakeGithubGraphqlProject> projects;
+
+  const FakeGithubGraphqlUser({required this.login, this.projects = const []});
+}
+
 class FakeGithubGraphqlProject {
   final String id;
   final String title;
@@ -50,26 +59,55 @@ class FakeGithubGraphqlProject {
 GraphQLClient createFakeGithubGraphqlClient({
   required Future<String?> Function() readToken,
   required Map<String, FakeGithubGraphqlAccount> accountsByToken,
+  void Function(String operationName)? onOperation,
+  GraphQLError? Function(String operationName, Map<String, dynamic> variables)?
+  operationError,
 }) {
   return GraphQLClient(
-    link: AuthLink(
-      getToken: () async {
-        final token = await readToken();
-        return token == null ? null : 'Bearer $token';
-      },
-    ).concat(_FakeGithubGraphqlLink(accountsByToken: accountsByToken)),
+    link:
+        AuthLink(
+          getToken: () async {
+            final token = await readToken();
+            return token == null ? null : 'Bearer $token';
+          },
+        ).concat(
+          _FakeGithubGraphqlLink(
+            accountsByToken: accountsByToken,
+            onOperation: onOperation,
+            operationError: operationError,
+          ),
+        ),
     cache: GraphQLCache(store: InMemoryStore()),
   );
 }
 
 class _FakeGithubGraphqlLink extends Link {
   final Map<String, FakeGithubGraphqlAccount> accountsByToken;
+  final void Function(String operationName)? onOperation;
+  final GraphQLError? Function(
+    String operationName,
+    Map<String, dynamic> variables,
+  )?
+  operationError;
 
-  _FakeGithubGraphqlLink({required this.accountsByToken});
+  _FakeGithubGraphqlLink({
+    required this.accountsByToken,
+    this.onOperation,
+    this.operationError,
+  });
 
   @override
   Stream<Response> request(Request request, [NextLink? forward]) async* {
     final operationName = _operationName(request);
+    onOperation?.call(operationName);
+    final injectedError = operationError?.call(
+      operationName,
+      request.variables,
+    );
+    if (injectedError != null) {
+      yield Response(errors: [injectedError], response: const {});
+      return;
+    }
     final token = _tokenFromRequest(request);
     final account = token == null ? null : accountsByToken[token];
 
@@ -87,6 +125,10 @@ class _FakeGithubGraphqlLink extends Link {
       'OwnerProjects' => _ownerProjectsData(
         account,
         request.variables['ownerId'] as String?,
+      ),
+      'UserProjects' => _userProjectsData(
+        account,
+        request.variables['login'] as String?,
       ),
       _ => null,
     };
@@ -150,6 +192,36 @@ Map<String, Object?> _userOrganizationsData(FakeGithubGraphqlAccount account) {
       },
       '__typename': 'User',
     },
+  });
+}
+
+Map<String, Object?> _userProjectsData(
+  FakeGithubGraphqlAccount account,
+  String? login,
+) {
+  final user = account.otherUsers
+      .where((entry) => entry.login.toLowerCase() == login?.toLowerCase())
+      .firstOrNull;
+  return _withRateLimit({
+    'user': user == null
+        ? null
+        : {
+            'login': user.login,
+            'projectsV2': {
+              'nodes': [
+                for (final project in user.projects)
+                  {
+                    'id': project.id,
+                    'title': project.title,
+                    'shortDescription': project.shortDescription,
+                    'closed': project.closed,
+                    '__typename': 'ProjectV2',
+                  },
+              ],
+              '__typename': 'ProjectV2Connection',
+            },
+            '__typename': 'User',
+          },
   });
 }
 

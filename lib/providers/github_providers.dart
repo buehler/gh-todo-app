@@ -6,6 +6,7 @@ import 'package:gh_todos/graphql/owner_projects.graphql.dart';
 import 'package:gh_todos/graphql/project_issues.graphql.dart';
 import 'package:gh_todos/graphql/schema.graphql.dart';
 import 'package:gh_todos/graphql/user_orgs.graphql.dart';
+import 'package:gh_todos/graphql/user_projects.graphql.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/issue_details.dart';
@@ -69,6 +70,26 @@ final userOrganizationsProvider =
         throw result.exception!;
       }
       return const [];
+    });
+
+final userProjectsProvider = FutureProvider.autoDispose
+    .family<Query$UserProjects$user?, String>((ref, login) async {
+      ref.watch(sessionGenerationProvider);
+      final client = ref.watch(graphqlClientProvider);
+      final result = await client.query$UserProjects(
+        Options$Query$UserProjects(
+          variables: Variables$Query$UserProjects(login: login),
+          fetchPolicy: FetchPolicy.networkOnly,
+        ),
+      );
+      final parsed = result.parsedData;
+      if (parsed != null) {
+        return parsed.user;
+      }
+      if (result.hasException) {
+        throw result.exception!;
+      }
+      return null;
     });
 
 final projectRouteRefreshProvider = FutureProvider.autoDispose

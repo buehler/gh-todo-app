@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/adaptive_sheet.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
+import 'package:gh_todos/graphql/user_projects.graphql.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
-/// Shows a modal bottom sheet that lets the user pick an owner (self or org)
-/// and then select a GitHub project to add.
+/// Shows a modal bottom sheet that lets the user pick a project owned by the
+/// viewer, an organization, or an explicitly entered GitHub user.
 ///
 /// Projects whose IDs are in [excludeProjectIds] are filtered out.
 /// Returns the selected [Project] or `null` if dismissed.
@@ -36,6 +39,8 @@ class _Owner {
   const _Owner({required this.id, required this.login});
 }
 
+enum _AddProjectMode { owned, otherUser }
+
 class _AddProjectSheet extends ConsumerStatefulWidget {
   final Set<String> excludeProjectIds;
   final bool isDialog;
@@ -50,9 +55,18 @@ class _AddProjectSheet extends ConsumerStatefulWidget {
 }
 
 class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
+  final _usernameController = TextEditingController();
+  _AddProjectMode _mode = _AddProjectMode.owned;
   _Owner? _explicitOwner;
+  String? _submittedLogin;
 
   void _selectOwner(_Owner owner) => setState(() => _explicitOwner = owner);
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +81,10 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
     AsyncValue<Query$UserInformation$viewer?> userAsync,
     ScrollController? scrollController,
   ) {
+    if (_mode == _AddProjectMode.otherUser) {
+      return _buildOtherUserView(context, scrollController);
+    }
+
     return userAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => const Center(child: Text('Failed to load user')),
@@ -89,7 +107,7 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
                 24,
                 16,
               ),
-              child: _SheetHeader(),
+              child: const _SheetHeader(title: 'Add Project'),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -99,7 +117,18 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
                 onChanged: _selectOwner,
               ),
             ),
-            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: EditorialButton(
+                  label: 'From another user',
+                  leadingIcon: LucideIcons.userSearch,
+                  variation: ButtonVariation.secondary,
+                  onPressed: _showOtherUserView,
+                ),
+              ),
+            ),
             _Divider(),
             Expanded(
               child: _ProjectList(
@@ -112,6 +141,96 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildOtherUserView(
+    BuildContext context,
+    ScrollController? scrollController,
+  ) {
+    final submittedLogin = _submittedLogin;
+    final projectsAsync = submittedLogin == null
+        ? null
+        : ref.watch(userProjectsProvider(submittedLogin));
+    final isLoading = projectsAsync?.isLoading ?? false;
+    final canSubmit =
+        _normalizeLogin(_usernameController.text).isNotEmpty && !isLoading;
+    final onSurfaceVariant = resolveColor(
+      context,
+      ColorTokens.surface.onVariant,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AdaptiveSheetDragHandle(isDialog: widget.isDialog),
+        Padding(
+          padding: EdgeInsets.fromLTRB(16, widget.isDialog ? 16 : 0, 24, 12),
+          child: Row(
+            children: [
+              EditorialIconButton(
+                icon: LucideIcons.arrowLeft,
+                tooltip: 'Back',
+                variation: IconButtonVariation.ghost,
+                onPressed: _showOwnedView,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: _SheetHeader(title: 'Add from another user'),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StyledText(
+                'Enter the exact GitHub username of the personal project owner.',
+                style: editorialTextStyle(
+                  TextTokens.body.$small,
+                  color: onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              EditorialTextField(
+                controller: _usernameController,
+                label: 'GitHub username',
+                hintText: 'octocat',
+                prefixIcon: LucideIcons.atSign,
+                enabled: !isLoading,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onChanged: _handleUsernameChanged,
+                onSubmitted: (_) => _submitUsername(),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: EditorialButton(
+                  label: 'Find projects',
+                  leadingIcon: LucideIcons.search,
+                  loading: isLoading,
+                  enabled: canSubmit,
+                  onPressed: canSubmit ? _submitUsername : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _Divider(),
+        Expanded(
+          child: _OtherUserProjectResults(
+            projectsAsync: projectsAsync,
+            submittedLogin: submittedLogin,
+            excludeProjectIds: widget.excludeProjectIds,
+            scrollController: scrollController,
+            onRetry: submittedLogin == null ? null : _submitUsername,
+          ),
+        ),
+      ],
     );
   }
 
@@ -151,6 +270,38 @@ class _AddProjectSheetState extends ConsumerState<_AddProjectSheet> {
       },
     );
   }
+
+  void _showOtherUserView() {
+    setState(() {
+      _mode = _AddProjectMode.otherUser;
+      _submittedLogin = null;
+    });
+  }
+
+  void _showOwnedView() {
+    setState(() {
+      _mode = _AddProjectMode.owned;
+      _submittedLogin = null;
+    });
+  }
+
+  void _handleUsernameChanged(String value) {
+    if (_normalizeLogin(value) == _submittedLogin) return;
+    setState(() => _submittedLogin = null);
+  }
+
+  void _submitUsername() {
+    final login = _normalizeLogin(_usernameController.text);
+    if (login.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    ref.invalidate(userProjectsProvider(login));
+    setState(() => _submittedLogin = login);
+  }
+}
+
+String _normalizeLogin(String input) {
+  final trimmed = input.trim();
+  return trimmed.startsWith('@') ? trimmed.substring(1).trim() : trimmed;
 }
 
 class _OwnerDropdownLoader extends ConsumerWidget {
@@ -192,12 +343,16 @@ class _OwnerDropdownLoader extends ConsumerWidget {
 }
 
 class _SheetHeader extends StatelessWidget {
+  final String title;
+
+  const _SheetHeader({required this.title});
+
   @override
   Widget build(BuildContext context) {
     final onSurface = resolveColor(context, ColorTokens.surface.on);
 
     return StyledText(
-      'Add Project',
+      title,
       style: editorialTextStyle(
         TextTokens.headline.$medium,
         color: onSurface,
@@ -275,6 +430,142 @@ class _OwnerDropdown extends StatelessWidget {
   }
 }
 
+class _OtherUserProjectResults extends StatelessWidget {
+  final AsyncValue<Query$UserProjects$user?>? projectsAsync;
+  final String? submittedLogin;
+  final Set<String> excludeProjectIds;
+  final ScrollController? scrollController;
+  final VoidCallback? onRetry;
+
+  const _OtherUserProjectResults({
+    required this.projectsAsync,
+    required this.submittedLogin,
+    required this.excludeProjectIds,
+    required this.scrollController,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncValue = projectsAsync;
+    if (asyncValue == null) {
+      return const _LookupState(
+        title: 'Enter a username',
+        message: 'Projects are loaded only after you submit an exact login.',
+      );
+    }
+
+    return asyncValue.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => _LookupState(
+        title: 'Could not load projects',
+        message: 'Check the username and token access, then try again.',
+        actionLabel: 'Try again',
+        onAction: onRetry,
+      ),
+      data: (user) {
+        if (user == null) {
+          return _LookupState(
+            title: 'User not found',
+            message: 'No GitHub user exists with the login @$submittedLogin.',
+          );
+        }
+
+        final projects = _extractUserProjects(
+          user,
+        ).where((project) => !excludeProjectIds.contains(project.id)).toList();
+        if (projects.isEmpty) {
+          return _LookupState(
+            title: 'No open projects found',
+            message:
+                'No readable, open personal projects were found for @${user.login}.',
+          );
+        }
+
+        return ListView.builder(
+          controller: scrollController,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: projects.length,
+          itemBuilder: (context, index) {
+            final project = projects[index];
+            return _ProjectRow(
+              title: project.title,
+              description: project.shortDescription,
+              onTap: () => Navigator.pop(
+                context,
+                Project(
+                  id: project.id,
+                  name: project.title,
+                  ownerLogin: user.login,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _LookupState extends StatelessWidget {
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _LookupState({
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = resolveColor(context, ColorTokens.surface.on);
+    final onSurfaceVariant = resolveColor(
+      context,
+      ColorTokens.surface.onVariant,
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StyledText(
+              title,
+              style: editorialTextStyle(
+                TextTokens.title.$medium,
+                color: onSurface,
+                fontWeight: FontWeight.w700,
+              ).textAlign(TextAlign.center),
+            ),
+            const SizedBox(height: 6),
+            StyledText(
+              message,
+              style: editorialTextStyle(
+                TextTokens.body.$small,
+                color: onSurfaceVariant,
+              ).textAlign(TextAlign.center),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              EditorialButton(
+                label: actionLabel!,
+                variation: ButtonVariation.tertiary,
+                onPressed: onAction,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ProjectList extends ConsumerWidget {
   final String ownerId;
   final String ownerLogin;
@@ -335,6 +626,21 @@ class _ProjectData {
     required this.title,
     this.shortDescription,
   });
+}
+
+List<_ProjectData> _extractUserProjects(Query$UserProjects$user user) {
+  return user.projectsV2.nodes
+          ?.whereType<Query$UserProjects$user$projectsV2$nodes>()
+          .where((project) => !project.closed)
+          .map(
+            (project) => _ProjectData(
+              id: project.id,
+              title: project.title,
+              shortDescription: project.shortDescription,
+            ),
+          )
+          .toList() ??
+      [];
 }
 
 List<_ProjectData> _extractProjects(Query$OwnerProjects$node? node) {

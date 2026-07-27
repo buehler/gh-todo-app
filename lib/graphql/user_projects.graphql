@@ -1,0 +1,23 @@
+query UserProjects($login: String!) {
+  user(login: $login) {
+    login
+    projectsV2(
+      first: 100
+      minPermissionLevel: READ
+      orderBy: { field: TITLE, direction: ASC }
+    ) {
+      nodes {
+        id
+        title
+        shortDescription
+        closed
+      }
+    }
+  }
+  rateLimit {
+    cost
+    limit
+    remaining
+    resetAt
+  }
+}

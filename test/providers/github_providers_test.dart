@@ -72,6 +72,13 @@ void main() {
     expect(userA?.login, 'alpha');
     expect(orgsA.map((org) => org.login), ['alpha-org']);
     expect(_projectTitles(projectsA), ['Alpha Personal Board']);
+    final userProjectsA = await harness.container.read(
+      userProjectsProvider('ghdevcbue2').future,
+    );
+    expect(userProjectsA?.login, 'GhDevCBue2');
+    expect(userProjectsA?.projectsV2.nodes?.map((project) => project?.title), [
+      'Shared Personal Board',
+    ]);
 
     await session.updateToken('token-b');
 
@@ -85,11 +92,15 @@ void main() {
     final newOwnerProjects = await harness.container.read(
       ownerProjectsProvider('user-b').future,
     );
+    final userProjectsB = await harness.container.read(
+      userProjectsProvider('ghdevcbue2').future,
+    );
 
     expect(userB?.login, 'bravo');
     expect(orgsB.map((org) => org.login), ['bravo-org']);
     expect(oldOwnerProjects, isNull);
     expect(_projectTitles(newOwnerProjects), ['Bravo Personal Board']);
+    expect(userProjectsB, isNull);
   });
 
   test('project issues paginate and bucket closed items locally', () async {
@@ -172,6 +183,17 @@ const _accountA = FakeGithubGraphqlAccount(
     name: 'Alpha User',
     avatarUrl: 'https://example.com/alpha.png',
   ),
+  otherUsers: [
+    FakeGithubGraphqlUser(
+      login: 'GhDevCBue2',
+      projects: [
+        FakeGithubGraphqlProject(
+          id: 'project-a-shared',
+          title: 'Shared Personal Board',
+        ),
+      ],
+    ),
+  ],
   organizations: [FakeGithubGraphqlOrg(id: 'org-a', login: 'alpha-org')],
   projectsByOwnerId: {
     'user-a': [

@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/compositions/settings/add_project_sheet.dart';
 import 'package:gh_todos/models/pat_auth_metadata.dart';
+import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/style/themes.dart';
+import 'package:graphql/client.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
@@ -17,13 +19,27 @@ import '../../support/fakes.dart';
 
 void main() {
   testWidgets(
-    'add project sheet refreshes viewer, orgs, and projects after PAT update',
+    'add project sheet refreshes after PAT update and adds by username',
     (tester) async {
+      Project? selectedProject;
+      var userProjectsRequestCount = 0;
+      var failNextUserProjectsRequest = true;
       late final TestHarness harness;
       final graphqlClient = createFakeGithubGraphqlClient(
         readToken: () async =>
             harness.container.read(sessionProvider.notifier).readToken(),
         accountsByToken: {'token-a': _accountA, 'token-b': _accountB},
+        onOperation: (operationName) {
+          if (operationName == 'UserProjects') {
+            userProjectsRequestCount++;
+          }
+        },
+        operationError: (operationName, variables) {
+          if (operationName == 'UserProjects' && failNextUserProjectsRequest) {
+            return GraphQLError(message: 'Injected failure');
+          }
+          return null;
+        },
       );
 
       harness = await createTestContainer(
@@ -88,7 +104,12 @@ void main() {
                   return Scaffold(
                     body: Center(
                       child: ElevatedButton(
-                        onPressed: () => showAddProjectSheet(context),
+                        onPressed: () async {
+                          selectedProject = await showAddProjectSheet(
+                            context,
+                            excludeProjectIds: const {'project-b-excluded'},
+                          );
+                        },
                         child: const Text('Open Add Project'),
                       ),
                     ),
@@ -121,6 +142,72 @@ void main() {
 
       expect(find.text('Bravo Org Roadmap'), findsOneWidget);
       expect(find.text('Alpha Org Board'), findsNothing);
+
+      await tester.tap(find.text('From another user'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add from another user'), findsOneWidget);
+      expect(find.text('Find projects'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add Project'), findsOneWidget);
+      expect(find.text('Bravo Org Roadmap'), findsOneWidget);
+
+      await tester.tap(find.text('From another user'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(EditableText), ' @failure ');
+      await tester.pump();
+
+      expect(find.text('Could not load projects'), findsNothing);
+      expect(userProjectsRequestCount, 0);
+
+      await tester.tap(find.text('Find projects'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Could not load projects'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(userProjectsRequestCount, greaterThan(0));
+
+      final failedRequestCount = userProjectsRequestCount;
+      failNextUserProjectsRequest = false;
+      await tester.ensureVisible(find.text('Try again'));
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Retry Personal Board'), findsOneWidget);
+      expect(userProjectsRequestCount, greaterThan(failedRequestCount));
+
+      final retriedRequestCount = userProjectsRequestCount;
+      await tester.enterText(find.byType(EditableText), ' @unknown ');
+      await tester.pump();
+      await tester.tap(find.text('Find projects'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('User not found'), findsOneWidget);
+      expect(userProjectsRequestCount, retriedRequestCount + 1);
+
+      await tester.enterText(find.byType(EditableText), ' @ghdevcbue2 ');
+      await tester.pump();
+
+      expect(find.text('User not found'), findsNothing);
+      expect(find.text('Enter a username'), findsOneWidget);
+
+      await tester.tap(find.text('Find projects'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Shared Personal Board'), findsOneWidget);
+      expect(userProjectsRequestCount, retriedRequestCount + 2);
+      expect(find.text('Already Added Shared Board'), findsNothing);
+      expect(find.text('Closed Shared Board'), findsNothing);
+
+      await tester.tap(find.text('Shared Personal Board'));
+      await tester.pumpAndSettle();
+
+      expect(selectedProject?.id, 'project-b-shared');
+      expect(selectedProject?.ownerLogin, 'GhDevCBue2');
     },
   );
 }
@@ -154,6 +241,35 @@ const _accountB = FakeGithubGraphqlAccount(
     avatarUrl: 'https://example.com/bravo.png',
   ),
   organizations: [FakeGithubGraphqlOrg(id: 'org-b', login: 'bravo-org')],
+  otherUsers: [
+    FakeGithubGraphqlUser(
+      login: 'failure',
+      projects: [
+        FakeGithubGraphqlProject(
+          id: 'project-b-retry',
+          title: 'Retry Personal Board',
+        ),
+      ],
+    ),
+    FakeGithubGraphqlUser(
+      login: 'GhDevCBue2',
+      projects: [
+        FakeGithubGraphqlProject(
+          id: 'project-b-shared',
+          title: 'Shared Personal Board',
+        ),
+        FakeGithubGraphqlProject(
+          id: 'project-b-excluded',
+          title: 'Already Added Shared Board',
+        ),
+        FakeGithubGraphqlProject(
+          id: 'project-b-closed',
+          title: 'Closed Shared Board',
+          closed: true,
+        ),
+      ],
+    ),
+  ],
   projectsByOwnerId: {
     'user-b': [
       FakeGithubGraphqlProject(
