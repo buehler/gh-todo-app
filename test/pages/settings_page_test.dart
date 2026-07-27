@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/models/authenticated_user_snapshot.dart';
 import 'package:gh_todos/models/pat_auth_metadata.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
+import 'package:gh_todos/pages/changelog_page.dart';
+import 'package:gh_todos/components/github_html_body.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
@@ -64,6 +66,7 @@ void main() {
     expect(find.text('Sync Frequency'), findsNothing);
     expect(find.text('Current PAT scopes'), findsOneWidget);
     expect(find.text('View Logs'), findsOneWidget);
+    expect(find.text('View Changelog'), findsOneWidget);
     expect(find.text('PAT GUIDANCE'), findsOneWidget);
     expect(find.text('PROJECT GUIDANCE'), findsOneWidget);
     expect(find.text('Required: project'), findsOneWidget);
@@ -88,6 +91,20 @@ void main() {
 
     expect(find.byKey(ApplicationLogsPage.pageKey), findsOneWidget);
     expect(find.text('Application Logs'), findsOneWidget);
+  });
+
+  testWidgets('view changelog pushes the changelog page', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpAuthenticatedAppAt(tester, AppRoutes.settingsPath);
+
+    await tester.tap(find.text('View Changelog'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(ChangelogPage.pageKey), findsOneWidget);
+    expect(find.byType(GithubHtmlBody), findsOneWidget);
+    expect(find.text('The changelog could not be loaded.'), findsNothing);
   });
 
   testWidgets('application logs can scroll without scrollbar errors', (

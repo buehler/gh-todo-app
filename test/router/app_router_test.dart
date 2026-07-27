@@ -7,6 +7,7 @@ import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/issue_detail_page.dart';
 import 'package:gh_todos/pages/issue_route_page.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
+import 'package:gh_todos/pages/changelog_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
@@ -85,6 +86,19 @@ void main() {
     expect(find.byType(ApplicationLogsPage), findsOneWidget);
     expect(find.text('Application Logs'), findsOneWidget);
     expect(find.byKey(ConnectPage.pageKey), findsNothing);
+  });
+
+  testWidgets('unauthenticated navigation to changelog remains on changelog', (
+    tester,
+  ) async {
+    final result = await createTestApp(
+      initialLocation: AppRoutes.changelogPath,
+    );
+
+    await pumpApp(tester, result.app);
+
+    expect(find.byType(ChangelogPage), findsOneWidget);
+    expect(find.byKey(ChangelogPage.pageKey), findsOneWidget);
   });
 
   testWidgets('setup can push application logs while unauthenticated', (

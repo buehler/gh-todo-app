@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/pages/application_logs_page.dart';
+import 'package:gh_todos/pages/changelog_page.dart';
 import 'package:gh_todos/pages/issue_route_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
@@ -57,7 +58,9 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
       final hasToken = session.requireValue.hasToken;
       final path = state.uri.path;
       final isPublicPath =
-          path == AppRoutes.setupPath || path == AppRoutes.applicationLogsPath;
+          path == AppRoutes.setupPath ||
+          path == AppRoutes.applicationLogsPath ||
+          path == AppRoutes.changelogPath;
 
       if (!hasToken && !isPublicPath) {
         return AppRoutes.setupPath;
@@ -143,6 +146,11 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
         path: AppRoutes.applicationLogsPath,
         name: AppRoutes.applicationLogsName,
         builder: (context, state) => const ApplicationLogsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.changelogPath,
+        name: AppRoutes.changelogName,
+        builder: (context, state) => const ChangelogPage(),
       ),
       GoRoute(
         path: AppRoutes.setupPath,

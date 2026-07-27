@@ -11,6 +11,7 @@ import 'package:mix/mix.dart';
 class SettingsAccountSection extends StatelessWidget {
   final VoidCallback onPatPressed;
   final VoidCallback onViewLogsPressed;
+  final VoidCallback onViewChangelogPressed;
   final PatAuthMetadata? metadata;
   final bool isLoading;
   final String? errorText;
@@ -18,6 +19,7 @@ class SettingsAccountSection extends StatelessWidget {
   const SettingsAccountSection({
     required this.onPatPressed,
     required this.onViewLogsPressed,
+    required this.onViewChangelogPressed,
     required this.metadata,
     required this.isLoading,
     required this.errorText,
@@ -123,6 +125,19 @@ class SettingsAccountSection extends StatelessWidget {
             title: 'View Logs',
             subtitle: 'Open local application logs.',
             onPress: onViewLogsPressed,
+          ),
+        ),
+        const SizedBox(height: 12),
+        EditorialCard(
+          variation: CardVariation.elevated,
+          padding: EdgeInsets.zero,
+          child: _AccountRow(
+            icon: LucideIcons.history,
+            iconBgColor: withOpacity(primary, 0.1),
+            iconColor: primary,
+            title: 'View Changelog',
+            subtitle: 'See what has changed in the app.',
+            onPress: onViewChangelogPressed,
           ),
         ),
       ],

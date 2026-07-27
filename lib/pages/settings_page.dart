@@ -69,6 +69,8 @@ class SettingsPage extends ConsumerWidget {
             SettingsAccountSection(
               onPatPressed: () => _onPatPressed(context, ref),
               onViewLogsPressed: () => _onViewLogsPressed(context, ref),
+              onViewChangelogPressed: () =>
+                  _onViewChangelogPressed(context, ref),
               metadata: metadataAsync.asData?.value,
               isLoading: metadataAsync.isLoading,
               errorText: metadataAsync.hasError
@@ -164,6 +166,17 @@ class SettingsPage extends ConsumerWidget {
         .info('Navigating to application logs.', category: 'settings');
     if (!context.mounted) return;
     await context.pushNamed<void>(AppRoutes.applicationLogsName);
+  }
+
+  Future<void> _onViewChangelogPressed(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await ref
+        .read(appLoggerProvider)
+        .info('Navigating to changelog.', category: 'settings');
+    if (!context.mounted) return;
+    await context.pushNamed<void>(AppRoutes.changelogName);
   }
 
   VoidCallback _urlOpener(String url) {
