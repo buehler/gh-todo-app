@@ -23,12 +23,10 @@ struct ProjectIDOptionsProvider: DynamicOptionsProvider {
             "project_count": projects.count,
         ])
         let items = projects.map { project in
-            let title = "\(project.ownerLogin) / \(project.name)"
-
             return IntentItem(
                 project.id,
-                title: LocalizedStringResource(stringLiteral: title),
-                subtitle: LocalizedStringResource(stringLiteral: project.id)
+                title: LocalizedStringResource(stringLiteral: project.name),
+                subtitle: LocalizedStringResource(stringLiteral: project.ownerLogin)
             )
         }
 
