@@ -12,7 +12,7 @@ class GithubTokenStorageService {
           const FlutterSecureStorage(
             aOptions: AndroidOptions(),
             iOptions: IOSOptions(
-              accessibility: KeychainAccessibility.unlocked,
+              accessibility: KeychainAccessibility.first_unlock,
               groupId: iosKeychainAccessGroup,
             ),
             mOptions: MacOsOptions(
