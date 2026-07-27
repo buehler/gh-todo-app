@@ -1,12 +1,50 @@
 import Foundation
 
 struct WidgetProject: Codable, Identifiable {
+    static let defaultIssueQuery = "assignee:@me"
+
     let id: String
     let name: String
     let ownerLogin: String
+    let issueQuery: String
     let dueDateFieldId: String?
     let priorityFieldId: String?
     let priorityOptionMap: [String: String]
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, ownerLogin, issueQuery, dueDateFieldId, priorityFieldId, priorityOptionMap
+    }
+
+    init(
+        id: String,
+        name: String,
+        ownerLogin: String,
+        issueQuery: String = Self.defaultIssueQuery,
+        dueDateFieldId: String?,
+        priorityFieldId: String?,
+        priorityOptionMap: [String: String]
+    ) {
+        self.id = id
+        self.name = name
+        self.ownerLogin = ownerLogin
+        self.issueQuery = issueQuery
+        self.dueDateFieldId = dueDateFieldId
+        self.priorityFieldId = priorityFieldId
+        self.priorityOptionMap = priorityOptionMap
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        ownerLogin = try container.decode(String.self, forKey: .ownerLogin)
+        issueQuery = try container.decodeIfPresent(String.self, forKey: .issueQuery)
+            ?? Self.defaultIssueQuery
+        dueDateFieldId = try container.decodeIfPresent(String.self, forKey: .dueDateFieldId)
+        priorityFieldId = try container.decodeIfPresent(String.self, forKey: .priorityFieldId)
+        priorityOptionMap = try container.decodeIfPresent([String: String].self, forKey: .priorityOptionMap)
+            ?? [:]
+    }
 }
 
 enum ProjectCacheResult {

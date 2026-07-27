@@ -107,6 +107,7 @@ void main() {
             id: 'project-1',
             name: 'Inbox',
             ownerLogin: 'alpha',
+            issueQuery: 'assignee:@me,octocat',
             dueDateFieldId: 'due-date',
             priorityFieldId: 'priority',
             priorityOptionMap: {'prio-high': TodoPriority.high},
@@ -246,6 +247,7 @@ class _PagedProjectItemsLink extends Link {
     }
 
     final after = request.variables['after'] as String?;
+    expect(request.variables['issueQuery'], 'assignee:@me,octocat');
     final payload = switch (after) {
       null => _projectItemsPageOne(),
       'cursor-1' => _projectItemsPageTwo(),

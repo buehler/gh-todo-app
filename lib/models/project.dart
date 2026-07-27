@@ -4,6 +4,8 @@ import 'package:gh_todos/models/priority.dart';
 part 'project.freezed.dart';
 part 'project.g.dart';
 
+const defaultIssueQuery = 'assignee:@me';
+
 /// A GitHub Project V2 mapped into the app, plus the optional single-select
 /// and date field mappings that power local priority / due-date semantics.
 @freezed
@@ -12,6 +14,10 @@ abstract class Project with _$Project {
     required String id,
     required String name,
     @Default('') String ownerLogin,
+
+    /// GitHub Project item query used to filter the todo feed. An empty
+    /// query intentionally returns all project items.
+    @Default(defaultIssueQuery) String issueQuery,
 
     /// GitHub Project field id of the DATE field that maps to the local
     /// "due date". `null` when no mapping is configured.

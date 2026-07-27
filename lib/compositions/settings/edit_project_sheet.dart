@@ -49,10 +49,8 @@ Future<EditProjectResult?> showEditProjectSheet(
   return showAdaptiveSheet<EditProjectResult>(
     context,
     dialogMaxWidth: 640,
-    builder: (_, isDialog) => _EditProjectSheet(
-      project: project,
-      isDialog: isDialog,
-    ),
+    builder: (_, isDialog) =>
+        _EditProjectSheet(project: project, isDialog: isDialog),
   );
 }
 
@@ -67,6 +65,8 @@ class _EditProjectSheet extends ConsumerStatefulWidget {
 }
 
 class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
+  late final TextEditingController _issueQueryController =
+      TextEditingController(text: widget.project.issueQuery);
   late String? _dueDateFieldId = widget.project.dueDateFieldId;
   late String? _priorityFieldId = widget.project.priorityFieldId;
   late Map<String, TodoPriority> _priorityOptionMap = Map.of(
@@ -75,6 +75,7 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
 
   bool get _isDirty {
     final p = widget.project;
+    if (p.issueQuery != _issueQueryController.text.trim()) return true;
     if (p.dueDateFieldId != _dueDateFieldId) return true;
     if (p.priorityFieldId != _priorityFieldId) return true;
     return !_mapsEqual(p.priorityOptionMap, _priorityOptionMap);
@@ -94,6 +95,12 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
 
   void _onDueDateFieldChanged(String? fieldId) {
     setState(() => _dueDateFieldId = fieldId);
+  }
+
+  @override
+  void dispose() {
+    _issueQueryController.dispose();
+    super.dispose();
   }
 
   void _onPriorityFieldChanged(String? fieldId) {
@@ -122,6 +129,7 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
       id: widget.project.id,
       name: widget.project.name,
       ownerLogin: widget.project.ownerLogin,
+      issueQuery: _issueQueryController.text.trim(),
       dueDateFieldId: _dueDateFieldId,
       priorityFieldId: _priorityFieldId,
       priorityOptionMap: _priorityFieldId == null
@@ -144,6 +152,14 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
       children: [
         _Header(project: widget.project),
         const SizedBox(height: 24),
+        EditorialTextField(
+          controller: _issueQueryController,
+          label: 'Issue Query',
+          hintText: defaultIssueQuery,
+          helperText: 'GitHub Project query used to filter this todo feed.',
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 28),
         DueDateFieldSection(
           projectId: widget.project.id,
           selectedFieldId: _dueDateFieldId,
@@ -165,8 +181,7 @@ class _EditProjectSheetState extends ConsumerState<_EditProjectSheet> {
         ),
         const SizedBox(height: 32),
         _RemoveRow(
-          onPressed: () =>
-              Navigator.pop(context, const RemoveProjectResult()),
+          onPressed: () => Navigator.pop(context, const RemoveProjectResult()),
         ),
       ],
     );

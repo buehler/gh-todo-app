@@ -1,7 +1,7 @@
-query ProjectAssignedItemsPage($projectId: ID!, $after: String) {
+query ProjectAssignedItemsPage($projectId: ID!, $after: String, $issueQuery: String!) {
   node(id: $projectId) {
     ... on ProjectV2 {
-      items(first: 100, after: $after, query: "assignee:@me") {
+      items(first: 100, after: $after, query: $issueQuery) {
         nodes {
           ...ProjectItemFields
         }

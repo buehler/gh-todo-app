@@ -498,6 +498,7 @@ let previewProject = WidgetProject(
     id: "id",
     name: "MyProject",
     ownerLogin: "cbue",
+    issueQuery: WidgetProject.defaultIssueQuery,
     dueDateFieldId: "",
     priorityFieldId: "",
     priorityOptionMap: [:]

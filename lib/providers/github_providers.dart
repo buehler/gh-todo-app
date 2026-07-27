@@ -228,7 +228,11 @@ Future<ProjectIssuesFeed> _loadProjectIssuesFeed(
   required Project? project,
 }) async {
   final nowUtc = DateTime.now().toUtc();
-  final nodes = await _fetchProjectItemNodes(client, projectId: projectId);
+  final nodes = await _fetchProjectItemNodes(
+    client,
+    projectId: projectId,
+    issueQuery: project?.issueQuery ?? defaultIssueQuery,
+  );
   final open = <IssueData>[];
   final closed = <IssueData>[];
 
@@ -254,6 +258,7 @@ Future<ProjectIssuesFeed> _loadProjectIssuesFeed(
 Future<List<Fragment$ProjectItemFields?>> _fetchProjectItemNodes(
   GraphQLClient client, {
   required String projectId,
+  required String issueQuery,
 }) async {
   final nodes = <Fragment$ProjectItemFields?>[];
   String? after;
@@ -264,6 +269,7 @@ Future<List<Fragment$ProjectItemFields?>> _fetchProjectItemNodes(
         variables: Variables$Query$ProjectAssignedItemsPage(
           projectId: projectId,
           after: after,
+          issueQuery: issueQuery,
         ),
         fetchPolicy: FetchPolicy.networkOnly,
       ),

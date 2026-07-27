@@ -1,7 +1,7 @@
 import Foundation
 
 extension GraphQLClient {
-    static func queryProjectIssues(projectId: String) async throws -> [Todo] {
+    static func queryProjectIssues(projectId: String, issueQuery: String) async throws -> [Todo] {
         struct Response: Decodable {
             let data: ResponseData?
         }
@@ -66,7 +66,8 @@ extension GraphQLClient {
         let query = GraphQLPayload(
             query: _queryProjectIssues,
             variables: [
-                "projectId": projectId
+                "projectId": projectId,
+                "issueQuery": issueQuery,
             ]
         )
         let result = try await fetch(query)
@@ -161,10 +162,10 @@ extension GraphQLClient {
 }
 
 private let _queryProjectIssues = """
-    query ProjectAssignedItemsPage($projectId: ID!, $after: String) {
+    query ProjectAssignedItemsPage($projectId: ID!, $after: String, $issueQuery: String!) {
       node(id: $projectId) {
         ... on ProjectV2 {
-          items(first: 100, after: $after, query: "assignee:@me") {
+          items(first: 100, after: $after, query: $issueQuery) {
             nodes {
               ...ProjectItemFields
             }
