@@ -10,6 +10,7 @@ import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
+import 'package:gh_todos/compositions/todos/todos_project_switcher.dart';
 import 'package:gh_todos/graphql/userinfo.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/project.dart';
@@ -108,7 +109,7 @@ void main() {
     expect(find.byType(TodosIssueComposer), findsNothing);
   });
 
-  testWidgets('renders project chips and issues for selected project', (
+  testWidgets('renders project switcher and issues for selected project', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
@@ -145,15 +146,72 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Project chips rendered.
+    // Project selector renders the configured projects without an aggregate
+    // option.
+    expect(find.byKey(TodosProjectSwitcher.selectKey), findsOneWidget);
     expect(find.text('Alpha'), findsOneWidget);
-    expect(find.text('Beta'), findsOneWidget);
+    expect(find.text('acme'), findsOneWidget);
+    expect(find.text('All Projects'), findsNothing);
 
     // Issues rendered.
     expect(find.text('Fix login flow'), findsOneWidget);
     expect(find.text('Add dark mode'), findsOneWidget);
     // Comment count shown for issue with comments.
     expect(find.text('3'), findsOneWidget);
+  });
+
+  testWidgets('sorts project options and keeps long menus scrollable', (
+    tester,
+  ) async {
+    final projects = [
+      const Project(id: 'bravo-z', name: 'Zulu', ownerLogin: 'Bravo'),
+      const Project(id: 'alpha-b', name: 'beta', ownerLogin: 'alpha'),
+      const Project(id: 'alpha-a', name: 'Alpha', ownerLogin: 'ALPHA'),
+      for (var index = 0; index < 12; index++)
+        Project(
+          id: 'omega-$index',
+          name: 'Project $index',
+          ownerLogin: 'omega',
+        ),
+    ];
+    await _pumpFeed(
+      tester,
+      projects: projects,
+      open: const [],
+      closed: const [],
+      mutations: FakeIssueMutations(),
+      size: const Size(390, 844),
+    );
+
+    await tester.tap(find.byKey(TodosProjectSwitcher.selectKey));
+    await tester.pumpAndSettle();
+
+    final alpha = find.byKey(
+      const ValueKey('todos-project-switcher-option-alpha-a'),
+    );
+    final beta = find.byKey(
+      const ValueKey('todos-project-switcher-option-alpha-b'),
+    );
+    final bravo = find.byKey(
+      const ValueKey('todos-project-switcher-option-bravo-z'),
+    );
+    expect(alpha, findsOneWidget);
+    expect(beta, findsOneWidget);
+    expect(bravo, findsOneWidget);
+    expect(find.text('ALPHA'), findsOneWidget);
+    expect(find.text('alpha'), findsOneWidget);
+    expect(find.text('Bravo'), findsNWidgets(2));
+    expect(tester.getTopLeft(alpha).dy, lessThan(tester.getTopLeft(beta).dy));
+    expect(tester.getTopLeft(beta).dy, lessThan(tester.getTopLeft(bravo).dy));
+    expect(find.byType(Scrollbar), findsWidgets);
+
+    final menuScroll = find.byType(Scrollable).last;
+    final lastProject = find.byKey(
+      const ValueKey('todos-project-switcher-option-omega-11'),
+    );
+    await tester.scrollUntilVisible(lastProject, 200, scrollable: menuScroll);
+    expect(lastProject, findsOneWidget);
+    expect(tester.getCenter(lastProject).dy, lessThan(844));
   });
 
   testWidgets('quick-add enter creates todo, clears, and refocuses', (
@@ -445,8 +503,7 @@ void main() {
         expect(find.text('Fix the login edge cases.'), findsOneWidget);
         expect(find.byKey(TodosSplitView.detailPaneEmptyKey), findsNothing);
 
-        await tester.tap(find.text('Beta'));
-        await tester.pumpAndSettle();
+        await _selectProject(tester, 'Beta');
 
         expect(find.byKey(TodosSplitView.detailPaneEmptyKey), findsOneWidget);
         expect(find.text('Fix the login edge cases.'), findsNothing);
@@ -869,6 +926,13 @@ String _dateIso(DateTime date) {
   final month = date.month.toString().padLeft(2, '0');
   final day = date.day.toString().padLeft(2, '0');
   return '${date.year}-$month-$day';
+}
+
+Future<void> _selectProject(WidgetTester tester, String name) async {
+  await tester.tap(find.byKey(TodosProjectSwitcher.selectKey));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(name).last);
+  await tester.pumpAndSettle();
 }
 
 void _expectVerticalOrder(WidgetTester tester, List<Finder> finders) {

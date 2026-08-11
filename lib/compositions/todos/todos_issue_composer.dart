@@ -12,7 +12,7 @@ import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 
-/// Inline quick-add composer that lives directly beneath the project chips
+/// Inline quick-add composer that lives directly beneath the project selector
 /// on the root feed.
 ///
 /// Input + gradient "+" button, wrapped in a `surface_container_lowest` card

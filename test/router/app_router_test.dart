@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
+import 'package:gh_todos/compositions/todos/todos_project_switcher.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/pages/issue_detail_page.dart';
@@ -159,7 +160,9 @@ void main() {
     expect(pages.any((page) => page is NoTransitionPage), isTrue);
   });
 
-  testWidgets('project pills keep navigating after restart', (tester) async {
+  testWidgets('project selector keeps navigating after restart', (
+    tester,
+  ) async {
     final sessionPrefs = FakeSessionPrefsService(selectedProjectId: 'proj-1');
 
     await pumpApp(
@@ -174,22 +177,19 @@ void main() {
     expect(find.text('Alpha issue'), findsOneWidget);
     expect(_currentRoutePath(tester), AppRoutes.projectLocation('proj-1'));
 
-    await tester.tap(find.text('Beta'));
-    await tester.pumpAndSettle();
+    await _selectProject(tester, 'Beta');
 
     expect(find.text('Beta issue'), findsOneWidget);
     expect(await sessionPrefs.readSelectedProjectId(), 'proj-2');
     expect(_currentRoutePath(tester), AppRoutes.projectLocation('proj-2'));
 
-    await tester.tap(find.text('Alpha'));
-    await tester.pumpAndSettle();
+    await _selectProject(tester, 'Alpha');
 
     expect(find.text('Alpha issue'), findsOneWidget);
     expect(await sessionPrefs.readSelectedProjectId(), 'proj-1');
     expect(_currentRoutePath(tester), AppRoutes.projectLocation('proj-1'));
 
-    await tester.tap(find.text('Beta'));
-    await tester.pumpAndSettle();
+    await _selectProject(tester, 'Beta');
 
     expect(find.text('Beta issue'), findsOneWidget);
     expect(await sessionPrefs.readSelectedProjectId(), 'proj-2');
@@ -366,7 +366,9 @@ void main() {
     expect(projectIssues.builds, 1);
   });
 
-  testWidgets('project chip navigation does not force refresh', (tester) async {
+  testWidgets('project selector navigation does not force refresh', (
+    tester,
+  ) async {
     final betaIssues = _ProjectIssuesController([
       (open: [_betaIssue], closed: const []),
       (open: [_betaIssueFresh], closed: const []),
@@ -375,8 +377,7 @@ void main() {
     await pumpApp(tester, _deepLinkApp(project2Issues: betaIssues));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Beta'));
-    await tester.pumpAndSettle();
+    await _selectProject(tester, 'Beta');
 
     expect(find.text('Beta issue'), findsOneWidget);
     expect(find.text('Beta issue fresh'), findsNothing);
@@ -400,6 +401,13 @@ void main() {
       AppRoutes.issueDetailLocation(projectId: 'proj-1', issueId: 'issue-1'),
     );
   });
+}
+
+Future<void> _selectProject(WidgetTester tester, String name) async {
+  await tester.tap(find.byKey(TodosProjectSwitcher.selectKey));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(name).last);
+  await tester.pumpAndSettle();
 }
 
 String _currentRoutePath(WidgetTester tester) {

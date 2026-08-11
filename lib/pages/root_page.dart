@@ -9,7 +9,7 @@ import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
 import 'package:gh_todos/compositions/todos/swipeable_issue_row.dart';
 import 'package:gh_todos/compositions/todos/todos_issue_composer.dart';
-import 'package:gh_todos/compositions/todos/todos_project_chips.dart';
+import 'package:gh_todos/compositions/todos/todos_project_switcher.dart';
 import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/models/issue_ordering.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
@@ -25,7 +25,7 @@ import 'package:mix/mix.dart';
 
 /// The authenticated root page — the "Issues" feed.
 ///
-/// Shows project chips for switching, an inline quick-add composer, and a
+/// Shows a project selector, an inline quick-add composer, and a
 /// list of issues for the currently selected project. Supports pull-to-refresh.
 class RootPage extends ConsumerWidget {
   static const pageKey = ValueKey('root-page');
@@ -283,7 +283,7 @@ class _FeedHeader extends StatelessWidget {
 
     return Row(
       children: [
-        const Expanded(child: TodosProjectChips()),
+        const Expanded(child: TodosProjectSwitcher()),
         if (showManualRefresh) ...[
           const SizedBox(width: 12),
           Padding(
