@@ -648,6 +648,54 @@ Line seven''';
       contains(isA<MarkdownListContinuationFormatter>()),
     );
   });
+
+  testWidgets(
+    'modifier enter saves edit issue changes from anywhere in sheet',
+    (tester) async {
+      final harness = await _pump(tester, issue: _openIssue);
+
+      await tester.tap(find.byTooltip('More actions'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('issue-detail-menu-edit')));
+      await tester.pumpAndSettle();
+
+      final descriptionField = find.byType(TextField).last;
+      await tester.enterText(descriptionField, 'Edited with a shortcut');
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Issue'), findsNothing);
+      expect(harness.mutations.calls, hasLength(1));
+      final call = harness.mutations.calls.single as UpdateIssueCoreCall;
+      expect(call.projectId, _projectId);
+      expect(call.issueId, _issueId);
+      expect(call.title, isNull);
+      expect(call.body, 'Edited with a shortcut');
+
+      await tester.tap(find.byTooltip('More actions'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('issue-detail-menu-edit')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(descriptionField, 'Edited with Command');
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Issue'), findsNothing);
+      expect(harness.mutations.calls, hasLength(2));
+      expect(
+        (harness.mutations.calls.last as UpdateIssueCoreCall).body,
+        'Edited with Command',
+      );
+    },
+  );
 }
 
 // ----------------------------- Helpers ---------------------------------------

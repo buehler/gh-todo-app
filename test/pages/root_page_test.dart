@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gh_todos/app.dart';
@@ -189,6 +190,48 @@ void main() {
     final input = tester.widget<TextField>(textField);
     expect(input.controller?.text, isEmpty);
     expect(input.focusNode?.hasFocus, isTrue);
+  });
+
+  testWidgets('modifier enter creates quick todo, clears, and refocuses', (
+    tester,
+  ) async {
+    final mutations = FakeIssueMutations();
+    await _pumpFeed(
+      tester,
+      projects: _testProjects,
+      open: const [],
+      closed: const [],
+      mutations: mutations,
+    );
+
+    final textField = find.descendant(
+      of: find.byKey(TodosIssueComposer.inputKey),
+      matching: find.byType(TextField),
+    );
+
+    for (final modifier in [
+      LogicalKeyboardKey.controlLeft,
+      LogicalKeyboardKey.metaLeft,
+    ]) {
+      await tester.enterText(
+        textField,
+        'Modifier todo ${mutations.calls.length}',
+      );
+      await tester.pump();
+      await tester.sendKeyDownEvent(modifier);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(modifier);
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
+      expect(tester.widget<TextField>(textField).focusNode?.hasFocus, isTrue);
+    }
+
+    expect(mutations.calls, hasLength(2));
+    expect(
+      mutations.calls.map((call) => (call as CreateIssueInProjectCall).title),
+      ['Modifier todo 0', 'Modifier todo 1'],
+    );
   });
 
   testWidgets('groups open todos by due-date bucket and hides empty headers', (

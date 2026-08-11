@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/adaptive_sheet.dart';
@@ -202,12 +203,23 @@ class _EditIssueSheetState extends ConsumerState<_EditIssueSheet> {
     assert(initialDueIso == initialDueIso);
   }
 
+  void _saveIfPossible() {
+    if (_canSave) _save();
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.isDialog) {
-      return _buildDialogBody(context);
-    }
-    return _buildSheetBody(context);
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter, control: true):
+            _saveIfPossible,
+        const SingleActivator(LogicalKeyboardKey.enter, meta: true):
+            _saveIfPossible,
+      },
+      child: widget.isDialog
+          ? _buildDialogBody(context)
+          : _buildSheetBody(context),
+    );
   }
 
   Widget _buildFormColumn() {

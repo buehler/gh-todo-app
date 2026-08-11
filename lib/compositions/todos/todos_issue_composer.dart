@@ -141,6 +141,7 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
                     enabled: enabled,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => enabled ? _submit(selectedId) : null,
+                    submitOnModifierEnter: true,
                   ),
                 ),
                 const SizedBox(width: 12),
