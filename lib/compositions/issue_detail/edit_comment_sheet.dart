@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/adaptive_sheet.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
@@ -57,6 +58,10 @@ class _EditCommentSheetState extends State<_EditCommentSheet> {
 
   void _save() {
     Navigator.pop(context, _controller.text);
+  }
+
+  void _saveIfPossible() {
+    if (_canSave) _save();
   }
 
   @override
@@ -125,20 +130,32 @@ class _EditCommentSheetState extends State<_EditCommentSheet> {
       ],
     );
 
-    if (widget.isDialog) {
-      // Adapter provides the rounded surface + shadow. We only supply content.
-      return content;
-    }
+    final sheet = widget.isDialog
+        // Adapter provides the rounded surface + shadow. We only supply content.
+        ? content
+        : Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: surfaceLowest,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+              ),
+              child: content,
+            ),
+          );
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: surfaceLowest,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: content,
-      ),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter, control: true):
+            _saveIfPossible,
+        const SingleActivator(LogicalKeyboardKey.enter, meta: true):
+            _saveIfPossible,
+      },
+      child: sheet,
     );
   }
 }

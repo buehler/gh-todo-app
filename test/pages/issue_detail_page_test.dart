@@ -672,6 +672,45 @@ Line seven''';
     },
   );
 
+  testWidgets('modifier enter saves an edited comment', (tester) async {
+    final harness = await _pump(
+      tester,
+      issue: _openIssue,
+      comments: [_ownComment],
+    );
+
+    for (final modifier in [
+      LogicalKeyboardKey.controlLeft,
+      LogicalKeyboardKey.metaLeft,
+    ]) {
+      await tester.tap(
+        find.byKey(const ValueKey('issue-comment-actions-c-own')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit comment'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byType(TextField).last,
+        'Edited with ${modifier == LogicalKeyboardKey.controlLeft ? 'Control' : 'Command'}',
+      );
+      await tester.pump();
+      await tester.sendKeyDownEvent(modifier);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(modifier);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Comment'), findsNothing);
+    }
+
+    expect(harness.mutations.calls, hasLength(2));
+    final calls = harness.mutations.calls.cast<UpdateCommentCall>();
+    expect(calls.map((call) => call.body), [
+      'Edited with Control',
+      'Edited with Command',
+    ]);
+  });
+
   testWidgets('close issue flips the button to secondary "Re-open"', (
     tester,
   ) async {
