@@ -52,6 +52,7 @@ extension GraphQLClient {
             let title: String?
             let updatedAt: String?
             let state: String?
+            let closedAt: String?
 
             enum CodingKeys: String, CodingKey {
                 case typeName = "__typename"
@@ -60,6 +61,7 @@ extension GraphQLClient {
                 case title
                 case updatedAt
                 case state
+                case closedAt
             }
         }
 
@@ -89,14 +91,6 @@ extension GraphQLClient {
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         dateFormatter.dateFormat = "yyyy-MM-dd"
 
-        let dateTimeFormatter = ISO8601DateFormatter()
-        dateTimeFormatter.formatOptions = [
-            .withInternetDateTime,
-            .withFractionalSeconds,
-        ]
-        let fallbackDateTimeFormatter = ISO8601DateFormatter()
-        fallbackDateTimeFormatter.formatOptions = [.withInternetDateTime]
-
         return response.data?.node?.items?.nodes?.compactMap { item in
             guard
                 let content = item?.content,
@@ -105,11 +99,18 @@ extension GraphQLClient {
                 let title = content.title,
                 let number = content.number,
                 let updatedAtRaw = content.updatedAt,
-                let updatedAt =
-                    dateTimeFormatter.date(from: updatedAtRaw)
-                    ?? fallbackDateTimeFormatter.date(from: updatedAtRaw),
+                let updatedAt = parseGitHubTimestamp(updatedAtRaw),
                 let state = content.state
             else {
+                return nil
+            }
+
+            let closed = state == "CLOSED"
+            guard shouldIncludeInTodoFeed(
+                closed: closed,
+                closedAtRaw: content.closedAt,
+                updatedAt: updatedAt
+            ) else {
                 return nil
             }
 
@@ -153,7 +154,8 @@ extension GraphQLClient {
                 title: title,
                 number: number,
                 updatedAt: updatedAt,
-                closed: state == "CLOSED",
+                closed: closed,
+                closedAt: content.closedAt.flatMap(parseGitHubTimestamp),
                 priority: priority,
                 dueDate: dueDate
             )

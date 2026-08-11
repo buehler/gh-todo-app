@@ -6,6 +6,7 @@ struct Todo: Identifiable {
     let number: Int
     var updatedAt: Date = .distantPast
     var closed: Bool = false
+    var closedAt: Date? = nil
     var priority: TodoPriority? = nil
     var dueDate: Date? = nil
 }
@@ -16,6 +17,42 @@ enum TodoPriority {
     case medium
     case low
     case trivial
+}
+
+private let recentlyClosedWindow: TimeInterval = 3 * 24 * 60 * 60
+
+func parseGitHubTimestamp(_ value: String) -> Date? {
+    let fractionalFormatter = ISO8601DateFormatter()
+    fractionalFormatter.formatOptions = [
+        .withInternetDateTime,
+        .withFractionalSeconds,
+    ]
+
+    let standardFormatter = ISO8601DateFormatter()
+    standardFormatter.formatOptions = [.withInternetDateTime]
+
+    return fractionalFormatter.date(from: value) ?? standardFormatter.date(from: value)
+}
+
+func shouldIncludeInTodoFeed(
+    closed: Bool,
+    closedAtRaw: String?,
+    updatedAt: Date,
+    now: Date = Date()
+) -> Bool {
+    guard closed else { return true }
+
+    let closedAt: Date
+    if let closedAtRaw {
+        guard let parsedClosedAt = parseGitHubTimestamp(closedAtRaw) else {
+            return false
+        }
+        closedAt = parsedClosedAt
+    } else {
+        closedAt = updatedAt
+    }
+
+    return closedAt >= now.addingTimeInterval(-recentlyClosedWindow)
 }
 
 func orderTodos(todos: [Todo]) -> [Todo] {
