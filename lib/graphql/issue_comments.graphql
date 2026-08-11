@@ -11,6 +11,12 @@ query IssueComments($id: ID!) {
           }
           body
           bodyHTML
+          isMinimized
+          minimizedReason
+          viewerCanDelete
+          viewerCanMinimize
+          viewerCanUnminimize
+          viewerCanUpdate
         }
       }
     }

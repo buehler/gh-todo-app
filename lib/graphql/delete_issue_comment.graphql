@@ -1,0 +1,5 @@
+mutation DeleteIssueComment($commentId: ID!) {
+  deleteIssueComment(input: {id: $commentId}) {
+    clientMutationId
+  }
+}

@@ -6,9 +6,12 @@ import 'package:gh_todos/graphql/add_project_item.graphql.dart';
 import 'package:gh_todos/graphql/clear_project_item_field.graphql.dart';
 import 'package:gh_todos/graphql/close_issue.graphql.dart';
 import 'package:gh_todos/graphql/create_issue.graphql.dart';
+import 'package:gh_todos/graphql/delete_issue_comment.graphql.dart';
+import 'package:gh_todos/graphql/minimize_comment.graphql.dart';
 import 'package:gh_todos/graphql/project_repository.graphql.dart';
 import 'package:gh_todos/graphql/reopen_issue.graphql.dart';
 import 'package:gh_todos/graphql/schema.graphql.dart';
+import 'package:gh_todos/graphql/unminimize_comment.graphql.dart';
 import 'package:gh_todos/graphql/update_issue.graphql.dart';
 import 'package:gh_todos/graphql/update_issue_comment.graphql.dart';
 import 'package:gh_todos/graphql/update_project_item_field.graphql.dart';
@@ -32,6 +35,22 @@ abstract class IssueMutations {
     required String issueId,
     required String commentId,
     required String body,
+  });
+
+  Future<void> hideComment({
+    required String issueId,
+    required String commentId,
+    required CommentHideReason reason,
+  });
+
+  Future<void> unhideComment({
+    required String issueId,
+    required String commentId,
+  });
+
+  Future<void> deleteComment({
+    required String issueId,
+    required String commentId,
   });
 
   Future<CloseIssueResult> closeIssue({
@@ -82,6 +101,19 @@ abstract class IssueMutations {
     required String title,
     String? body,
   });
+}
+
+enum CommentHideReason { abuse, duplicate, offTopic, outdated, resolved, spam }
+
+extension on CommentHideReason {
+  Enum$ReportedContentClassifiers get graphqlValue => switch (this) {
+    CommentHideReason.abuse => Enum$ReportedContentClassifiers.ABUSE,
+    CommentHideReason.duplicate => Enum$ReportedContentClassifiers.DUPLICATE,
+    CommentHideReason.offTopic => Enum$ReportedContentClassifiers.OFF_TOPIC,
+    CommentHideReason.outdated => Enum$ReportedContentClassifiers.OUTDATED,
+    CommentHideReason.resolved => Enum$ReportedContentClassifiers.RESOLVED,
+    CommentHideReason.spam => Enum$ReportedContentClassifiers.SPAM,
+  };
 }
 
 /// Thrown by [IssueMutations.createIssueInProject] when the selected project
@@ -221,6 +253,57 @@ class _RealIssueMutations implements IssueMutations {
           commentId: commentId,
           body: body,
         ),
+      ),
+    );
+    _unwrap(result);
+    _ref.invalidate(issueCommentsProvider(issueId));
+  }
+
+  @override
+  Future<void> hideComment({
+    required String issueId,
+    required String commentId,
+    required CommentHideReason reason,
+  }) async {
+    _ensureOnline();
+    final result = await _client.mutate$MinimizeIssueComment(
+      Options$Mutation$MinimizeIssueComment(
+        variables: Variables$Mutation$MinimizeIssueComment(
+          commentId: commentId,
+          classifier: reason.graphqlValue,
+        ),
+      ),
+    );
+    _unwrap(result);
+    _ref.invalidate(issueCommentsProvider(issueId));
+  }
+
+  @override
+  Future<void> unhideComment({
+    required String issueId,
+    required String commentId,
+  }) async {
+    _ensureOnline();
+    final result = await _client.mutate$UnminimizeIssueComment(
+      Options$Mutation$UnminimizeIssueComment(
+        variables: Variables$Mutation$UnminimizeIssueComment(
+          commentId: commentId,
+        ),
+      ),
+    );
+    _unwrap(result);
+    _ref.invalidate(issueCommentsProvider(issueId));
+  }
+
+  @override
+  Future<void> deleteComment({
+    required String issueId,
+    required String commentId,
+  }) async {
+    _ensureOnline();
+    final result = await _client.mutate$DeleteIssueComment(
+      Options$Mutation$DeleteIssueComment(
+        variables: Variables$Mutation$DeleteIssueComment(commentId: commentId),
       ),
     );
     _unwrap(result);

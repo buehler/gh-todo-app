@@ -498,6 +498,12 @@ Map<String, Object?> _comment({
         : {'login': authorLogin, '__typename': 'User'},
     'body': body,
     'bodyHTML': '<p>$body</p>',
+    'isMinimized': false,
+    'minimizedReason': null,
+    'viewerCanDelete': false,
+    'viewerCanMinimize': false,
+    'viewerCanUnminimize': false,
+    'viewerCanUpdate': false,
     '__typename': 'IssueComment',
   };
 }

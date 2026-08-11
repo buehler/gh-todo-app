@@ -6,6 +6,7 @@ import 'package:gh_todos/components/components.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/shared/offline_notice.dart';
 import 'package:gh_todos/compositions/issue_detail/add_comment_composer.dart';
+import 'package:gh_todos/compositions/issue_detail/comment_moderation_sheets.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_comment_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/edit_issue_sheet.dart';
 import 'package:gh_todos/compositions/issue_detail/issue_conversation_section.dart';
@@ -129,6 +130,49 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
       _showError('Offline. Reconnect to edit comments.');
     } catch (_) {
       _showError('Failed to update comment.');
+    }
+  }
+
+  Future<void> _hideComment(IssueComment comment) async {
+    final reason = await showHideCommentSheet(context);
+    if (reason == null) return;
+    try {
+      await ref
+          .read(issueMutationsProvider)
+          .hideComment(
+            issueId: _issueId,
+            commentId: comment.id,
+            reason: reason,
+          );
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to hide comments.');
+    } catch (_) {
+      _showError('Failed to hide comment.');
+    }
+  }
+
+  Future<void> _unhideComment(IssueComment comment) async {
+    try {
+      await ref
+          .read(issueMutationsProvider)
+          .unhideComment(issueId: _issueId, commentId: comment.id);
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to unhide comments.');
+    } catch (_) {
+      _showError('Failed to unhide comment.');
+    }
+  }
+
+  Future<void> _deleteComment(IssueComment comment) async {
+    if (!await showDeleteCommentSheet(context)) return;
+    try {
+      await ref
+          .read(issueMutationsProvider)
+          .deleteComment(issueId: _issueId, commentId: comment.id);
+    } on OfflineWriteBlockedException {
+      _showError('Offline. Reconnect to delete comments.');
+    } catch (_) {
+      _showError('Failed to delete comment.');
     }
   }
 
@@ -422,7 +466,6 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.paddingOf(context).top;
 
-    final viewerLogin = ref.watch(userInfoProvider).asData?.value?.login;
     final isOffline = ref.watch(offlineStatusProvider).asData?.value ?? false;
     final details = ref.watch(issueDetailsProvider(_issue));
 
@@ -476,8 +519,10 @@ class _IssueDetailPageState extends ConsumerState<IssueDetailPage> {
               IssueConversationSection(
                 issueId: _issueId,
                 commentCount: _issue.commentCount,
-                viewerLogin: viewerLogin,
                 onEditComment: (c) => unawaited(_editComment(c)),
+                onHideComment: (c) => unawaited(_hideComment(c)),
+                onUnhideComment: (c) => unawaited(_unhideComment(c)),
+                onDeleteComment: (c) => unawaited(_deleteComment(c)),
                 onTaskToggle: isOffline ? null : _toggleCommentTask,
                 taskToggleBusyCommentIds: _commentTaskToggleBusyIds,
               ),

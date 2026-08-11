@@ -11,6 +11,12 @@ abstract class IssueComment with _$IssueComment {
     required String body,
     required String bodyHtml,
     required String createdAt,
+    @Default(false) bool isMinimized,
+    String? minimizedReason,
+    @Default(false) bool viewerCanDelete,
+    @Default(false) bool viewerCanMinimize,
+    @Default(false) bool viewerCanUnminimize,
+    @Default(false) bool viewerCanUpdate,
   }) = _IssueComment;
 }
 

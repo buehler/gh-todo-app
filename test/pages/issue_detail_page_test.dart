@@ -85,6 +85,10 @@ final _ownComment = IssueComment(
   body: '**My** original comment.',
   bodyHtml: '<p><strong>My</strong> original comment.</p>',
   createdAt: '2026-04-13T10:00:00Z',
+  viewerCanUpdate: true,
+  viewerCanDelete: true,
+  viewerCanMinimize: true,
+  viewerCanUnminimize: true,
 );
 
 final _otherComment = IssueComment(
@@ -389,20 +393,107 @@ Line seven''';
     );
   });
 
-  testWidgets('own comment shows pencil icon; others do not', (tester) async {
+  testWidgets('only comments with capabilities show an actions menu', (
+    tester,
+  ) async {
     await _pump(
       tester,
       issue: _openIssue,
       comments: [_ownComment, _otherComment],
     );
 
-    // Exactly one pencil icon across the conversation (for the own comment).
     expect(
-      find.byKey(const ValueKey('issue-comment-edit-icon')),
+      find.byKey(const ValueKey('issue-comment-actions-c-own')),
       findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('issue-comment-actions-c-other')),
+      findsNothing,
     );
     expect(find.text('me'), findsOneWidget);
     expect(find.text('someone-else'), findsOneWidget);
+  });
+
+  testWidgets('hidden comments stay in the conversation and expand locally', (
+    tester,
+  ) async {
+    final hidden = _otherComment.copyWith(
+      isMinimized: true,
+      minimizedReason: 'outdated',
+      viewerCanUnminimize: true,
+    );
+    await _pump(tester, issue: _openIssue, comments: [hidden]);
+
+    expect(find.text('Comment hidden — outdated'), findsOneWidget);
+    expect(find.textContaining("Someone else's comment."), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('issue-comment-show-c-other')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("Someone else's comment."), findsOneWidget);
+  });
+
+  testWidgets('hide comment forwards the selected GitHub classifier', (
+    tester,
+  ) async {
+    final harness = await _pump(
+      tester,
+      issue: _openIssue,
+      comments: [_ownComment],
+    );
+    await tester.tap(find.byKey(const ValueKey('issue-comment-actions-c-own')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hide comment'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hide comment'), findsWidgets);
+    await tester.tap(find.text('Hide comment').last);
+    await tester.pumpAndSettle();
+
+    final call = harness.mutations.calls.whereType<HideCommentCall>().single;
+    expect(call.issueId, _issueId);
+    expect(call.commentId, _ownComment.id);
+    expect(call.reason, CommentHideReason.outdated);
+  });
+
+  testWidgets('unhide comment records the mutation', (tester) async {
+    final hidden = _ownComment.copyWith(
+      isMinimized: true,
+      minimizedReason: 'resolved',
+    );
+    final harness = await _pump(tester, issue: _openIssue, comments: [hidden]);
+    await tester.tap(find.byKey(const ValueKey('issue-comment-show-c-own')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('issue-comment-actions-c-own')));
+    await tester.pumpAndSettle();
+    expect(find.text('Hide comment'), findsNothing);
+    await tester.tap(find.text('Unhide comment'));
+    await tester.pumpAndSettle();
+
+    final call = harness.mutations.calls.whereType<UnhideCommentCall>().single;
+    expect(call.commentId, _ownComment.id);
+  });
+
+  testWidgets('delete comment requires confirmation before mutation', (
+    tester,
+  ) async {
+    final harness = await _pump(
+      tester,
+      issue: _openIssue,
+      comments: [_ownComment],
+    );
+    await tester.tap(find.byKey(const ValueKey('issue-comment-actions-c-own')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete comment'));
+    await tester.pumpAndSettle();
+
+    expect(harness.mutations.calls.whereType<DeleteCommentCall>(), isEmpty);
+    await tester.tap(find.text('Delete comment').last);
+    await tester.pumpAndSettle();
+    expect(
+      harness.mutations.calls.whereType<DeleteCommentCall>(),
+      hasLength(1),
+    );
   });
 
   testWidgets('renders issue description and comments from html', (
@@ -564,7 +655,11 @@ Line seven''';
     (tester) async {
       await _pump(tester, issue: _openIssue, comments: [_ownComment]);
 
-      await tester.tap(find.byKey(const ValueKey('issue-comment-edit-icon')));
+      await tester.tap(
+        find.byKey(const ValueKey('issue-comment-actions-c-own')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit comment'));
       await tester.pumpAndSettle();
 
       expect(find.text('Edit Comment'), findsOneWidget);

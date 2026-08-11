@@ -456,6 +456,12 @@ final issueCommentsProvider = StreamProvider.autoDispose
                 body: c.body,
                 bodyHtml: c.bodyHTML,
                 createdAt: c.createdAt,
+                isMinimized: c.isMinimized,
+                minimizedReason: c.minimizedReason,
+                viewerCanDelete: c.viewerCanDelete,
+                viewerCanMinimize: c.viewerCanMinimize,
+                viewerCanUnminimize: c.viewerCanUnminimize,
+                viewerCanUpdate: c.viewerCanUpdate,
               ),
             );
           }

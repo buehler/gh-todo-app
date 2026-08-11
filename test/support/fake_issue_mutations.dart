@@ -62,6 +62,36 @@ class FakeIssueMutations implements IssueMutations {
   }
 
   @override
+  Future<void> hideComment({
+    required String issueId,
+    required String commentId,
+    required CommentHideReason reason,
+  }) async {
+    calls.add(
+      HideCommentCall(issueId: issueId, commentId: commentId, reason: reason),
+    );
+    _maybeThrow();
+  }
+
+  @override
+  Future<void> unhideComment({
+    required String issueId,
+    required String commentId,
+  }) async {
+    calls.add(UnhideCommentCall(issueId: issueId, commentId: commentId));
+    _maybeThrow();
+  }
+
+  @override
+  Future<void> deleteComment({
+    required String issueId,
+    required String commentId,
+  }) async {
+    calls.add(DeleteCommentCall(issueId: issueId, commentId: commentId));
+    _maybeThrow();
+  }
+
+  @override
   Future<CloseIssueResult> closeIssue({
     required String projectId,
     required String issueId,
@@ -211,6 +241,29 @@ class UpdateCommentCall extends MutationCall {
     required this.commentId,
     required this.body,
   });
+}
+
+class HideCommentCall extends MutationCall {
+  final String issueId;
+  final String commentId;
+  final CommentHideReason reason;
+  const HideCommentCall({
+    required this.issueId,
+    required this.commentId,
+    required this.reason,
+  });
+}
+
+class UnhideCommentCall extends MutationCall {
+  final String issueId;
+  final String commentId;
+  const UnhideCommentCall({required this.issueId, required this.commentId});
+}
+
+class DeleteCommentCall extends MutationCall {
+  final String issueId;
+  final String commentId;
+  const DeleteCommentCall({required this.issueId, required this.commentId});
 }
 
 class CloseIssueCall extends MutationCall {
