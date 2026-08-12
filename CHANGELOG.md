@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0](https://github.com/buehler/gh-todo-app/compare/v1.1.0...v1.2.0) (2026-08-12)
+
+
+### Features
+
+* add changelog page to settings to see exact changes ([bd698ac](https://github.com/buehler/gh-todo-app/commit/bd698acb026198eb508501ba8b6d7d464512cb49))
+* add project setting "issue query" that allows filtering for other issues ([59ac482](https://github.com/buehler/gh-todo-app/commit/59ac48201a4dfb050b09b7aff96c58f521d2f4a6))
+* allow adding projects from other github users (direct access via username) ([6b89a7c](https://github.com/buehler/gh-todo-app/commit/6b89a7c2d9d0ccc891c96ed3eea8e297a85b07ea))
+* allow hide and delete of comments inside issue details ([a01ed4f](https://github.com/buehler/gh-todo-app/commit/a01ed4fad05d91699860732317ec339b50aa93ca))
+* **ios:** add better logging for diagnosis (no PII revealed) ([7e185e6](https://github.com/buehler/gh-todo-app/commit/7e185e6736a6b8d76e6ff59c3c7d87fa9249a908))
+* **ios:** widget shows last updated timestamp ([0a81474](https://github.com/buehler/gh-todo-app/commit/0a8147489c96d6e7b7fbca4f35d765b9c5727757))
+* use better project switcher ([f97ccd3](https://github.com/buehler/gh-todo-app/commit/f97ccd35f17882bc06e56a13abd407de23c2fac8))
+
+
+### Bug Fixes
+
+* also use cmd/ctrl enter in edit comment ([a7fd574](https://github.com/buehler/gh-todo-app/commit/a7fd574454959091b61aefdee36ffc8ed22ab6d2))
+* cmd / ctrl enter also works in edit issue sheet ([0756313](https://github.com/buehler/gh-todo-app/commit/07563133ccd05c9baedf46bf11654bd77b95ae9d))
+* **ios:** correctly use PAT in widgets after first unlock and migrate them ([1b0b337](https://github.com/buehler/gh-todo-app/commit/1b0b3379f460913135f9ab0dabcc0377f3434165))
+* **ios:** dont show closed issues unlimited time ([6829f72](https://github.com/buehler/gh-todo-app/commit/6829f72a3fd0110adc6fe7b00d0ddc7332aa38c8))
+* **ios:** remove icloud synchronizable tokens ([26fcefe](https://github.com/buehler/gh-todo-app/commit/26fcefe78f82b63b3da30ff0467630f6108fb6ce))
+* **ios:** remove small widget because its useless ([632ddf7](https://github.com/buehler/gh-todo-app/commit/632ddf7adcacaa0929689622d0930ba66fea0a94))
+* **ios:** widget shows owner in config instead of id ([e2bffb6](https://github.com/buehler/gh-todo-app/commit/e2bffb6c485525cf9236ebab9057b8ddc0b60af4))
+* not clickable link in changelog ([9133764](https://github.com/buehler/gh-todo-app/commit/91337649724df42ba3cd143c32211b7a6ddc44a7))
+* unfocus on successfull post comment in issue detail ([3eba935](https://github.com/buehler/gh-todo-app/commit/3eba9353fe8e86d33d7181f8d9954befe48e828b))
+* use pat insert/update as password field (hidden values and triggers password autofill) ([a3cdd75](https://github.com/buehler/gh-todo-app/commit/a3cdd75fb93898911867bb5b91df910fd95638bd))
+
 ## [1.1.0](https://github.com/buehler/gh-todo-app/compare/v1.0.0...v1.1.0) (2026-07-23)
 
 
