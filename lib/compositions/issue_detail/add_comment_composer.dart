@@ -63,20 +63,15 @@ class _AddCommentComposerState extends State<AddCommentComposer> {
     try {
       final ok = await handler(text);
       if (!mounted) return;
-      if (ok) _controller.clear();
+      if (ok) {
+        _controller.clear();
+        _focusNode.unfocus();
+      }
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
-        _refocusInput();
       }
     }
-  }
-
-  void _refocusInput() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !widget.enabled) return;
-      _focusNode.requestFocus();
-    });
   }
 
   @override

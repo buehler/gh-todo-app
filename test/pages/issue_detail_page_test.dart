@@ -209,7 +209,7 @@ void main() {
       contains(isA<MarkdownListContinuationFormatter>()),
     );
     expect(textField.controller?.text, isEmpty);
-    expect(textField.focusNode?.hasFocus, isTrue);
+    expect(textField.focusNode?.hasFocus, isFalse);
   });
 
   testWidgets('modifier enter posts comment and clears the composer', (
@@ -238,7 +238,12 @@ void main() {
     expect((call as PostCommentCall).issueId, _issueId);
     expect(call.body, 'Keyboard comment');
     expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
+    expect(
+      tester.widget<TextField>(textField).focusNode?.hasFocus,
+      isFalse,
+    );
 
+    await tester.tap(textField);
     await tester.enterText(textField, 'Command comment');
     await tester.pump();
 
@@ -253,7 +258,7 @@ void main() {
     expect((call as PostCommentCall).issueId, _issueId);
     expect(call.body, 'Command comment');
     expect(tester.widget<TextField>(textField).controller?.text, isEmpty);
-    expect(tester.widget<TextField>(textField).focusNode?.hasFocus, isTrue);
+    expect(tester.widget<TextField>(textField).focusNode?.hasFocus, isFalse);
   });
 
   testWidgets('shift enter does not post comment', (tester) async {
