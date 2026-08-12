@@ -36,7 +36,7 @@ struct TodosWidgetView: View {
         VStack(alignment: .leading) {
             switch entry.state {
             case let .content(project, todos):
-                WidgetHeader(project: project)
+                WidgetHeader(project: project, updatedAt: entry.date)
                 TodosList(project: project, todos: todos)
             case .unconfigured:
                 NoProjectView()
@@ -112,6 +112,7 @@ private struct WidgetHeader: View {
     @Environment(\.widgetFamily) private var family
 
     let project: WidgetProject
+    let updatedAt: Date
 
     private var titleFont: Font {
         switch family {
@@ -122,6 +123,15 @@ private struct WidgetHeader: View {
         }
     }
 
+    private var showsLastUpdatedHint: Bool {
+        switch family {
+        case .systemMedium, .systemLarge:
+            true
+        default:
+            false
+        }
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
             Text(project.name)
@@ -129,7 +139,12 @@ private struct WidgetHeader: View {
                 .foregroundStyle(Color.primary)
                 .lineLimit(1)
 
-            Spacer(minLength: 8)
+            if showsLastUpdatedHint {
+                LastUpdatedHint(updatedAt: updatedAt)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+
+            Spacer(minLength: 0)
 
             Button(intent: RefreshIssueIntent()) {
                 Image(systemName: "arrow.clockwise.circle")
@@ -148,6 +163,25 @@ private struct WidgetHeader: View {
             .tint(WidgetPalette.primary)
             .accessibilityLabel("Refresh Todos")
         }
+    }
+}
+
+private struct LastUpdatedHint: View {
+    let updatedAt: Date
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "clock.arrow.circlepath")
+            Text("Updated")
+            Text(updatedAt, format: .dateTime.hour().minute())
+        }
+        .font(.caption2.weight(.medium))
+        .foregroundStyle(WidgetPalette.muted.opacity(0.8))
+        .lineLimit(1)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(.ultraThinMaterial, in: Capsule())
+        .accessibilityLabel("Last updated \(updatedAt.formatted(date: .omitted, time: .shortened))")
     }
 }
 
@@ -556,7 +590,10 @@ let previewTodos: [Todo] = [
 #Preview("Large Widget", as: .systemLarge) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), state: .content(project: previewProject, todos: previewTodos))
+    TodosEntry(
+        date: Date(timeIntervalSinceReferenceDate: 777_649_920),
+        state: .content(project: previewProject, todos: previewTodos)
+    )
 }
 
 #Preview("Large Widget With Less Todos", as: .systemLarge) {
@@ -574,7 +611,10 @@ let previewTodos: [Todo] = [
 #Preview("Medium Widget", as: .systemMedium) {
     GHTodosWidget()
 } timeline: {
-    TodosEntry(date: Date(), state: .content(project: previewProject, todos: previewTodos))
+    TodosEntry(
+        date: Date(timeIntervalSinceReferenceDate: 777_649_920),
+        state: .content(project: previewProject, todos: previewTodos)
+    )
 }
 
 #Preview("Medium Empty Widget", as: .systemMedium) {
