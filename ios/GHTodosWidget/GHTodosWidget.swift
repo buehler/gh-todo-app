@@ -17,7 +17,7 @@ struct GHTodosWidget: Widget {
         .configurationDisplayName("GH Todos")
         .description("Shows todos from a selected GitHub Project.")
         .supportedFamilies([
-            .systemSmall, .systemMedium, .systemLarge,
+            .systemMedium, .systemLarge,
         ])
     }
 }
@@ -109,40 +109,18 @@ private struct WidgetErrorView: View {
 }
 
 private struct WidgetHeader: View {
-    @Environment(\.widgetFamily) private var family
-
     let project: WidgetProject
     let updatedAt: Date
-
-    private var titleFont: Font {
-        switch family {
-        case .systemSmall:
-            .caption.weight(.semibold)
-        default:
-            .headline.weight(.semibold)
-        }
-    }
-
-    private var showsLastUpdatedHint: Bool {
-        switch family {
-        case .systemMedium, .systemLarge:
-            true
-        default:
-            false
-        }
-    }
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
             Text(project.name)
-                .font(titleFont)
+                .font(.headline.weight(.semibold))
                 .foregroundStyle(Color.primary)
                 .lineLimit(1)
 
-            if showsLastUpdatedHint {
-                LastUpdatedHint(updatedAt: updatedAt)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
+            LastUpdatedHint(updatedAt: updatedAt)
+                .fixedSize(horizontal: true, vertical: false)
 
             Spacer(minLength: 0)
 
@@ -150,13 +128,13 @@ private struct WidgetHeader: View {
                 Image(systemName: "arrow.clockwise.circle")
                     .font(
                         .system(
-                            size: family == .systemSmall ? 16 : 18,
+                            size: 18,
                             weight: .semibold
                         )
                     )
                     .frame(
-                        width: family == .systemSmall ? 36 : 42,
-                        height: family == .systemSmall ? 30 : 34
+                        width: 42,
+                        height: 34
                     )
             }
             .buttonStyle(.borderless)
@@ -206,8 +184,6 @@ private struct TodosList: View {
         Group {
             if todos.isEmpty {
                 EmptyTodosState()
-            } else if family == .systemSmall {
-                SmallTodoCard(todo: visibleTodos.first)
             } else {
                 Grid {
                     ForEach(0..<6) { index in
@@ -357,102 +333,20 @@ private struct TodoStateIcon: View {
     }
 }
 
-private struct SmallTodoCard: View {
-    let todo: Todo?
-
-    private var accent: PriorityStyle? {
-        todo?.priority.map(PriorityStyle.init(priority:))
-    }
-
-    var body: some View {
-        if let todo {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 0) {
-                    Rectangle()
-                        .fill(accent?.foreground ?? Color.clear)
-                        .frame(width: 4)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(todo.title)
-                            .font(.headline.weight(.light).pointSize(14))
-                            .foregroundStyle(
-                                todo.closed ? Color.secondary : Color.primary
-                            )
-                            .strikethrough(todo.closed)
-                            .lineLimit(3)
-
-                        HStack {
-                            if let dueDate = todo.dueDate {
-                                Label(
-                                    formatDueDate(dueDate),
-                                    systemImage: "calendar"
-                                )
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(WidgetPalette.muted)
-                                .lineLimit(1)
-                                .layoutPriority(1)
-                            }
-
-                            if let priority = todo.priority {
-                                Spacer()
-                                Text(priorityLabel(priority))
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(
-                                        accent?.foreground
-                                            ?? WidgetPalette.muted
-                                    )
-                                    .lineLimit(1)
-                            }
-                        }
-                    }
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .background(
-                    cardBackground,
-                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                )
-                .clipShape(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                )
-                .opacity(todo.closed ? 0.58 : 1)
-            }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .topLeading
-            )
-        }
-    }
-
-    private var cardBackground: Color {
-        if let accent {
-            return accent.background.opacity(todo?.closed == true ? 0.45 : 0.72)
-        }
-        return Color(.secondarySystemBackground)
-    }
-}
-
 private struct EmptyTodosState: View {
-    @Environment(\.widgetFamily) private var family
-
     var body: some View {
-        VStack(spacing: family == .systemSmall ? 6 : 8) {
+        VStack(spacing: 8) {
             Image(systemName: "checkmark.circle")
                 .font(
                     .system(
-                        size: family == .systemSmall ? 24 : 30,
+                        size: 30,
                         weight: .medium
                     )
                 )
                 .foregroundStyle(WidgetPalette.primary)
 
             Text("all done for now")
-                .font(
-                    family == .systemSmall
-                        ? .caption.weight(.semibold)
-                        : .callout.weight(.semibold)
-                )
+                .font(.callout.weight(.semibold))
                 .foregroundStyle(WidgetPalette.muted)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -490,21 +384,6 @@ private struct PriorityStyle {
 private enum WidgetPalette {
     static let primary = Color(hex: 0x0051AE)
     static let muted = Color(hex: 0x424753)
-}
-
-private func priorityLabel(_ priority: TodoPriority) -> String {
-    switch priority {
-    case .urgent:
-        "Urgent"
-    case .high:
-        "High Priority"
-    case .medium:
-        "Medium Priority"
-    case .low:
-        "Low Priority"
-    case .trivial:
-        "Trivial"
-    }
 }
 
 private func formatDueDate(_ date: Date) -> String {
@@ -581,7 +460,7 @@ let previewTodos: [Todo] = [
     ),
 ]
 
-#Preview("Unconfigured Widget", as: .systemSmall) {
+#Preview("Unconfigured Widget", as: .systemMedium) {
     GHTodosWidget()
 } timeline: {
     TodosEntry(date: Date(), state: .unconfigured)
@@ -623,53 +502,7 @@ let previewTodos: [Todo] = [
     TodosEntry(date: Date(), state: .content(project: previewProject, todos: []))
 }
 
-#Preview("Small Widget", as: .systemSmall) {
-    GHTodosWidget()
-} timeline: {
-    TodosEntry(date: Date(), state: .content(project: previewProject, todos: previewTodos))
-}
-
-#Preview("Small Widget Closed Todo", as: .systemSmall) {
-    GHTodosWidget()
-} timeline: {
-    TodosEntry(
-        date: Date(),
-        state: .content(project: previewProject, todos: [
-            Todo(
-                id: "1",
-                title: "Ship widget priority styling",
-                number: 13,
-                closed: true,
-                priority: .urgent,
-                dueDate: Date().addingTimeInterval(86_400)
-            )
-        ])
-    )
-}
-
-#Preview("Small Widget No Priority", as: .systemSmall) {
-    GHTodosWidget()
-} timeline: {
-    TodosEntry(
-        date: Date(),
-        state: .content(project: previewProject, todos: [
-            Todo(
-                id: "1",
-                title: "Ship widget priority styling",
-                number: 13,
-                dueDate: Date().addingTimeInterval(86_400)
-            )
-        ])
-    )
-}
-
-#Preview("Small Empty Widget", as: .systemSmall) {
-    GHTodosWidget()
-} timeline: {
-    TodosEntry(date: Date(), state: .content(project: previewProject, todos: []))
-}
-
-#Preview("Project Unavailable", as: .systemSmall) {
+#Preview("Project Unavailable", as: .systemMedium) {
     GHTodosWidget()
 } timeline: {
     TodosEntry(date: Date(), state: .projectUnavailable)
