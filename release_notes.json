@@ -1,6 +1,6 @@
 [
-  {
-    "language": "en-US",
-    "text": "• Find projects more easily with the new project switcher, including projects from other GitHub users.\n• Focus your task list with a custom issue filter for each project.\n• Manage conversations more effectively: hide or delete comments directly from an issue.\n• View a detailed changelog from Settings.\n\niOS\n\n• The Home Screen widget now shows when it was last updated and has improved project and issue handling.\n• Improved widget reliability after device unlock and when working with closed issues."
-  }
+	{
+		"language": "en-US",
+		"text": "fix(ios): correctly show priority and dates in widget"
+	}
 ]
