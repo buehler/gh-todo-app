@@ -1,7 +1,7 @@
 import Foundation
 
 extension GraphQLClient {
-    static func queryProjectIssues(projectId: String, issueQuery: String) async throws -> [Todo] {
+    static func queryProjectIssues(project: WidgetProject) async throws -> [Todo] {
         struct Response: Decodable {
             let data: ResponseData?
         }
@@ -29,12 +29,14 @@ extension GraphQLClient {
 
         struct FieldValue: Decodable {
             let typeName: String?
+            let optionId: String?
             let name: String?
             let date: String?
             let field: ProjectField?
 
             enum CodingKeys: String, CodingKey {
                 case typeName = "__typename"
+                case optionId
                 case name
                 case date
                 case field
@@ -42,6 +44,7 @@ extension GraphQLClient {
         }
 
         struct ProjectField: Decodable {
+            let id: String?
             let name: String?
         }
 
@@ -68,8 +71,8 @@ extension GraphQLClient {
         let query = GraphQLPayload(
             query: _queryProjectIssues,
             variables: [
-                "projectId": projectId,
-                "issueQuery": issueQuery,
+                "projectId": project.id,
+                "issueQuery": project.issueQuery,
             ]
         )
         let result = try await fetch(query)
@@ -85,11 +88,6 @@ extension GraphQLClient {
         guard response.data?.node != nil else {
             throw Errors.missingProjectData
         }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        dateFormatter.dateFormat = "yyyy-MM-dd"
 
         return response.data?.node?.items?.nodes?.compactMap { item in
             guard
@@ -114,40 +112,20 @@ extension GraphQLClient {
                 return nil
             }
 
-            var priority: TodoPriority?
-            var dueDate: Date?
-
-            for fieldValue in item?.fieldValues?.nodes ?? [] {
-                guard let fieldValue else { continue }
-
-                if priority == nil,
-                    fieldValue.typeName
-                        == "ProjectV2ItemFieldSingleSelectValue",
-                    fieldValue.field?.name == "Priority",
-                    let priorityName = fieldValue.name?.lowercased()
-                {
-                    switch priorityName {
-                    case "super high", "urgent":
-                        priority = .urgent
-                    case "high", "high priority":
-                        priority = .high
-                    case "medium", "medium priority":
-                        priority = .medium
-                    case "low", "lowest":
-                        priority = .low
-                    case "trivial":
-                        priority = .trivial
-                    default:
-                        break
-                    }
-                } else if dueDate == nil,
-                    fieldValue.typeName == "ProjectV2ItemFieldDateValue",
-                    fieldValue.field?.name == "Due Date",
-                    let date = fieldValue.date
-                {
-                    dueDate = dateFormatter.date(from: date)
-                }
-            }
+            let mappedFields = resolveMappedFields(
+                fieldValues: (item?.fieldValues?.nodes ?? []).compactMap { fieldValue in
+                    guard let fieldValue else { return nil }
+                    return WidgetProjectFieldValue(
+                        typeName: fieldValue.typeName,
+                        fieldId: fieldValue.field?.id,
+                        fieldName: fieldValue.field?.name,
+                        optionId: fieldValue.optionId,
+                        optionName: fieldValue.name,
+                        date: fieldValue.date
+                    )
+                },
+                project: project
+            )
 
             return Todo(
                 id: id,
@@ -156,8 +134,8 @@ extension GraphQLClient {
                 updatedAt: updatedAt,
                 closed: closed,
                 closedAt: content.closedAt.flatMap(parseGitHubTimestamp),
-                priority: priority,
-                dueDate: dueDate
+                priority: mappedFields.priority,
+                dueDate: mappedFields.dueDate
             )
         } ?? []
     }

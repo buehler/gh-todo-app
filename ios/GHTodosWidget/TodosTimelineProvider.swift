@@ -82,10 +82,7 @@ struct TodosTimelineProvider: AppIntentTimelineProvider {
 
         let id = diagnosticID ?? WidgetDiagnostics.identifier()
         do {
-            let todos = try await GraphQLClient.queryProjectIssues(
-                projectId: project.id,
-                issueQuery: project.issueQuery
-            )
+            let todos = try await GraphQLClient.queryProjectIssues(project: project)
             let orderedTodos = orderTodos(todos: todos)
             WidgetDiagnostics.event("todos_loaded", diagnosticID: id, details: ["todo_count": todos.count])
             return TodosEntry(date: now, state: .content(project: project, todos: orderedTodos))

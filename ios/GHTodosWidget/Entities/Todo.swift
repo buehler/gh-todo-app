@@ -11,12 +11,57 @@ struct Todo: Identifiable {
     var dueDate: Date? = nil
 }
 
-enum TodoPriority {
+enum TodoPriority: String {
     case urgent
     case high
     case medium
     case low
     case trivial
+}
+
+struct WidgetProjectFieldValue {
+    let typeName: String?
+    let fieldId: String?
+    let fieldName: String?
+    let optionId: String?
+    let optionName: String?
+    let date: String?
+}
+
+func resolveMappedFields(
+    fieldValues: [WidgetProjectFieldValue],
+    project: WidgetProject
+) -> (priority: TodoPriority?, dueDate: Date?) {
+    var priority: TodoPriority?
+    var dueDate: Date?
+
+    let dateFormatter = DateFormatter()
+    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+    dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+    dateFormatter.dateFormat = "yyyy-MM-dd"
+
+    for fieldValue in fieldValues {
+        if priority == nil,
+            fieldValue.typeName == "ProjectV2ItemFieldSingleSelectValue",
+            let priorityFieldId = project.priorityFieldId,
+            fieldValue.fieldId == priorityFieldId,
+            let optionId = fieldValue.optionId,
+            let mappedValue = project.priorityOptionMap[optionId]
+        {
+            priority = TodoPriority(rawValue: mappedValue)
+        }
+
+        if dueDate == nil,
+            fieldValue.typeName == "ProjectV2ItemFieldDateValue",
+            let dueDateFieldId = project.dueDateFieldId,
+            fieldValue.fieldId == dueDateFieldId,
+            let date = fieldValue.date
+        {
+            dueDate = dateFormatter.date(from: date)
+        }
+    }
+
+    return (priority, dueDate)
 }
 
 private let recentlyClosedWindow: TimeInterval = 3 * 24 * 60 * 60
