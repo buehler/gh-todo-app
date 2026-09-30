@@ -16,11 +16,15 @@ class IssueRoutePage extends ConsumerWidget {
   final String requestedProjectId;
   final String issueId;
   final String? routeRefreshKey;
+  final IssueData? initialIssue;
+  final List<String> failedFields;
 
   const IssueRoutePage({
     required this.requestedProjectId,
     required this.issueId,
     this.routeRefreshKey,
+    this.initialIssue,
+    this.failedFields = const [],
     super.key,
   });
 
@@ -32,6 +36,8 @@ class IssueRoutePage extends ConsumerWidget {
           requestedProjectId: requestedProjectId,
           issueId: issueId,
           routeRefreshKey: routeRefreshKey,
+          initialIssue: initialIssue,
+          failedFields: failedFields,
           embedded: true,
         ),
         child: RootPage(
@@ -45,6 +51,8 @@ class IssueRoutePage extends ConsumerWidget {
       requestedProjectId: requestedProjectId,
       issueId: issueId,
       routeRefreshKey: routeRefreshKey,
+      initialIssue: initialIssue,
+      failedFields: failedFields,
       embedded: false,
     );
   }
@@ -54,12 +62,16 @@ class _IssueRouteDetail extends ConsumerStatefulWidget {
   final String requestedProjectId;
   final String issueId;
   final String? routeRefreshKey;
+  final IssueData? initialIssue;
+  final List<String> failedFields;
   final bool embedded;
 
   const _IssueRouteDetail({
     required this.requestedProjectId,
     required this.issueId,
     required this.routeRefreshKey,
+    required this.initialIssue,
+    required this.failedFields,
     required this.embedded,
   });
 
@@ -68,6 +80,25 @@ class _IssueRouteDetail extends ConsumerStatefulWidget {
 }
 
 class _IssueRouteDetailState extends ConsumerState<_IssueRouteDetail> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.failedFields.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Todo created. Could not save ${widget.failedFields.join(' and ')}. '
+              'Edit the todo to set it.',
+            ),
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final projectIdAsync = ref.watch(
@@ -93,6 +124,13 @@ class _IssueRouteDetailState extends ConsumerState<_IssueRouteDetail> {
           });
         }
 
+        final initial = widget.initialIssue;
+        if (initial != null &&
+            initial.id == widget.issueId &&
+            initial.projectId == projectId) {
+          return _detail(context, projectId, initial);
+        }
+
         final feedAsync = switch (widget.routeRefreshKey) {
           final refreshKey? => ref.watch(
             projectRouteRefreshProvider((
@@ -112,27 +150,38 @@ class _IssueRouteDetailState extends ConsumerState<_IssueRouteDetail> {
     String projectId,
     AsyncValue<ProjectIssuesFeed> feedAsync,
   ) {
-    return feedAsync.when(
+    if (feedAsync.isLoading) return _frame(const _RouteLoading());
+    final feed = feedAsync.asData?.value;
+    final inFeed = feed == null ? null : _findIssue(feed, widget.issueId);
+    if (inFeed != null) return _detail(context, projectId, inFeed);
+
+    final directAsync = ref.watch(
+      projectIssueByIdProvider((projectId: projectId, issueId: widget.issueId)),
+    );
+    return directAsync.when(
       loading: () => _frame(const _RouteLoading()),
       error: (_, _) => _frame(const _RouteMessage('Failed to load issue.')),
-      data: (feed) {
-        final issue = _findIssue(feed, widget.issueId);
-        if (issue == null) {
-          return _RouteRedirect(location: AppRoutes.projectLocation(projectId));
-        }
+      data: (issue) => issue == null
+          ? _RouteRedirect(location: AppRoutes.projectLocation(projectId))
+          : _detail(context, projectId, issue),
+    );
+  }
 
-        return IssueDetailPage(
-          key: ValueKey('issue-route-$projectId-${widget.issueId}'),
-          issueId: widget.issueId,
-          issue: issue,
-          embedded: widget.embedded,
-          onBack: widget.embedded
-              ? () => context.goNamed(
-                  AppRoutes.projectName,
-                  pathParameters: {AppRoutes.projectIdParam: projectId},
-                )
-              : null,
-        );
+  Widget _detail(BuildContext context, String projectId, IssueData issue) {
+    return IssueDetailPage(
+      key: ValueKey('issue-route-$projectId-${widget.issueId}'),
+      issueId: widget.issueId,
+      issue: issue,
+      embedded: widget.embedded,
+      onBack: () {
+        if (!widget.embedded && context.canPop()) {
+          context.pop();
+        } else {
+          context.goNamed(
+            AppRoutes.projectName,
+            pathParameters: {AppRoutes.projectIdParam: projectId},
+          );
+        }
       },
     );
   }

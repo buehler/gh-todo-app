@@ -127,6 +127,14 @@ class NoLinkedRepositoryException implements Exception {
       'NoLinkedRepositoryException: project $projectId has no linked repository';
 }
 
+/// The issue exists, but the project item write failed or returned no item id.
+/// Callers must not create the issue again when handling this exception.
+class IssueProjectAttachmentUnknownException implements Exception {
+  final IssueData issue;
+
+  const IssueProjectAttachmentUnknownException(this.issue);
+}
+
 class OfflineWriteBlockedException implements Exception {
   const OfflineWriteBlockedException();
 
@@ -513,19 +521,7 @@ class _RealIssueMutations implements IssueMutations {
       throw Exception('createIssue returned no issue payload');
     }
 
-    // Step 3: attach the new issue to the project.
-    final addResult = await _client.mutate$AddProjectItem(
-      Options$Mutation$AddProjectItem(
-        variables: Variables$Mutation$AddProjectItem(
-          projectId: projectId,
-          contentId: issue.id,
-        ),
-      ),
-    );
-    final addData = _unwrap(addResult);
-    final projectItemId = addData.addProjectV2ItemById?.item?.id;
-
-    final newIssue = IssueData(
+    final createdIssue = IssueData(
       id: issue.id,
       number: issue.number,
       title: issue.title,
@@ -536,6 +532,30 @@ class _RealIssueMutations implements IssueMutations {
       createdAt: issue.createdAt,
       updatedAt: issue.updatedAt,
       closed: false,
+    );
+
+    // Step 3: attach the new issue to the project. Preserve its identity if
+    // this second write fails so the UI cannot accidentally create a duplicate.
+    String? projectItemId;
+    try {
+      final addResult = await _client.mutate$AddProjectItem(
+        Options$Mutation$AddProjectItem(
+          variables: Variables$Mutation$AddProjectItem(
+            projectId: projectId,
+            contentId: issue.id,
+          ),
+        ),
+      );
+      final addData = _unwrap(addResult);
+      projectItemId = addData.addProjectV2ItemById?.item?.id;
+      if (projectItemId == null) {
+        throw StateError('Project item mutation returned no item id');
+      }
+    } catch (_) {
+      throw IssueProjectAttachmentUnknownException(createdIssue);
+    }
+
+    final newIssue = createdIssue.copyWith(
       projectId: projectId,
       projectItemId: projectItemId,
     );

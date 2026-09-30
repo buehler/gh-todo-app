@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gh_todos/components/editorial_button.dart';
 import 'package:gh_todos/components/editorial_icon_button.dart';
 import 'package:gh_todos/components/src/component_foundation.dart';
 import 'package:gh_todos/compositions/shared/offline_notice.dart';
@@ -41,8 +42,14 @@ class RootPage extends ConsumerWidget {
 
   final String? requestedProjectId;
   final String? routeRefreshKey;
+  final bool showNewTodoAction;
 
-  const RootPage({this.requestedProjectId, this.routeRefreshKey, super.key});
+  const RootPage({
+    this.requestedProjectId,
+    this.routeRefreshKey,
+    this.showNewTodoAction = true,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -80,6 +87,7 @@ class RootPage extends ConsumerWidget {
           key: pageKey,
           projectId: selectedId,
           routeRefreshKey: routeRefreshKey,
+          showNewTodoAction: showNewTodoAction,
           topPadding: topPadding,
           bottomPadding: bottomPadding,
         );
@@ -119,6 +127,7 @@ class _EmptyState extends StatelessWidget {
 class _IssuesFeed extends ConsumerStatefulWidget {
   final String projectId;
   final String? routeRefreshKey;
+  final bool showNewTodoAction;
   final double topPadding;
   final double bottomPadding;
 
@@ -126,6 +135,7 @@ class _IssuesFeed extends ConsumerStatefulWidget {
     super.key,
     required this.projectId,
     required this.routeRefreshKey,
+    required this.showNewTodoAction,
     required this.topPadding,
     required this.bottomPadding,
   });
@@ -187,6 +197,8 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
           child: Padding(
             padding: EdgeInsets.only(top: widget.topPadding + 24),
             child: _FeedHeader(
+              projectId: widget.projectId,
+              showNewTodoAction: widget.showNewTodoAction,
               showManualRefresh: _showManualRefresh,
               isRefreshing: _isRefreshing,
               onRefresh: _refreshIssues,
@@ -263,11 +275,15 @@ class _IssuesFeedState extends ConsumerState<_IssuesFeed> {
 }
 
 class _FeedHeader extends StatelessWidget {
+  final String projectId;
+  final bool showNewTodoAction;
   final bool showManualRefresh;
   final bool isRefreshing;
   final Future<void> Function() onRefresh;
 
   const _FeedHeader({
+    required this.projectId,
+    required this.showNewTodoAction,
     required this.showManualRefresh,
     required this.isRefreshing,
     required this.onRefresh,
@@ -281,40 +297,74 @@ class _FeedHeader extends StatelessWidget {
       ColorTokens.surface.onVariant,
     );
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Expanded(child: TodosProjectSwitcher()),
-        if (showManualRefresh) ...[
-          const SizedBox(width: 12),
-          Padding(
-            padding: const EdgeInsets.only(right: 24),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: isRefreshing
-                  ? Box(
-                      style: BoxStyler()
-                          .color(surfaceLow)
-                          .borderRounded(editorialRadiusMedium)
-                          .alignment(Alignment.center),
-                      child: SizedBox(
-                        key: RootPage.refreshProgressKey,
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(onSurfaceVariant),
+        Row(
+          children: [
+            const Expanded(child: TodosProjectSwitcher()),
+            if (showManualRefresh) ...[
+              const SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.only(right: 24),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: isRefreshing
+                      ? Box(
+                          style: BoxStyler()
+                              .color(surfaceLow)
+                              .borderRounded(editorialRadiusMedium)
+                              .alignment(Alignment.center),
+                          child: SizedBox(
+                            key: RootPage.refreshProgressKey,
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(
+                                onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        )
+                      : EditorialIconButton(
+                          key: RootPage.refreshButtonKey,
+                          icon: LucideIcons.refreshCw,
+                          tooltip: 'Refresh issues',
+                          variation: IconButtonVariation.tonal,
+                          enabled: !isRefreshing,
+                          onPressed: onRefresh,
                         ),
-                      ),
-                    )
-                  : EditorialIconButton(
-                      key: RootPage.refreshButtonKey,
-                      icon: LucideIcons.refreshCw,
-                      tooltip: 'Refresh issues',
-                      variation: IconButtonVariation.tonal,
-                      enabled: !isRefreshing,
-                      onPressed: onRefresh,
-                    ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (showNewTodoAction) ...[
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: EditorialButton(
+                label: 'New todo',
+                leadingIcon: LucideIcons.plus,
+                onPressed: () {
+                  final parameters = {AppRoutes.projectIdParam: projectId};
+                  if (isWide(context)) {
+                    context.goNamed(
+                      AppRoutes.newTodoName,
+                      pathParameters: parameters,
+                    );
+                  } else {
+                    context.pushNamed(
+                      AppRoutes.newTodoName,
+                      pathParameters: parameters,
+                    );
+                  }
+                },
+              ),
             ),
           ),
         ],

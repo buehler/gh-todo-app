@@ -124,6 +124,18 @@ private struct WidgetHeader: View {
 
             Spacer(minLength: 0)
 
+            Link(
+                destination: URL(
+                    string: "ghtodos://local/project/\(project.id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? project.id)/new"
+                )!
+            ) {
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 38, height: 34)
+            }
+            .tint(WidgetPalette.primary)
+            .accessibilityLabel("New todo in \(project.name)")
+
             Button(intent: RefreshIssueIntent()) {
                 Image(systemName: "arrow.clockwise.circle")
                     .font(

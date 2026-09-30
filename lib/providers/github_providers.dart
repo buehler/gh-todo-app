@@ -145,6 +145,57 @@ final ownerProjectsProvider = FutureProvider.autoDispose
       return null;
     });
 
+/// Resolves an issue through its project membership, independently of the
+/// project's feed filter. This also handles a newly created issue that the
+/// user's custom query excludes from the list.
+final projectIssueByIdProvider = FutureProvider.autoDispose
+    .family<IssueData?, ({String projectId, String issueId})>((
+      ref,
+      request,
+    ) async {
+      ref.watch(sessionGenerationProvider);
+      final projects = ref.watch(projectListProvider);
+      final project = projects
+          .where((p) => p.id == request.projectId)
+          .firstOrNull;
+      if (project == null) return null;
+
+      final client = ref.watch(graphqlClientProvider);
+      String? after;
+      while (true) {
+        final result = await client.query$ProjectIssueById(
+          Options$Query$ProjectIssueById(
+            variables: Variables$Query$ProjectIssueById(
+              issueId: request.issueId,
+              after: after,
+            ),
+            fetchPolicy: FetchPolicy.networkOnly,
+          ),
+        );
+        if (result.hasException) throw result.exception!;
+        final node = result.parsedData?.node;
+        if (node is! Query$ProjectIssueById$node$$Issue) return null;
+        final items = node.projectItems;
+        if (items == null) return null;
+        final nodes = items.nodes;
+        if (nodes != null) {
+          for (final item in nodes) {
+            if (item?.project.id == request.projectId) {
+              return _issueFromItem(
+                item,
+                project: project,
+                projectId: request.projectId,
+              );
+            }
+          }
+        }
+        if (!items.pageInfo.hasNextPage) return null;
+        final next = items.pageInfo.endCursor;
+        if (next == null || next.isEmpty || next == after) return null;
+        after = next;
+      }
+    });
+
 /// Owns the open + recently-closed issue lists for a single GitHub Project.
 ///
 /// [build] does the initial network fetch (with a TTL-backed keepAlive so

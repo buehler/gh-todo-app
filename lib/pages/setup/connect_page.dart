@@ -68,7 +68,12 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
       if (!mounted) {
         return;
       }
-      context.goNamed(AppRoutes.rootName);
+      final returnTo = AppRoutes.newTodoReturnLocation(
+        GoRouterState.of(
+          context,
+        ).uri.queryParameters[AppRoutes.returnToQueryParam],
+      );
+      context.go(returnTo ?? AppRoutes.rootPath);
     } catch (error, stackTrace) {
       _logger.warning('Setup PAT validation failed.', error, stackTrace);
       if (!mounted) {

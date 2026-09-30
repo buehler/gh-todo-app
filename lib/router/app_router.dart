@@ -5,11 +5,14 @@ import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
 import 'package:gh_todos/pages/changelog_page.dart';
 import 'package:gh_todos/pages/issue_route_page.dart';
+import 'package:gh_todos/pages/new_todo_route_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
+import 'package:gh_todos/models/issue_data.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
+import 'package:gh_todos/router/created_todo_route_extra.dart';
 import 'package:gh_todos/services/app_logging.dart';
 import 'package:gh_todos/style/breakpoints.dart';
 import 'package:go_router/go_router.dart';
@@ -58,11 +61,21 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
           path == AppRoutes.changelogPath;
 
       if (!hasToken && !isPublicPath) {
+        final returnTo = AppRoutes.newTodoReturnLocation(state.uri.toString());
+        if (returnTo != null) {
+          return Uri(
+            path: AppRoutes.setupPath,
+            queryParameters: {AppRoutes.returnToQueryParam: returnTo},
+          ).toString();
+        }
         return AppRoutes.setupPath;
       }
 
       if (hasToken && path == AppRoutes.setupPath) {
-        return AppRoutes.rootPath;
+        return AppRoutes.newTodoReturnLocation(
+              state.uri.queryParameters[AppRoutes.returnToQueryParam],
+            ) ??
+            AppRoutes.rootPath;
       }
 
       return null;
@@ -71,7 +84,9 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(
           navigationShell: navigationShell,
-          hideChromeOnCompact: state.uri.path.contains('/issue/'),
+          hideChromeOnCompact:
+              state.uri.path.contains('/issue/') ||
+              AppRoutes.newTodoReturnLocation(state.uri.path) != null,
         ),
         branches: [
           StatefulShellBranch(
@@ -103,6 +118,7 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
                     path: AppRoutes.issueDetailPath,
                     name: AppRoutes.issueDetailName,
                     pageBuilder: (context, state) {
+                      final extra = state.extra;
                       final child = IssueRoutePage(
                         requestedProjectId:
                             state.pathParameters[AppRoutes.projectIdParam]!,
@@ -110,6 +126,14 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
                         routeRefreshKey: state
                             .uri
                             .queryParameters[AppRoutes.freshQueryParam],
+                        initialIssue: extra is CreatedTodoRouteExtra
+                            ? extra.issue
+                            : extra is IssueData
+                            ? extra
+                            : null,
+                        failedFields: extra is CreatedTodoRouteExtra
+                            ? extra.failedFields
+                            : const [],
                       );
 
                       if (isWide(context)) {
@@ -119,6 +143,26 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
                         );
                       }
 
+                      return MaterialPage(key: state.pageKey, child: child);
+                    },
+                  ),
+                  GoRoute(
+                    path: AppRoutes.newTodoPath,
+                    name: AppRoutes.newTodoName,
+                    pageBuilder: (context, state) {
+                      final child = NewTodoRoutePage(
+                        requestedProjectId:
+                            state.pathParameters[AppRoutes.projectIdParam]!,
+                        routeRefreshKey: state
+                            .uri
+                            .queryParameters[AppRoutes.freshQueryParam],
+                      );
+                      if (isWide(context)) {
+                        return NoTransitionPage(
+                          key: state.pageKey,
+                          child: child,
+                        );
+                      }
                       return MaterialPage(key: state.pageKey, child: child);
                     },
                   ),

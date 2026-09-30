@@ -11,6 +11,7 @@ import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Inline quick-add composer that lives directly beneath the project selector
 /// on the root feed.
@@ -72,6 +73,24 @@ class _TodosIssueComposerState extends ConsumerState<TodosIssueComposer> {
       if (!mounted) return;
       _showError(
         'This project has no linked repository. Link one in GitHub to add issues.',
+      );
+    } on IssueProjectAttachmentUnknownException catch (error) {
+      if (!mounted) return;
+      _controller.clear();
+      final uri = Uri.tryParse(error.issue.url ?? '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Issue created, but its project attachment could not be confirmed.',
+          ),
+          action: uri == null
+              ? null
+              : SnackBarAction(
+                  label: 'Open issue',
+                  onPressed: () =>
+                      launchUrl(uri, mode: LaunchMode.externalApplication),
+                ),
+        ),
       );
     } catch (_) {
       if (!mounted) return;

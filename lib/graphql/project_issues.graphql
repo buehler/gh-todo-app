@@ -65,3 +65,22 @@ fragment ProjectItemFields on ProjectV2Item {
     }
   }
 }
+
+query ProjectIssueById($issueId: ID!, $after: String) {
+  node(id: $issueId) {
+    ... on Issue {
+      projectItems(first: 100, after: $after) {
+        nodes {
+          project {
+            id
+          }
+          ...ProjectItemFields
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
