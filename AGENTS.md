@@ -4,9 +4,7 @@ Operating guide for AI coding agents working in this repository. Read this
 first — it captures conventions, layering rules, and the design-source-of-
 truth that the rest of the codebase assumes you already know.
 
----
-
-## 1. What this app is
+## What this app is
 
 **`gh_todos`** is a Flutter client that re-frames **GitHub Projects V2** as a
 personal todo list. The user pastes a GitHub Personal Access Token (PAT), the
@@ -34,35 +32,8 @@ issue tracker — not a full project management tool.
 - **Optimistic updates** — mutations (state, priority, comments, etc.) are
   reflected in the UI immediately and reconciled when the mutation returns.
 
-### Platform targets
 
-Flutter multi-platform: **iOS, Android, macOS, Windows, Linux, Web**. The
-shell is fully responsive — see §6.
-
----
-
-## 2. Tech stack
-
-| Concern          | Choice                                                      |
-| ---------------- | ----------------------------------------------------------- |
-| Language         | Dart, SDK `^3.11.4`                                         |
-| UI framework     | Flutter (Material 3 base, styled via Mix)                   |
-| Design system    | [`mix`](https://pub.dev/packages/mix) v2 tokens + variants  |
-| State            | `flutter_riverpod` v3 + `riverpod_annotation` (codegen)     |
-| Routing          | `go_router` v17 with `StatefulShellRoute.indexedStack`      |
-| API              | GitHub GraphQL v4 via `graphql` + `graphql_codegen`         |
-| Models           | `freezed` + `json_serializable`                             |
-| Secure storage   | `flutter_secure_storage` (PAT only)                         |
-| Local prefs      | `shared_preferences` (selected project, project list cache) |
-| Typography       | `google_fonts` — Manrope (display) + Inter (body)           |
-| Icons            | `lucide_icons_flutter`                                      |
-| Relative time    | `timeago`                                                   |
-| Swipe gestures   | `flutter_slidable`                                          |
-| External links   | `url_launcher`                                              |
-
----
-
-## 3. Directory layout
+## Directory layout
 
 ```
 lib/
@@ -116,9 +87,8 @@ assets/fonts, assets/icon.png
   `foo.freezed.dart`, `foo.graphql` + `foo.graphql.dart`. Never hand-edit
   `.g.dart` / `.freezed.dart` / `.graphql.dart`.
 
----
 
-## 4. Data & GraphQL
+## Data & GraphQL
 
 - **Auth.** PAT is stored by `GithubTokenStorageService` in
   [`flutter_secure_storage`](lib/services/github_token_storage_service.dart).
@@ -142,9 +112,7 @@ assets/fonts, assets/icon.png
   is the Projects V2 item id. **Priority/due-date mutations target the item
   id**, state/comment mutations target the issue id. Don't mix them up.
 
----
-
-## 5. Design source of truth — Stitch exports
+## Design source of truth — Stitch exports
 
 The design was produced in **Stitch** and exported as paired HTML + PNG
 files under `design/`. These are not decorative — **they are the visual
@@ -204,7 +172,7 @@ design/
 
 ---
 
-## 6. Responsive shell
+## Responsive shell
 
 Width thresholds live in [lib/style/breakpoints.dart](lib/style/breakpoints.dart):
 
@@ -225,40 +193,7 @@ remapped to these tiers via `appBreakpoints`) over imperative branches.
 Reach for `isCompact/isMedium/isExpanded/isLarge/isWide` only when a Mix
 variant isn't expressive enough.
 
----
-
-## 7. Build, test, run
-
-All commands run from the repo root.
-
-```bash
-# Install deps
-flutter pub get
-
-# Regenerate freezed / riverpod / json / graphql_codegen outputs
-make build_runner
-# (equivalent to: dart run build_runner build --delete-conflicting-outputs)
-
-# Static analysis + tests (run both before finishing a change)
-flutter analyze
-flutter test
-
-# Launcher icons (rarely needed)
-make launcher_icons
-```
-
-**Run `make build_runner` after any change to:**
-
-- `*.graphql` files (queries/mutations)
-- `@freezed` / `@JsonSerializable` models
-- `@riverpod` providers
-
-If you edit a generated file by hand, you're doing it wrong — edit the
-source and rerun the codegen.
-
----
-
-## 8. Conventions you're expected to follow
+## Conventions you're expected to follow
 
 - **State** — use Riverpod. New async data = new provider; don't add
   `StatefulWidget` fields for things a provider should own. Use `keepAlive`
@@ -272,18 +207,14 @@ source and rerun the codegen.
 - **Icons** — `lucide_icons_flutter` only. Don't mix icon libraries.
 - **Navigation** — go through `AppRoutes` name/path constants; never
   hard-code strings. Use `context.goNamed` / `context.pushNamed`.
-- **Testing** — widget tests live in `test/pages/` and `test/router/`.
-  Fakes live in `test/support/`. New pages get a smoke test that
-  exercises the main interaction.
+- **Testing** — Code style and dev guide
 - **Copy** — user-facing strings stay in code (no i18n layer yet); use
   plain strings, no ad-hoc constants files.
 - **Do not introduce** — new state-management packages, new HTTP clients,
   new design-system abstractions, or Material widgets that bypass Mix
   tokens (use the `editorial_*` primitives instead).
 
----
-
-## 9. Security & data handling
+## Security & data handling
 
 - The PAT is the only secret in this app. It is read once per mutation
   through `sessionProvider.readToken()` and flows only into the
@@ -296,24 +227,22 @@ source and rerun the codegen.
 - Token form should always be obscured. On clear/logout, call
   `sessionProvider.clearToken()` — it already nukes the keychain entry.
 
----
+## Code style and dev guide
 
-## 10. Quick-reference — where to start for common tasks
+If not explicitly requested in a prompt/session, this project does not need the addition of tests. So, no UI/magic
+tests shall be generated with the exception if specifically requested for a certain feature.
+This also accounts for general analysis. Checking if the code works shall be done via static analysis as well as
+`flutter analyze` and `go build`. Along with "no tests": don't run the app to do some verification.
+Instruct the user how to verify the functionality manually. You are only allowed to run flutter analyze and
+go build as well as other static analytics tools and formatting tools.
 
-| Task                                | Start here                                                                          |
-| ----------------------------------- | ----------------------------------------------------------------------------------- |
-| New screen                          | `design/{mobile,desktop}/<name>.{html,png}` → `pages/` + `compositions/<feature>/` |
-| New GraphQL query                   | Add `lib/graphql/<name>.graphql` → `make build_runner` → wrap in a provider         |
-| New reusable widget                 | `lib/components/editorial_*.dart`; keep it provider-free                            |
-| Restyle an existing widget          | Check `design/mobile/DESIGN.md` + the relevant HTML; update Mix style, not inline   |
-| New priority color / surface tone   | `lib/style/themes.dart` (tokens) + `lib/style/colors.dart` (token declarations)     |
-| Change responsive breakpoint        | `lib/style/breakpoints.dart` — update both `kXxxMax` and `appBreakpoints`           |
-| Mutation with optimistic UI         | `lib/providers/issue_mutations.dart` is the pattern to copy                         |
-| Wire an external link               | `url_launcher` + the existing footer composition                                    |
+Regarding style: keep the code lean. Compositions in the UI are currently kept where they are needed if they are
+only used in one particular screen. If there is a composition that is used in multiple screens, they shall be flagged
+and then the engineer may decide to extract them. But there must be no automatic creation of a lot of compositions and
+one time components. The base components (UI atoms) are in the UI/components folder and if a prompt suggests
+creating a new one it may be done. However, an engineer needs to acknowledge this.
 
----
-
-## 11. Things to ask the user before doing
+## Things to ask the user before doing
 
 - Adding a new top-level dependency to `pubspec.yaml`.
 - Changing the design system spec (`design/mobile/DESIGN.md`) or
