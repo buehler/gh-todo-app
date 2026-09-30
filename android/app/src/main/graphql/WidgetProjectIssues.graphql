@@ -1,0 +1,38 @@
+query WidgetProjectIssues($projectId: ID!, $issueQuery: String!) {
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      items(first: 100, query: $issueQuery) {
+        nodes {
+          fieldValues(first: 15) {
+            nodes {
+              __typename
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                optionId
+                field {
+                  ... on ProjectV2SingleSelectField { id }
+                }
+              }
+              ... on ProjectV2ItemFieldDateValue {
+                date
+                field {
+                  ... on ProjectV2Field { id }
+                }
+              }
+            }
+          }
+          content {
+            __typename
+            ... on Issue {
+              id
+              number
+              title
+              updatedAt
+              state
+              closedAt
+            }
+          }
+        }
+      }
+    }
+  }
+}

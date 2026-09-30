@@ -4,7 +4,6 @@ import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/services/widget_shared_project_cache.dart';
 import 'package:hive_ce/hive.dart';
 
-// TODO: clear.
 class ProjectStorageService {
   static const boxName = 'mappedProjects';
 
@@ -50,4 +49,6 @@ class ProjectStorageService {
   Future<void> _updateWidgetCache() async {
     return _projectFileService?.writeProjectsJson('[${_box.values.join(',')}]');
   }
+
+  Future<void> syncWidgetCache() => _updateWidgetCache();
 }

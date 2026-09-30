@@ -1,0 +1,5 @@
+mutation WidgetCloseIssue($issueId: ID!) {
+  closeIssue(input: { issueId: $issueId }) {
+    issue { id }
+  }
+}

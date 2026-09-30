@@ -1,4 +1,5 @@
 import 'package:gh_todos/services/project_storage_service.dart';
+import 'package:gh_todos/services/widget_shared_project_cache.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -16,6 +17,13 @@ Future<void> hiveBootstrap(Ref ref) async {
   if (!Hive.isBoxOpen(ProjectStorageService.boxName)) {
     await Hive.openBox<String>(ProjectStorageService.boxName);
   }
+
+  // Existing installations may have projects before the Android widget cache
+  // exists. Republish the current mapping whenever the app starts.
+  await ProjectStorageService(
+    Hive.box<String>(ProjectStorageService.boxName),
+    projectFileService: WidgetSharedProjectFileService(),
+  ).syncWidgetCache();
 
   // GraphQL reads use the default HiveStore box after bootstrap completes.
 }

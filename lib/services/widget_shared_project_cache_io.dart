@@ -6,7 +6,7 @@ class WidgetSharedProjectFileService {
   static const _channel = MethodChannel('ch.cbue.ghTodos/widget_project_cache');
 
   Future<void> writeProjectsJson(String json) async {
-    if (!Platform.isIOS) {
+    if (!Platform.isIOS && !Platform.isAndroid) {
       return;
     }
 
@@ -14,7 +14,7 @@ class WidgetSharedProjectFileService {
   }
 
   Future<void> clearProjectsJson() async {
-    if (!Platform.isIOS) {
+    if (!Platform.isIOS && !Platform.isAndroid) {
       return;
     }
 
