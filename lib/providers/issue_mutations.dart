@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/add_comment.graphql.dart';
 import 'package:gh_todos/graphql/add_project_item.graphql.dart';
@@ -16,11 +14,11 @@ import 'package:gh_todos/graphql/update_issue.graphql.dart';
 import 'package:gh_todos/graphql/update_issue_comment.graphql.dart';
 import 'package:gh_todos/graphql/update_project_item_field.graphql.dart';
 import 'package:gh_todos/models/issue_data.dart';
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/connectivity_provider.dart';
 import 'package:gh_todos/providers/github_providers.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:graphql/client.dart';
+import 'package:logging/logging.dart';
 
 /// Narrow seam for all GitHub mutations fired from the issue detail page.
 ///
@@ -174,6 +172,8 @@ final issueMutationsProvider = Provider<IssueMutations>(
 );
 
 class _RealIssueMutations implements IssueMutations {
+  static final _logger = Logger('IssueMutations');
+
   final Ref _ref;
 
   _RealIssueMutations(this._ref);
@@ -183,11 +183,7 @@ class _RealIssueMutations implements IssueMutations {
   void _ensureOnline() {
     final isOffline = _ref.read(offlineStatusProvider).asData?.value ?? false;
     if (isOffline) {
-      unawaited(
-        _ref
-            .read(appLoggerProvider)
-            .warn('Blocked write while offline.', category: 'issues'),
-      );
+      _logger.warning('Blocked write while offline.');
       throw const OfflineWriteBlockedException();
     }
   }
@@ -198,25 +194,16 @@ class _RealIssueMutations implements IssueMutations {
   /// didn't return anything useful.
   T _unwrap<T>(QueryResult<T> result) {
     if (result.hasException) {
-      unawaited(
-        _ref
-            .read(appLoggerProvider)
-            .error(
-              'GraphQL mutation failed.',
-              category: 'issues',
-              error: result.exception,
-              stackTrace: result.exception?.originalStackTrace,
-            ),
+      _logger.severe(
+        'GraphQL mutation failed.',
+        result.exception,
+        result.exception?.originalStackTrace,
       );
       throw result.exception!;
     }
     final data = result.parsedData;
     if (data == null) {
-      unawaited(
-        _ref
-            .read(appLoggerProvider)
-            .error('GraphQL mutation returned no data.', category: 'issues'),
-      );
+      _logger.severe('GraphQL mutation returned no data.');
       throw Exception('Mutation returned no data');
     }
     return data;
@@ -315,9 +302,7 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
-    await _ref
-        .read(appLoggerProvider)
-        .info('Closing issue $issueId.', category: 'issues');
+    _logger.info('Closing issue $issueId.');
     _ensureOnline();
     final result = await _client.mutate$CloseIssue(
       Options$Mutation$CloseIssue(
@@ -357,9 +342,7 @@ class _RealIssueMutations implements IssueMutations {
     required String projectId,
     required String issueId,
   }) async {
-    await _ref
-        .read(appLoggerProvider)
-        .info('Reopening issue $issueId.', category: 'issues');
+    _logger.info('Reopening issue $issueId.');
     _ensureOnline();
     final result = await _client.mutate$ReopenIssue(
       Options$Mutation$ReopenIssue(
@@ -487,9 +470,7 @@ class _RealIssueMutations implements IssueMutations {
     required String title,
     String? body,
   }) async {
-    await _ref
-        .read(appLoggerProvider)
-        .info('Creating issue in project $projectId.', category: 'issues');
+    _logger.info('Creating issue in project $projectId.');
     _ensureOnline();
     // Step 1: resolve the target repository. Projects V2 don't have a
     // "default repo" concept, so we pick the first linked repository

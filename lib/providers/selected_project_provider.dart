@@ -1,12 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/storage_providers.dart';
+import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'selected_project_provider.g.dart';
+
+final _logger = Logger('SelectedProject');
 
 @Riverpod(keepAlive: true)
 class SelectedProject extends _$SelectedProject {
@@ -50,14 +50,7 @@ final routeSelectedProjectProvider = FutureProvider.family<String?, String?>((
   final projects = ref.watch(projectListProvider);
 
   if (requested != null && projects.any((p) => p.id == requested)) {
-    unawaited(
-      ref
-          .read(appLoggerProvider)
-          .debug(
-            'Resolved widget route to project $requested.',
-            category: 'route',
-          ),
-    );
+    _logger.fine('Resolved widget route to project $requested.');
     // The route is authoritative for the current render. Persistence is
     // scheduled by the consuming page after the current provider build.
     return requested;

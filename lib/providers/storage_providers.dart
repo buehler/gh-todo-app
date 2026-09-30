@@ -1,4 +1,3 @@
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/services/auth_metadata_storage_service.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
@@ -57,7 +56,6 @@ SessionResetService sessionReset(Ref ref) {
     projectStorage: ref.watch(projectStorageProvider),
     sessionPrefs: ref.watch(sessionPrefsProvider),
     authMetadataStorage: ref.watch(authMetadataStorageProvider),
-    logger: ref.watch(appLoggerProvider),
   );
 }
 
@@ -68,6 +66,5 @@ SessionManager sessionManager(Ref ref) {
     authMetadataStorage: ref.watch(authMetadataStorageProvider),
     authService: ref.watch(githubAuthProvider),
     resetService: ref.watch(sessionResetProvider),
-    logger: ref.watch(appLoggerProvider),
   );
 }

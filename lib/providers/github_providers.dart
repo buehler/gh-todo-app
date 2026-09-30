@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/graphql/issue_comments.graphql.dart';
 import 'package:gh_todos/graphql/owner_projects.graphql.dart';
@@ -13,14 +11,16 @@ import 'package:gh_todos/models/issue_details.dart';
 import 'package:gh_todos/models/issue_ordering.dart';
 import 'package:gh_todos/models/priority.dart';
 import 'package:gh_todos/models/project.dart';
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/graphql_provider.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
 import 'package:gh_todos/providers/session_generation_provider.dart';
 import 'package:graphql/client.dart';
+import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'github_providers.g.dart';
+
+final _logger = Logger('ProjectRouteRefresh');
 
 /// The result of the project feed query: two independently sorted lists.
 /// The buckets are derived locally from paginated project items.
@@ -97,12 +97,8 @@ final projectRouteRefreshProvider = FutureProvider.autoDispose
       ref,
       request,
     ) async {
-      final logger = ref.read(appLoggerProvider);
-      unawaited(
-        logger.debug(
-          'Starting widget route refresh for project ${request.projectId}.',
-          category: 'route',
-        ),
+      _logger.fine(
+        'Starting widget route refresh for project ${request.projectId}.',
       );
 
       try {
@@ -114,22 +110,16 @@ final projectRouteRefreshProvider = FutureProvider.autoDispose
         final feed = await ref
             .read(projectIssuesProvider(request.projectId).future)
             .timeout(projectRouteRefreshTimeout);
-        unawaited(
-          logger.debug(
-            'Completed widget route refresh for project ${request.projectId}: '
-            '${feed.open.length} open, ${feed.closed.length} closed.',
-            category: 'route',
-          ),
+        _logger.fine(
+          'Completed widget route refresh for project ${request.projectId}: '
+          '${feed.open.length} open, ${feed.closed.length} closed.',
         );
         return feed;
       } catch (error, stackTrace) {
-        unawaited(
-          logger.error(
-            'Widget route refresh failed for project ${request.projectId}.',
-            category: 'route',
-            error: error,
-            stackTrace: stackTrace,
-          ),
+        _logger.severe(
+          'Widget route refresh failed for project ${request.projectId}.',
+          error,
+          stackTrace,
         );
         Error.throwWithStackTrace(error, stackTrace);
       }

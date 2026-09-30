@@ -1,21 +1,22 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/shell/app_shell.dart';
 import 'package:gh_todos/compositions/shell/todos_split_view.dart';
-import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/pages/changelog_page.dart';
 import 'package:gh_todos/pages/issue_route_page.dart';
 import 'package:gh_todos/pages/root_page.dart';
 import 'package:gh_todos/pages/settings_page.dart';
 import 'package:gh_todos/pages/setup/connect_page.dart';
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
+import 'package:gh_todos/services/app_logging.dart';
 import 'package:gh_todos/style/breakpoints.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+
+final _logger = Logger('AppRouter');
 
 /// A [ChangeNotifier] that fires whenever the session provider changes,
 /// bridging Riverpod state into GoRouter's [refreshListenable].
@@ -35,6 +36,7 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
 
   return GoRouter(
     debugLogDiagnostics: kDebugMode,
+    observers: [TalkerRouteObserver(talkerInstance)],
     initialLocation: normalizedInitialLocation ?? AppRoutes.rootPath,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
@@ -44,14 +46,7 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
 
       final widgetLocation = _widgetDeepLinkLocation(state.uri.toString());
       if (widgetLocation != null) {
-        unawaited(
-          ref
-              .read(appLoggerProvider)
-              .debug(
-                'Received widget deep link: ${state.uri}',
-                category: 'route',
-              ),
-        );
+        _logger.fine('Received widget deep link: ${state.uri}');
         return widgetLocation;
       }
 
@@ -145,7 +140,10 @@ final appRouterProvider = Provider.family<GoRouter, String?>((
       GoRoute(
         path: AppRoutes.applicationLogsPath,
         name: AppRoutes.applicationLogsName,
-        builder: (context, state) => const ApplicationLogsPage(),
+        builder: (context, state) => TalkerScreen(
+          talker: talkerInstance,
+          appBarTitle: 'Application Logs',
+        ),
       ),
       GoRoute(
         path: AppRoutes.changelogPath,

@@ -1,11 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Provider;
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
-import 'package:gh_todos/services/app_logger_service.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'graphql_provider.g.dart';
@@ -32,27 +29,21 @@ final graphqlStoreProvider = Provider<Store>((ref) {
 GraphQLClient graphqlClient(Ref ref) {
   final transportLink = ref.watch(githubGraphqlTransportLinkProvider);
   final store = ref.watch(graphqlStoreProvider);
-  final logger = ref.read(appLoggerProvider);
-
   return GraphQLClient(
-    link: _GraphqlLoggingLink(logger: logger).concat(transportLink),
+    link: _GraphqlLoggingLink().concat(transportLink),
     cache: GraphQLCache(store: store),
   );
 }
 
 class _GraphqlLoggingLink extends Link {
-  _GraphqlLoggingLink({required AppLogger logger}) : _logger = logger;
-
-  final AppLogger _logger;
+  static final _logger = Logger('GraphqlLoggingLink');
 
   @override
   Stream<Response> request(Request request, [NextLink? forward]) {
     final operation = request.operation;
     final operationName = _operationName(request.operation);
     final operationKind = _operationKind(operation);
-    unawaited(
-      _logger.debug('$operationKind: $operationName', category: 'graphql'),
-    );
+    _logger.fine('$operationKind: $operationName');
     final stream = forward?.call(request) ?? const Stream<Response>.empty();
     return stream.map((response) {
       _logRateLimit(
@@ -100,15 +91,12 @@ class _GraphqlLoggingLink extends Link {
       case 'query':
         final rateLimit = response.data?['rateLimit'];
         if (rateLimit is! Map<String, dynamic>) return;
-        unawaited(
-          _logger.debug(
-            'query result: $operationName | rateLimit '
-            'cost=${rateLimit['cost'] ?? 'unavailable'} '
-            'limit=${rateLimit['limit'] ?? 'unavailable'} '
-            'remaining=${rateLimit['remaining'] ?? 'unavailable'} '
-            'resetAt=${rateLimit['resetAt'] ?? 'unavailable'}',
-            category: 'graphql',
-          ),
+        _logger.fine(
+          'query result: $operationName | rateLimit '
+          'cost=${rateLimit['cost'] ?? 'unavailable'} '
+          'limit=${rateLimit['limit'] ?? 'unavailable'} '
+          'remaining=${rateLimit['remaining'] ?? 'unavailable'} '
+          'resetAt=${rateLimit['resetAt'] ?? 'unavailable'}',
         );
       case 'mutation':
         final headers = response.context
@@ -120,15 +108,12 @@ class _GraphqlLoggingLink extends Link {
             entry.key.toLowerCase(): entry.value,
         };
         final resetAt = _formatResetAt(normalizedHeaders['x-ratelimit-reset']);
-        unawaited(
-          _logger.debug(
-            'mutation result: $operationName | rateLimit '
-            'cost=unavailable '
-            'limit=${normalizedHeaders['x-ratelimit-limit'] ?? 'unavailable'} '
-            'remaining=${normalizedHeaders['x-ratelimit-remaining'] ?? 'unavailable'} '
-            'resetAt=$resetAt',
-            category: 'graphql',
-          ),
+        _logger.fine(
+          'mutation result: $operationName | rateLimit '
+          'cost=unavailable '
+          'limit=${normalizedHeaders['x-ratelimit-limit'] ?? 'unavailable'} '
+          'remaining=${normalizedHeaders['x-ratelimit-remaining'] ?? 'unavailable'} '
+          'resetAt=$resetAt',
         );
       default:
         return;

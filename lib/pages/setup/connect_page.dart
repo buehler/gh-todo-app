@@ -10,7 +10,6 @@ import 'package:gh_todos/compositions/setup/connect_footer.dart';
 import 'package:gh_todos/compositions/setup/connect_security_notice.dart';
 import 'package:gh_todos/compositions/setup/connect_token_form.dart';
 import 'package:gh_todos/compositions/shared/pat_scope_help_card.dart';
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_routes.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
@@ -18,9 +17,12 @@ import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+final _logger = Logger('ConnectPage');
 
 class ConnectPage extends ConsumerStatefulWidget {
   static const pageKey = ValueKey('connect-page');
@@ -61,26 +63,14 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
     });
 
     try {
-      await ref
-          .read(appLoggerProvider)
-          .info(
-            'Setup flow submitted a PAT for validation.',
-            category: 'setup',
-          );
+      _logger.info('Setup flow submitted a PAT for validation.');
       await ref.read(sessionProvider.notifier).connectToken(trimmedToken);
       if (!mounted) {
         return;
       }
       context.goNamed(AppRoutes.rootName);
     } catch (error, stackTrace) {
-      await ref
-          .read(appLoggerProvider)
-          .warn(
-            'Setup PAT validation failed.',
-            category: 'setup',
-            error: error,
-            stackTrace: stackTrace,
-          );
+      _logger.warning('Setup PAT validation failed.', error, stackTrace);
       if (!mounted) {
         return;
       }
@@ -149,7 +139,7 @@ class _ConnectPageState extends ConsumerState<ConnectPage> {
   }
 }
 
-class _ConnectForegroundLayer extends ConsumerWidget {
+class _ConnectForegroundLayer extends StatelessWidget {
   final TextEditingController tokenController;
   final String? errorText;
   final bool isSubmitting;
@@ -173,7 +163,7 @@ class _ConnectForegroundLayer extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final onSurface = resolveColor(context, ColorTokens.surface.on);
     final onSurfaceVariant = resolveColor(
       context,
@@ -214,12 +204,7 @@ class _ConnectForegroundLayer extends ConsumerWidget {
                       padding: EdgeInsets.zero,
                       child: PressableBox(
                         onPress: () async {
-                          await ref
-                              .read(appLoggerProvider)
-                              .info(
-                                'Navigating to application logs.',
-                                category: 'setup',
-                              );
+                          _logger.info('Navigating to application logs.');
                           if (!context.mounted) return;
                           await context.pushNamed<void>(
                             AppRoutes.applicationLogsName,

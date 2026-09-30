@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gh_todos/compositions/setup/app_boot_screen.dart';
-import 'package:gh_todos/pages/application_logs_page.dart';
 import 'package:gh_todos/providers/hive_bootstrap_provider.dart';
 import 'package:gh_todos/providers/session_provider.dart';
 import 'package:gh_todos/router/app_router.dart';
+import 'package:gh_todos/services/app_logging.dart';
 import 'package:gh_todos/style/themes.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 class GhTodosApp extends ConsumerWidget {
   final String? initialLocation;
@@ -54,8 +55,12 @@ class _AppBootGateState extends ConsumerState<_AppBootGate> {
   @override
   Widget build(BuildContext context) {
     if (_showLogs) {
-      return ApplicationLogsPage(
-        onBack: () => setState(() => _showLogs = false),
+      return TalkerScreen(
+        talker: talkerInstance,
+        appBarTitle: 'Application Logs',
+        appBarLeading: BackButton(
+          onPressed: () => setState(() => _showLogs = false),
+        ),
       );
     }
 

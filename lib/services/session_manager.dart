@@ -1,49 +1,39 @@
 import 'package:gh_todos/models/pat_auth_metadata.dart';
-import 'package:gh_todos/services/app_logger_service.dart';
 import 'package:gh_todos/services/auth_metadata_storage_service.dart';
 import 'package:gh_todos/services/github_auth_service.dart';
 import 'package:gh_todos/services/github_token_storage_service.dart';
 import 'package:gh_todos/services/session_reset_service.dart';
+import 'package:logging/logging.dart';
 
 class SessionManager {
+  static final _logger = Logger('SessionManager');
+
   final GithubTokenStorageService _tokenStorage;
   final AuthMetadataStorageService _authMetadataStorage;
   final GithubAuthService _authService;
   final SessionResetService _resetService;
-  final AppLogger _logger;
 
   const SessionManager({
     required GithubTokenStorageService tokenStorage,
     required AuthMetadataStorageService authMetadataStorage,
     required GithubAuthService authService,
     required SessionResetService resetService,
-    required AppLogger logger,
   }) : _tokenStorage = tokenStorage,
        _authMetadataStorage = authMetadataStorage,
        _authService = authService,
-       _resetService = resetService,
-       _logger = logger;
+       _resetService = resetService;
 
   Future<PatAuthMetadata> connectToken(String token) async {
-    await _logger.info(
-      'Validating token during setup.',
-      category: 'session',
-    );
+    _logger.info('Validating token during setup.');
     final metadata = await _authService.inspectToken(token);
     await _tokenStorage.saveToken(token);
     await _authMetadataStorage.save(metadata);
-    await _logger.info(
-      'Token saved for authenticated user ${metadata.user.login}.',
-      category: 'session',
-    );
+    _logger.info('Token saved for authenticated user ${metadata.user.login}.');
     return metadata;
   }
 
   Future<PatAuthMetadata> updateToken(String token) async {
-    await _logger.info(
-      'Validating replacement token.',
-      category: 'session',
-    );
+    _logger.info('Validating replacement token.');
 
     final currentMetadata = await _authMetadataStorage.read();
     final nextMetadata = await _authService.inspectToken(token);
@@ -52,9 +42,8 @@ class SessionManager {
         currentMetadata.user.id == nextMetadata.user.id;
 
     if (!sameUser) {
-      await _logger.warn(
+      _logger.warning(
         'Replacement token belongs to a different authenticated user. Purging local state.',
-        category: 'session',
       );
       await _resetService.clearAllLocalData(clearToken: true);
     }
@@ -62,10 +51,7 @@ class SessionManager {
     await _tokenStorage.saveToken(token);
     await _authMetadataStorage.save(nextMetadata);
 
-    await _logger.info(
-      'Token update completed for ${nextMetadata.user.login}.',
-      category: 'session',
-    );
+    _logger.info('Token update completed for ${nextMetadata.user.login}.');
     return nextMetadata;
   }
 

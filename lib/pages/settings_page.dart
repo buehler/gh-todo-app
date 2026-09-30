@@ -12,7 +12,6 @@ import 'package:gh_todos/compositions/shared/legal_links_row.dart';
 import 'package:gh_todos/compositions/shared/pat_scope_help_card.dart';
 import 'package:gh_todos/models/project.dart';
 import 'package:gh_todos/providers/auth_metadata_provider.dart';
-import 'package:gh_todos/providers/app_logger_provider.dart';
 import 'package:gh_todos/compositions/shell/app_bottom_nav.dart';
 import 'package:gh_todos/compositions/shell/app_top_bar.dart';
 import 'package:gh_todos/providers/project_list_provider.dart';
@@ -23,11 +22,14 @@ import 'package:gh_todos/style/breakpoints.dart';
 import 'package:gh_todos/style/colors.dart';
 import 'package:gh_todos/style/typography.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:mix/mix.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Settings page showing account info and project list.
 class SettingsPage extends ConsumerWidget {
+  static final _logger = Logger('SettingsPage');
+
   static const pageKey = ValueKey('settings-page');
   static const tosUrl = 'https://gh-todos.cbue.ch/tos';
   static const privacyUrl = 'https://gh-todos.cbue.ch/privacy';
@@ -68,9 +70,8 @@ class SettingsPage extends ConsumerWidget {
             const SettingsSectionHeader(label: 'Account'),
             SettingsAccountSection(
               onPatPressed: () => _onPatPressed(context, ref),
-              onViewLogsPressed: () => _onViewLogsPressed(context, ref),
-              onViewChangelogPressed: () =>
-                  _onViewChangelogPressed(context, ref),
+              onViewLogsPressed: () => _onViewLogsPressed(context),
+              onViewChangelogPressed: () => _onViewChangelogPressed(context),
               metadata: metadataAsync.asData?.value,
               isLoading: metadataAsync.isLoading,
               errorText: metadataAsync.hasError
@@ -136,9 +137,7 @@ class SettingsPage extends ConsumerWidget {
 
     switch (action) {
       case PatAction.remove:
-        await ref
-            .read(appLoggerProvider)
-            .warn('User requested PAT removal.', category: 'settings');
+        _logger.warning('User requested PAT removal.');
         await ref.read(sessionProvider.notifier).clearToken();
         break;
       case PatAction.update:
@@ -146,9 +145,7 @@ class SettingsPage extends ConsumerWidget {
         final newToken = await showPatUpdateSheet(context);
         if (newToken == null) return;
         try {
-          await ref
-              .read(appLoggerProvider)
-              .info('User requested PAT update.', category: 'settings');
+          _logger.info('User requested PAT update.');
           await ref.read(sessionProvider.notifier).updateToken(newToken);
         } catch (error) {
           if (!context.mounted) return;
@@ -160,21 +157,14 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _onViewLogsPressed(BuildContext context, WidgetRef ref) async {
-    await ref
-        .read(appLoggerProvider)
-        .info('Navigating to application logs.', category: 'settings');
+  Future<void> _onViewLogsPressed(BuildContext context) async {
+    _logger.info('Navigating to application logs.');
     if (!context.mounted) return;
     await context.pushNamed<void>(AppRoutes.applicationLogsName);
   }
 
-  Future<void> _onViewChangelogPressed(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    await ref
-        .read(appLoggerProvider)
-        .info('Navigating to changelog.', category: 'settings');
+  Future<void> _onViewChangelogPressed(BuildContext context) async {
+    _logger.info('Navigating to changelog.');
     if (!context.mounted) return;
     await context.pushNamed<void>(AppRoutes.changelogName);
   }
