@@ -1,0 +1,11 @@
+display_name: GitHub Todos
+generic_name: Todo application
+icon: assets/icon.png
+categories:
+  - Office
+keywords:
+  - GitHub
+  - Projects
+  - Tasks
+startup_notify: true
+include: []

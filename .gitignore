@@ -1,3 +1,5 @@
+dist/
+
 *.g.dart
 *.freezed.dart
 
