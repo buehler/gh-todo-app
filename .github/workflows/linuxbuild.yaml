@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - feat/linux-build
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+          cache: true
+          cache-sdk: true
+      - run: flutter --version
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++6 libsecret-1-dev libjsoncpp-dev libsecret-1-0
+      - name: Enable Linux build
+        run: flutter config --enable-linux-desktop
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build Generated Code
+        run: dart run build_runner build
+      
