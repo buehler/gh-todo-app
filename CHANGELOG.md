@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/buehler/gh-todo-app/compare/v1.2.0...v1.3.0) (2026-10-14)
+
+
+### Features
+
+* add linux x64 build ([#13](https://github.com/buehler/gh-todo-app/issues/13)) ([b1acc76](https://github.com/buehler/gh-todo-app/commit/b1acc766997c67a0e5239bc4b0eda00e95bbeaab))
+* add new todo form and route ([9434437](https://github.com/buehler/gh-todo-app/commit/94344379139c3d177b52300d5d5fa2ab7c0004af))
+* **android:** add android widget similar to iOS ([c38a9e5](https://github.com/buehler/gh-todo-app/commit/c38a9e5cf693887d5a739382b3a40a1eb72fbb49))
+* better application logs and log view ([d81ce83](https://github.com/buehler/gh-todo-app/commit/d81ce833ee82ab88917a6e3ed176911c83dbb98e))
+* **ios:** update GHTodosWidget to support new todo form ([9434437](https://github.com/buehler/gh-todo-app/commit/94344379139c3d177b52300d5d5fa2ab7c0004af))
+
+
+### Bug Fixes
+
+* **ios:** correctly show priority and dates in widget ([7e44cf6](https://github.com/buehler/gh-todo-app/commit/7e44cf615405f69174745f05d08320c28226cad7))
+
 ## [1.2.0](https://github.com/buehler/gh-todo-app/compare/v1.1.0...v1.2.0) (2026-08-12)
 
 
