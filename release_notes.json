@@ -1,6 +1,6 @@
 [
-	{
-		"language": "en-US",
-		"text": "fix(ios): correctly show priority and dates in widget"
-	}
+  {
+    "language": "en-US",
+    "text": "- Create todos with a description, priority, and due date using the new form. Priority and due date use your project's field mappings.\n- Open issue details even when the issue is excluded by your project's custom filter.\n- Clearer messages when a todo is created but its project attachment, priority, or due date cannot be saved.\n- Improved application logs and log viewer for troubleshooting.\n\nAndroid\n\n- Added a Home Screen widget with project selection, priority colors, due dates, and a last-updated time. Refresh, close, or reopen todos directly from the widget, and open the app to view or create a todo.\n\niOS\n\n- Fixed widget priorities and due dates to follow your project's field mappings.\n- Added a widget shortcut to open the new todo form for its project."
+  }
 ]
