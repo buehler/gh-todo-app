@@ -1,0 +1,94 @@
+name: Linux Build
+
+on:
+  workflow_call:
+    inputs:
+      checkout-ref:
+        description: Commit SHA or release tag to build
+        required: true
+        type: string
+    outputs:
+      version:
+        description: Version read by the Linux Makefile
+        value: ${{ jobs.build-x64.outputs.version }}
+      sha:
+        description: Commit SHA used for the build
+        value: ${{ jobs.build-x64.outputs.sha }}
+
+permissions:
+  contents: read
+
+env:
+  APPIMAGE_EXTRACT_AND_RUN: '1'
+
+jobs:
+  build-x64:
+    name: Build Linux x64 AppImage
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      sha: ${{ steps.metadata.outputs.sha }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.checkout-ref }}
+          persist-credentials: false
+
+      - name: Read build metadata
+        id: metadata
+        run: |
+          version=$(make -s -C linux -f Makefile -f - print-version <<'MAKE'
+          .PHONY: print-version
+          print-version:;@printf '%s\n' '$(VERSION)'
+          MAKE
+          )
+          test -n "$version"
+          printf 'version=%s\nsha=%s\n' "$version" "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          channel: stable
+          version: latest
+          cache: true
+          cache-sdk: true
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config make \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libsecret-1-dev wget
+
+      - name: Enable Linux build
+        run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build generated code
+        run: dart run build_runner build
+
+      - name: Install x64 appimagetool
+        run: |
+          wget -O "$RUNNER_TEMP/appimagetool" \
+            "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+
+          sudo install -m 755 "$RUNNER_TEMP/appimagetool" \
+            /usr/local/bin/appimagetool
+
+      - name: Build and package x64 AppImage
+        run: make -C linux pkg
+
+      - name: Upload x64 AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-todos-linux-x86_64
+          path: build/linux/gh_todos-linux-x86_64.AppImage
+          if-no-files-found: error

@@ -1,0 +1,85 @@
+name: Preview Release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  linux-build:
+    name: Build Preview Linux AppImage
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.head_ref, 'release-please-')
+    uses: ./.github/workflows/linuxbuild.yaml
+    with:
+      checkout-ref: ${{ github.event.pull_request.head.sha }}
+
+  preview-release:
+    name: Publish Preview Linux AppImage
+    needs: linux-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Download x64 AppImage
+        uses: actions/download-artifact@v4
+        with:
+          name: gh-todos-linux-x86_64
+          path: dist
+
+      - name: Check PR and update preview tag
+        id: preview
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_TAG: preview-pr-${{ github.event.pull_request.number }}
+          BUILD_SHA: ${{ needs.linux-build.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr=$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER")
+          if [[ $(jq -r '.state' <<< "$pr") != open || $(jq -r '.head.sha' <<< "$pr") != "$BUILD_SHA" ]]; then
+            echo 'Skipping preview: the PR is closed or its head has changed.'
+            exit 0
+          fi
+
+          ref=$(gh api "repos/$GH_REPO/git/matching-refs/tags/$PREVIEW_TAG" |
+            jq -r --arg ref "refs/tags/$PREVIEW_TAG" '.[] | select(.ref == $ref) | .ref')
+          if [[ -n "$ref" ]]; then
+            gh api --method PATCH "repos/$GH_REPO/git/refs/tags/$PREVIEW_TAG" \
+              -f sha="$BUILD_SHA" -F force=true
+          else
+            gh api --method POST "repos/$GH_REPO/git/refs" \
+              -f ref="refs/tags/$PREVIEW_TAG" -f sha="$BUILD_SHA"
+          fi
+
+          echo 'publish=true' >> "$GITHUB_OUTPUT"
+
+      - name: Update preview release
+        if: steps.preview.outputs.publish == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: preview-pr-${{ github.event.pull_request.number }}
+          commit: ${{ needs.linux-build.outputs.sha }}
+          name: Preview ${{ needs.linux-build.outputs.version }}
+          body: |
+            Automated Linux preview for ${{ github.event.pull_request.html_url }}.
+            Built from commit `${{ needs.linux-build.outputs.sha }}`.
+          prerelease: true
+          makeLatest: "false"
+          replacesArtifacts: true
+          artifactErrorsFailBuild: true
+          artifacts: dist/gh_todos-linux-x86_64.AppImage
+          token: ${{ secrets.GITHUB_TOKEN }}

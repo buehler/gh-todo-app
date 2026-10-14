@@ -28,6 +28,34 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+  linux-build:
+    name: Build Release Linux AppImage
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: ./.github/workflows/linuxbuild.yaml
+    with:
+      checkout-ref: ${{ needs.release-please.outputs.tag_name }}
+
+  linux-release:
+    name: Publish Release Linux AppImage
+    needs: [release-please, linux-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download x64 AppImage
+        uses: actions/download-artifact@v4
+        with:
+          name: gh-todos-linux-x86_64
+          path: dist
+
+      - name: Attach x64 AppImage to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: gh release upload "$RELEASE_TAG" dist/gh_todos-linux-x86_64.AppImage --clobber
+
   flutter-web:
     name: Release Flutter Web
     runs-on: ubuntu-latest

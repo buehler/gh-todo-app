@@ -7,11 +7,6 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
-namespace {
-constexpr int kMinWindowWidth = 900;
-constexpr int kMinWindowHeight = 720;
-}  // namespace
-
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -58,9 +53,14 @@ static void my_application_activate(GApplication* application) {
   }
 
   gtk_window_set_default_size(window, 1280, 720);
-  gtk_window_set_size_request(window, kMinWindowWidth, kMinWindowHeight);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
+  g_autofree gchar* data_directory =
+      g_path_get_dirname(fl_dart_project_get_assets_path(project));
+  g_autofree gchar* icon_path =
+      g_build_filename(data_directory, "icon.png", nullptr);
+  gtk_window_set_icon_from_file(window, icon_path, nullptr);
+
   fl_dart_project_set_dart_entrypoint_arguments(
       project, self->dart_entrypoint_arguments);
 
