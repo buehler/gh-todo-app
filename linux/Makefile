@@ -10,7 +10,7 @@ APP_ID := ch.cbue.gh_todos
 build:
 	@test "$$(uname -s)/$$(uname -m)" = Linux/x86_64 || \
 		{ echo "Build on Linux x86_64 (for example, the x64 GitHub Actions runner)." >&2; exit 1; }
-	cd "$(ROOT)" && flutter build linux --release
+	cd "$(ROOT)" && flutter build linux --release --build-name=$(VERSION)
 
 pkg: build
 	@command -v appimagetool >/dev/null 2>&1 || \
