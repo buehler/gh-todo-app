@@ -1,23 +1,34 @@
 # GitHub Todos
 
-TODO :)
-
 [![Codemagic build status](https://api.codemagic.io/apps/69de322591d586c661c2ecc8/69de322591d586c661c2ecc7/status_badge.svg)](https://codemagic.io/app/69de322591d586c661c2ecc8/69de322591d586c661c2ecc7/latest_build)
 
-Here is a concise, technical summary you can copy and paste directly to the AI developer or project maintainer to get this fixed in the source repository:
+## Linux x64
 
-📋 Bug Report: Flutter AppImage Crash on Immutable Linux (Bazzite/Fedora)
+Build on Linux x86_64 with Flutter, Make, Clang, CMake, Ninja, pkg-config,
+GTK 3 development headers, liblzma development headers, the C++ development
+runtime, and libsecret development headers installed. Packaging also requires
+[appimagetool](https://github.com/AppImage/appimagetool/releases) on `PATH`.
+CI installs these dependencies on Ubuntu 22.04.
 
-Issue Summary:
-The AppImage crashes immediately upon launch with a libepoxy initialization error: No provider of eglGetPlatformDisplayEXT found. Requires one of: EGL_EXT_platform_base.
-The Root Cause:
-The application is bundled using an environment that packages a hardcoded or partial copy of libepoxy inside the AppImage. When running on modern immutable/atomic Linux distributions like Bazzite or Fedora Silverblue, this bundled libepoxy hijacks the runtime OpenGL/EGL function lookups. It attempts to resolve graphics drivers using the internal AppImage paths rather than passing the context to the host system's hardware drivers, resulting in an immediate core dump.
-Environment Context:
-• OS: Bazzite (Linux / Fedora-based Immutable OS)
-• Framework: Flutter (GTK embedding)
-• Display Server: Wayland (with XWayland fallback)
-Workarounds that bypass the issue:
-• Extracting the AppImage via --appimage-extract and manually deleting libepoxy.so* from the payload forces the app to correctly fall back to the host system’s graphics stack and fixes the crash entirely.
-Requested Action / Permanent Fix for Devs:
-Please update the AppImage packaging pipeline (e.g., appimagetool or your workflow scripts) to explicitly exclude libepoxy, libEGL, and related rendering libraries from being bundled inside the final .AppImage payload. These should instead be treated as dynamic host dependencies so Flutter can safely hook into the user's native GPU drivers at runtime.
-If the developer asks for how you successfully bypassed it on your end, let me know which of the previous workarounds worked best for you so we can give them exact details!
+```sh
+flutter pub get
+dart run build_runner build
+make -C linux build
+make -C linux pkg
+```
+
+`pkg` builds before packaging. `make -f linux/Makefile pkg` also works from
+the repository root. Staging stays in `build/linux/appimage/gh_todos.AppDir`;
+the output is `dist/<pubspec-version>/gh_todos-<pubspec-version>-linux-x86_64.AppImage`.
+
+The AppImage includes Flutter's bundle, libsecret, and libgcrypt/libgpg-error
+when linked by libsecret. The host must provide compatible GTK 3,
+GLib/GIO/GObject, C/C++ runtimes, graphics libraries and GPU drivers, and a
+running session Secret Service provider (such as GNOME Keyring or KWallet
+with Secret Service support). Host ABI compatibility is required; building
+on Ubuntu 22.04 does not guarantee support for every Linux installation.
+
+Verify the CI artifact on Ubuntu and Bazzite KDE: startup and window icon,
+external links, PAT persistence after reopening, and logout. Inspect the
+AppDir under `build/` to confirm libsecret is included and the graphics
+libraries excluded by the Makefile are absent.
